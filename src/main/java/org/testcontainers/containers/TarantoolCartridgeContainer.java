@@ -123,7 +123,9 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
     }
 
     /**
-     * Create a container with specified image and specified instances file from the classpath resources
+     * Create a container with specified image and specified instances file from the classpath resources. By providing
+     * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
+     * image is tagged with the provided name and not deleted after tests finishing).
      *
      * @param dockerImageName Tarantool docker image name with version
      * @param buildImageName Specify a stable image name for the test container to prevent rebuilds
@@ -247,6 +249,12 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
         return getMappedPort(apiPort);
     }
 
+    /**
+     * Set Cartridge router hostname
+     *
+     * @param routerHost a hostname, default is "localhost"
+     * @return this container instance
+     */
     public TarantoolCartridgeContainer withRouterHost(String routerHost) {
         checkNotRunning();
         this.routerHost = routerHost;
@@ -277,12 +285,24 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
         return this;
     }
 
+    /**
+     * Set the username for accessing the router node
+     *
+     * @param routerUsername a user name, default is "admin"
+     * @return this container instance
+     */
     public TarantoolCartridgeContainer withRouterUsername(String routerUsername) {
         checkNotRunning();
         this.routerUsername = routerUsername;
         return this;
     }
 
+    /**
+     * Set the user password for accessing the router node
+     *
+     * @param routerPassword a user password, usually is a value of the "cluster_cookie" option in cartridge.cfg({...})
+     * @return this container instance
+     */
     public TarantoolCartridgeContainer withRouterPassword(String routerPassword) {
         checkNotRunning();
         this.routerPassword = routerPassword;

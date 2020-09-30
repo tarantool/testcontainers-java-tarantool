@@ -33,6 +33,8 @@ Add the Maven dependency:
 
 ## Usage Example
 
+### Standalone Tarantool server
+
 Instantiate a generic TarantoolContainer and use it in your tests:
 
 ```java
@@ -68,6 +70,125 @@ public class SomeTest {
             ...
         }
     ...
+```
+
+### Tarantool Cartridge cluster
+
+For testing against Tarantool Cartridge you need to place a directory with the application code into the classpath
+(for example, into src/test/resources directory). Suppose we have the following directory structure in there:
+
+```tree
+src/test/resources/
+├── cartridge
+│   ├── Dockerfile.build.cartridge
+│   ├── Dockerfile.cartridge
+│   ├── app
+│   │   └── roles
+│   │       ├── api_router.lua
+│   │       ├── api_storage.lua
+│   │       └── custom.lua
+│   ├── cartridge.post-build
+│   ├── cartridge.pre-build
+│   ├── deps.sh
+│   ├── init.lua
+│   ├── instances.yml
+│   ├── stateboard.init.lua
+│   ├── test
+│   │   ├── helper
+│   │   │   ├── integration.lua
+│   │   │   └── unit.lua
+│   │   ├── helper.lua
+│   │   ├── integration
+│   │   │   └── api_test.lua
+│   │   └── unit
+│   │       └── sample_test.lua
+│   ├── testapp-scm-1.rockspec
+│   ├── tmp
+│   └── topology.lua
+```
+
+The file `instances.yml` contains the Cartridge nodes configuration, which looks like this:
+
+```yaml
+testapp.router:
+  workdir: ./tmp/db_dev/3301
+  advertise_uri: localhost:3301
+  http_port: 8081
+
+testapp.s1-master:
+  workdir: ./tmp/db_dev/3302
+  advertise_uri: localhost:3302
+  http_port: 8082
+
+testapp.s1-replica:
+  workdir: ./tmp/db_dev/3303
+  advertise_uri: localhost:3303
+  http_port: 8083
+
+testapp.s2-master:
+  workdir: ./tmp/db_dev/3304
+  advertise_uri: localhost:3304
+  http_port: 8084
+
+testapp.s2-replica:
+  workdir: ./tmp/db_dev/3305
+  advertise_uri: localhost:3305
+  http_port: 8085
+```
+
+and the file `topology.lua` conatains a custom script which sets up the cluster topology using the Cartridge API:
+
+```
+cartridge = require('cartridge')
+replicasets = {{
+    alias = 'app-router',
+    roles = {'vshard-router', 'app.roles.custom', 'app.roles.api_router'},
+    join_servers = {{uri = 'localhost:3301'}}
+}, {
+    alias = 's1-storage',
+    roles = {'vshard-storage', 'app.roles.api_storage'},
+    join_servers = {{uri = 'localhost:3302'}, {uri = 'localhost:3303'}}
+}, {
+    alias = 's2-storage',
+    roles = {'vshard-storage', 'app.roles.api_storage'},
+    join_servers = {{uri = 'localhost:3304'}, {uri = 'localhost:3305'}}
+}}
+return cartridge.admin_edit_topology({replicasets = replicasets})
+```
+
+Now we can set up a Cartridge container for tests:
+
+```java
+@Testcontainers
+public class SomeOtherTest {
+
+    @Container
+    private static final TarantoolCartridgeContainer container =
+        // Pass the classpath-relative paths of the instances configuration and topology script files
+        new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
+            // Point out the classpath-relative directory where the application files reside
+            .withDirectoryBinding("cartridge")
+            .withRouterHost("localhost") // Optional, "localhost" is default
+            .withRouterPort(3301) // Binary port, optional, 3301 is default
+            .withAPIPort(8801) // Cartridge HTTP API port, optional, 8081 is default
+            .withRouterUsername("admin") // Specify the actual username, default is "admin"
+            .withRouterPassword("testapp-cluster-cookie"); // Specify the actual password, see the "cluster_cookie" parameter
+                                                          // in the cartridge.cfg({...}) call in your application.
+                                                          // Usually it can be found in the init.lua module
+
+    // Use the created container in tests
+    public void testFoo() {
+        // Execute Lua commands in the router instance
+        List<Object> result = container.executeCommand("return profile_get(...)", 1).get();
+
+        // Instantiate a client connected to the router node
+        TarantoolCredentials credentials = new SimpleTarantoolCredentials(getRouterUsername(), getRouterPassword());
+        TarantoolServerAddress address = new TarantoolServerAddress(getRouterHost(), getRouterPort());
+        TarantoolClientConfig config = TarantoolClientConfig.builder().withCredentials(credentials).build();
+        try (TarantoolClient client = new StandaloneTarantoolClient(config, address)) {
+            // Do something with the client...
+        }
+    }
 ```
 
 ## License
