@@ -1,6 +1,5 @@
 package org.testcontainers.containers;
 
-import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -19,12 +18,30 @@ public class TarantoolStaticContainerTest {
     private static TarantoolContainer container = new TarantoolContainer();
 
     @Test
+    public void testExecuteCommand() throws Exception {
+        List<Object> result = container.executeCommand("return 1, 2").get();
+        assertEquals(2, result.size());
+        assertEquals(1, result.get(0));
+    }
+
+    @Test
+    public void testExecuteCommandWithArguments() throws Exception {
+        List<Object> result = container.executeCommand(
+                "return require('fun').iter({...}):reduce(function(x, acc) return acc+x end, 0)",
+                1, 2, 3)
+                .get();
+        assertEquals(1, result.size());
+        assertEquals(6, result.get(0));
+    }
+
+    @Test
     public void testSetLogLevel() throws Exception {
         container.withLogLevel(TarantoolLogLevel.INFO);
         List<Object> result = container.executeCommand("return box.cfg.log_level").get();
         assertEquals(1, result.size());
         assertEquals(5, result.get(0));
     }
+
     @Test
     public void testSetMemtxMemory() throws Exception {
         int memory = 256 * 1024 * 1024;

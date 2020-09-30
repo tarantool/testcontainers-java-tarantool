@@ -48,6 +48,7 @@
     <properties>
         <driver.version>1.0.0-SNAPSHOT</driver.version>
         <testcontainers.version>1.14.3</testcontainers.version>
+        <snakeyaml.version>1.26</snakeyaml.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <logging.config>${project.basedir}/src/test/resources/logback-test.xml</logging.config>
@@ -64,6 +65,11 @@
             <groupId>io.tarantool</groupId>
             <artifactId>driver</artifactId>
             <version>${driver.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
         </dependency>
 
         <!-- Test dependencies -->
@@ -97,6 +103,11 @@
             </testResource>
         </testResources>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

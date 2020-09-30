@@ -15,6 +15,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Sets up a Tarantool instance and provides API for configuring it.
@@ -45,6 +47,9 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private Integer memtxMemory = MEMTX_MEMORY;
     private String directoryResourcePath = getClass().getClassLoader().getResource(SCRIPT_RESOURCE_DIRECTORY).getPath();
     private String scriptFileName = SCRIPT_FILENAME;
+    private String instanceDir = INSTANCE_DIR;
+
+    private final AtomicReference<TarantoolClient> clientHolder = new AtomicReference<>();
 
     public TarantoolContainer() {
         this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION));
@@ -52,6 +57,10 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
 
     public TarantoolContainer(String dockerImageName) {
         super(dockerImageName);
+    }
+
+    public TarantoolContainer(Future<String> image) {
+        super(image);
     }
 
     @Override
@@ -126,6 +135,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
                 executeCommand(logLevel.toCommand()).get();
             } catch (Exception e) {
                 logger().error(String.format("Failed to set log_level to %s", logLevel.toString()), e);
+                throw new RuntimeException(e);
             }
         }
         return this;
@@ -148,6 +158,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
                 executeCommand(String.format("box.cfg{memtx_memory=%d}", memtxMemory)).get();
             } catch (Exception e) {
                 logger().error(String.format("Failed to set memtx_memory to %d", memtxMemory), e);
+                throw new RuntimeException(e);
             }
         }
         return this;
@@ -168,6 +179,26 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
                     String.format("No resource path found for the specified resource %s", directoryResourcePath));
         }
         return this;
+    }
+
+    /**
+     * Get the app scripts directory
+     *
+     * @return the app directory
+     * @see #withDirectoryBinding(String)
+     */
+    protected String getDirectoryBinding() {
+        return directoryResourcePath;
+    }
+
+
+    /**
+     * Get the app scripts directory in the container
+     *
+     * @return the app scripts directory
+     */
+    protected String getInstanceDir() {
+        return instanceDir;
     }
 
     /**
@@ -192,16 +223,29 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
         }
     }
 
+    protected TarantoolClient getClient(TarantoolClientConfig config, TarantoolServerAddress address) {
+        if (!isRunning()) {
+            throw new IllegalStateException("Cannot connect to Tarantool instance in a stopped container");
+        }
+        if (clientHolder.get() == null) {
+            clientHolder.compareAndSet(null, createClient(config, address));
+        }
+        return clientHolder.get();
+    }
+
+    private TarantoolClient createClient(TarantoolClientConfig config, TarantoolServerAddress address) {
+        return new StandaloneTarantoolClient(config, address);
+    }
+
     protected WaitStrategy tarantoolWaitStrategy() {
         return Wait.forLogMessage(".*entering the event loop.*", 1);
     }
 
     @Override
     protected void configure() {
-
-        withFileSystemBind(directoryResourcePath, INSTANCE_DIR, BindMode.READ_WRITE);
+        withFileSystemBind(directoryResourcePath, instanceDir, BindMode.READ_WRITE);
         withExposedPorts(port);
-        withCommand("tarantool", Paths.get(INSTANCE_DIR, scriptFileName).toString());
+        withCommand("tarantool", Paths.get(instanceDir, scriptFileName).toString());
 
         waitingFor(tarantoolWaitStrategy());
     }
@@ -254,14 +298,8 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
         }
 
         TarantoolCredentials credentials = new SimpleTarantoolCredentials(getUsername(), getPassword());
-        TarantoolClientConfig config = TarantoolClientConfig.builder()
-                .withCredentials(credentials).build();
         TarantoolServerAddress address = new TarantoolServerAddress(getHost(), getPort());
-        try (TarantoolClient client = new StandaloneTarantoolClient(config, address)) {
-            return client.eval(command, Arrays.asList(arguments));
-        } catch (Exception e) {
-            logger().error("Failed to execute command '{}': {}", command, e.getMessage());
-            throw e;
-        }
+        TarantoolClientConfig config = TarantoolClientConfig.builder().withCredentials(credentials).build();
+        return getClient(config, address).eval(command, Arrays.asList(arguments));
     }
 }

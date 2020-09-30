@@ -12,35 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class TarantoolContainerTest {
 
     @Test
-    public void testExecuteCommand() throws Exception {
-        try (TarantoolContainer container = new TarantoolContainer()) {
-            container.start();
-
-            List<Object> result = container.executeCommand("return 1, 2").get();
-            assertEquals(2, result.size());
-            assertEquals(1, result.get(0));
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    @Test
-    public void testExecuteCommandWithArguments() throws Exception {
-        try (TarantoolContainer container = new TarantoolContainer()) {
-            container.start();
-
-            List<Object> result = container.executeCommand(
-                    "return require('fun').iter({...}):reduce(function(x, acc) return acc+x end, 0)",
-                    1, 2, 3)
-                    .get();
-            assertEquals(1, result.size());
-            assertEquals(6, result.get(0));
-        } catch (Exception e) {
-            throw e;
-        }
-    }
-
-    @Test
     public void testExecuteScript() throws Exception {
         try (TarantoolContainer container = new TarantoolContainer()) {
             container.start();
@@ -49,8 +20,6 @@ class TarantoolContainerTest {
             List<Object> result = container.executeCommand("return user_function_no_param()").get();
             assertEquals(1, result.size());
             assertEquals(5, result.get(0));
-        } catch (Exception e) {
-            throw e;
         }
     }
 
@@ -77,8 +46,6 @@ class TarantoolContainerTest {
             result = container.executeCommand("return user_function_no_param()").get();
             assertEquals(result.size(), 1);
             assertEquals(result.get(0), 5);
-        } catch (Exception e) {
-            throw e;
         }
     }
 }
