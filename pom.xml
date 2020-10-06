@@ -6,6 +6,7 @@
 
     <groupId>io.tarantool</groupId>
     <artifactId>testcontainers-java-tarantool</artifactId>
+    <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
 
     <name>TestContainers for Tarantool</name>
@@ -208,6 +209,19 @@
                                 <phase>prepare-package</phase>
                                 <goals>
                                     <goal>test-jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
                                 </goals>
                             </execution>
                         </executions>
