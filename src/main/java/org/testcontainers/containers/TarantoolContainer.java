@@ -2,7 +2,7 @@ package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.StandaloneTarantoolClient;
-import io.tarantool.driver.TarantoolClient;
+import io.tarantool.driver.api.TarantoolClient;
 import io.tarantool.driver.TarantoolClientConfig;
 import io.tarantool.driver.TarantoolServerAddress;
 import io.tarantool.driver.auth.SimpleTarantoolCredentials;
@@ -34,7 +34,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private static final String API_PASSWORD = "secret";
     private static final TarantoolLogLevel LOG_LEVEL = TarantoolLogLevel.VERBOSE;
     private static final Integer MEMTX_MEMORY = 128 * 1024 * 1024; // 128 Mb in bytes
-    private static final String SCRIPT_RESOURCE_DIRECTORY = "org/testcontainers/containers";
+    private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String SCRIPT_FILENAME = "server.lua";
 
     private static final String INSTANCE_DIR = "/app";
