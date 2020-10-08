@@ -10,7 +10,7 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <name>TestContainers for Tarantool</name>
-    <description>Dockerized Tarantool and Tarantool Cartridge org.testcontainers.containers for testing under Testcontainers.</description>
+    <description>Dockerized Tarantool and Tarantool Cartridge containers for testing under Testcontainers.</description>
     <url>https://github.com/akudiyar/testcontainers-java-module-tarantool</url>
 
     <licenses>
@@ -41,13 +41,13 @@
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git://github.com/akudiyar/testcontainers-java-module-tarantool.git</connection>
-        <developerConnection>scm:git:ssh://github.com:akudiyar/testcontainers-java-module-tarantool.git</developerConnection>
+        <connection>scm:git:git@github.com:akudiyar/testcontainers-java-module-tarantool.git</connection>
+        <developerConnection>scm:git:git@github.com:akudiyar/testcontainers-java-module-tarantool.git</developerConnection>
         <url>http://github.com/akudiyar/testcontainers-java-module-tarantool/tree/master</url>
     </scm>
 
     <properties>
-        <driver.version>1.0.0-SNAPSHOT</driver.version>
+        <driver.version>0.1.1</driver.version>
         <testcontainers.version>1.15.0-rc2</testcontainers.version>
         <snakeyaml.version>1.26</snakeyaml.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -173,6 +173,8 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
+                    <indentSize>4</indentSize>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
                 </configuration>
             </plugin>
         </plugins>
@@ -237,6 +239,12 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
