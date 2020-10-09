@@ -11,12 +11,20 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.MountableFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 /**
  * Sets up a Tarantool instance and provides API for configuring it.
@@ -27,6 +35,8 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
 
     public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
     public static final String DEFAULT_IMAGE_VERSION = "2.x-centos7";
+    public static final String DEFAULT_TARANTOOL_BASE_IMAGE =
+            String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 3301;
@@ -46,6 +56,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private TarantoolLogLevel logLevel = LOG_LEVEL;
     private Integer memtxMemory = MEMTX_MEMORY;
     private String directoryResourcePath = getClass().getClassLoader().getResource(SCRIPT_RESOURCE_DIRECTORY).getPath();
+    private List<String> cleanupDirectories = new LinkedList<>();
     private String scriptFileName = SCRIPT_FILENAME;
     private String instanceDir = INSTANCE_DIR;
 
@@ -173,11 +184,29 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
      */
     public TarantoolContainer withDirectoryBinding(String directoryResourcePath) {
         checkNotRunning();
-        this.directoryResourcePath = getClass().getClassLoader().getResource(directoryResourcePath).getPath();
-        if (this.directoryResourcePath == null) {
+        URL resource = getClass().getClassLoader().getResource(directoryResourcePath);
+        if (resource == null) {
             throw new IllegalArgumentException(
                     String.format("No resource path found for the specified resource %s", directoryResourcePath));
         }
+        this.directoryResourcePath = resource.getPath();
+        return this;
+    }
+
+    /**
+     * Specify a directory in the classpath resource, which should be cleaned up from data files (Tarantool WALs and
+     * snapshots). Can be called several times for specifying several directories.
+     * The directory will be cleaned recursively when the container will be stopping.
+     *
+     * @param directoryResourcePath classpath resource directory full path
+     * @return this container instance
+     */
+    public TarantoolContainer cleanUpDirectory(String directoryResourcePath) {
+        if (directoryResourcePath == null) {
+            throw new IllegalArgumentException(
+                    String.format("No resource path found for the specified resource %s", directoryResourcePath));
+        }
+        this.cleanupDirectories.add(directoryResourcePath);
         return this;
     }
 
@@ -263,6 +292,30 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
         withLogLevel(logLevel);
 
         logger().info("Tarantool server is listening at {}:{}", getHost(), getPort());
+    }
+
+    @Override
+    protected void containerIsStopping(InspectContainerResponse containerInfo) {
+        super.containerIsStopping(containerInfo);
+        logger().info("Tarantool server is stopping");
+        for (String directory : cleanupDirectories) {
+            URL directoryResource = getClass().getClassLoader().getResource(directoryResourcePath);
+            if (directoryResource != null) {
+                Path directoryPath = Paths.get(directoryResource.getPath());
+                if (Files.isDirectory(directoryPath)) {
+                    logger().info("Removing all Tarantool data files in directory " + directory);
+                    try (Stream<Path> walk = Files.walk(directoryPath)) {
+                        walk.sorted(Comparator.reverseOrder())
+                                .filter(p -> p.endsWith(".xlog") || p.endsWith(".snap") || p.endsWith(".snap.inprogress"))
+                                .map(Path::toFile)
+                                .peek(f -> logger().info("Removing Tarantool data file: " + f.getPath()))
+                                .forEach(File::delete);
+                    } catch (IOException e) {
+                        logger().error("Failed to remove Tarantool data file", e);
+                    }
+                }
+            }
+        }
     }
 
     /**

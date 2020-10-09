@@ -17,8 +17,14 @@ public class TarantoolCartridgeStaticContainerTest {
 
     @Container
     private static final TarantoolCartridgeContainer container =
-            new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
-                    .withDirectoryBinding("cartridge");
+            new TarantoolCartridgeContainer(
+                    TarantoolContainer.DEFAULT_TARANTOOL_BASE_IMAGE,
+                    "testcontainers-java-tarantool:test",
+                    "cartridge/instances.yml",
+                    "cartridge/topology.lua")
+                    .withDirectoryBinding("cartridge")
+                    .cleanUpDirectory("cartridge/tmp");
+
 
     @Test
     public void testContainerWithParameters() throws Exception {

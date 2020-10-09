@@ -102,7 +102,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
-        this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION), instancesFile, topologyConfigurationFile);
+        this(DEFAULT_TARANTOOL_BASE_IMAGE, instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -158,7 +158,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
                 .from(baseImageName)
                 .run("/bin/sh", "-c",
                         "curl -L https://tarantool.io/installer.sh | VER=2.4 /bin/bash -s -- --repo-only && " +
-                                "yum -y install cmake make gcc git cartridge-cli")
+                                "yum -y install cmake make gcc git cartridge-cli && cartridge version")
                 .build();
     }
 
@@ -364,5 +364,17 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
         logger().info("Tarantool Cartridge cluster is started");
         logger().info("Tarantool Cartridge router is listening at {}:{}", getRouterHost(), getRouterPort());
         logger().info("Tarantool Cartridge HTTP API is available at {}:{}", getAPIHost(), getAPIPort());
+    }
+
+    @Override
+    public TarantoolCartridgeContainer withReuse(boolean reusable) {
+        super.withReuse(reusable);
+        return this;
+    }
+
+    @Override
+    public TarantoolCartridgeContainer cleanUpDirectory(String directoryResourcePath) {
+        super.cleanUpDirectory(directoryResourcePath);
+        return this;
     }
 }
