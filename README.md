@@ -8,30 +8,38 @@ See [testcontainers.org](https://wwww.testcontainers.org) for more information a
 
 ## Installation
 
-This module depends on the new asynchronous Tarantool driver:
-
-```xml
-<dependency>
-  <groupId>io.tarantool</groupId>
-  <artifactId>driver</artifactId>
-</dependency>
-```
-
-Download and install it using `mvn install` from Github (a temporary measure until the first release is published to Maven Central).
-
-Download and build this project via `mvn install` (a temporary measure until the first release is published to Maven Central).
-
 Add the Maven dependency:
 
 ```xml
 <dependency>
   <groupId>io.tarantool</groupId>
   <artifactId>testcontainers-java-tarantool</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
 ## Usage Example
+
+### Standalone Tarantool server
+
+For default setup, you need to have a file `server.lua` in your `src/test/resources` folder with contents similar to
+the following:
+
+```lua
+box.cfg {
+    listen = 3301,
+    memtx_memory = 128 * 1024 * 1024, -- 128 Mb
+    -- log = 'file:/tmp/tarantool.log',
+    log_level = 6,
+}
+-- API user will be able to login with this password
+box.schema.user.create('api_user', { password = 'secret' })
+-- API user will be able to create spaces, add or remove data, execute functions
+box.schema.user.grant('api_user', 'read,write,execute', 'universe')
+```
+
+The most necessary part is exposing the port 3301 for external connections -- the container will not start without that
+setting in the startup script.
 
 ### Standalone Tarantool server
 
@@ -172,9 +180,12 @@ public class SomeOtherTest {
             .withRouterPort(3301) // Binary port, optional, 3301 is default
             .withAPIPort(8801) // Cartridge HTTP API port, optional, 8081 is default
             .withRouterUsername("admin") // Specify the actual username, default is "admin"
-            .withRouterPassword("testapp-cluster-cookie"); // Specify the actual password, see the "cluster_cookie" parameter
+            .withRouterPassword("testapp-cluster-cookie") // Specify the actual password, see the "cluster_cookie" parameter
                                                           // in the cartridge.cfg({...}) call in your application.
                                                           // Usually it can be found in the init.lua module
+            .withReuse(true) // allows to reuse the container build once for faster testing
+            .cleanUpDirectory("cartridge/tmp"); // Cleanup Tarantool data files (WAL, snapshots) when stopping the
+                                                // container. Could be repeated several times for different directories
 
     // Use the created container in tests
     public void testFoo() {
