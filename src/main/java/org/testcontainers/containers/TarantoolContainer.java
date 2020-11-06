@@ -274,7 +274,8 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     protected void configure() {
         withFileSystemBind(directoryResourcePath, instanceDir, BindMode.READ_WRITE);
         withExposedPorts(port);
-        withCommand("tarantool", Paths.get(instanceDir, scriptFileName).toString());
+        withCommand("tarantool",
+                Paths.get(instanceDir, scriptFileName).toString().replace('\\','/'));
 
         waitingFor(tarantoolWaitStrategy());
     }
@@ -331,7 +332,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
         String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
-        String containerPath = Paths.get(INSTANCE_DIR, scriptName).toString();
+        String containerPath = Paths.get(INSTANCE_DIR, scriptName).toString().replace('\\','/');
         this.copyFileToContainer(
                 MountableFile.forClasspathResource(scriptResourcePath), containerPath);
         return executeCommand(String.format("dofile('%s')", containerPath));
