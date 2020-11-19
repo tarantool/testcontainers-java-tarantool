@@ -159,6 +159,8 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
                 .run("/bin/sh", "-c",
                         "curl -L https://tarantool.io/installer.sh | VER=2.4 /bin/bash -s -- --repo-only && " +
                                 "yum -y install cmake make gcc git cartridge-cli && cartridge version")
+                .user(String.format("%s:%s", TARANTOOL_SERVER_USER, TARANTOOL_SERVER_GROUP))
+                .cmd("cartridge build && cartridge start")
                 .build();
     }
 
@@ -329,7 +331,6 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
         withPassword(getRouterPassword());
         withEnv("BOOTSTRAP", "ON");
         withWorkingDirectory(getInstanceDir());
-        withCommand("/bin/sh", "-c", "cartridge build && cartridge start");
     }
 
     @Override
