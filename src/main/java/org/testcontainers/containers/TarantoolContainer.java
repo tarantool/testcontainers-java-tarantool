@@ -33,6 +33,8 @@ import java.util.stream.Stream;
  */
 public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
 
+    public static final String TARANTOOL_SERVER_USER = "tarantool";
+    public static final String TARANTOOL_SERVER_GROUP = "tarantool";
     public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
     public static final String DEFAULT_IMAGE_VERSION = "2.x-centos7";
     public static final String DEFAULT_TARANTOOL_BASE_IMAGE =
@@ -48,6 +50,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private static final String SCRIPT_FILENAME = "server.lua";
 
     private static final String INSTANCE_DIR = "/app";
+    private static final String TMP_DIR = "/tmp";
 
     private String username = API_USER;
     private String password = API_PASSWORD;
@@ -274,6 +277,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     protected void configure() {
         withFileSystemBind(directoryResourcePath, instanceDir, BindMode.READ_WRITE);
         withExposedPorts(port);
+
         withCommand("tarantool",
                 Paths.get(instanceDir, scriptFileName).toString().replace('\\','/'));
 
@@ -332,9 +336,8 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
         String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
-        String containerPath = Paths.get(INSTANCE_DIR, scriptName).toString().replace('\\','/');
-        this.copyFileToContainer(
-                MountableFile.forClasspathResource(scriptResourcePath), containerPath);
+        String containerPath = Paths.get(TMP_DIR, scriptName).toString().replace('\\','/');
+        this.copyFileToContainer(MountableFile.forClasspathResource(scriptResourcePath), containerPath);
         return executeCommand(String.format("dofile('%s')", containerPath));
     }
 
