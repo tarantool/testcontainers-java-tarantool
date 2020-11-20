@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  *
  * @author Alexey Kuzin
  */
-public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
+public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends GenericContainer<SELF> {
 
     public static final String TARANTOOL_SERVER_USER = "tarantool";
     public static final String TARANTOOL_SERVER_GROUP = "tarantool";
@@ -58,7 +58,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private Integer port = DEFAULT_PORT;
     private TarantoolLogLevel logLevel = LOG_LEVEL;
     private Integer memtxMemory = MEMTX_MEMORY;
-    private String directoryResourcePath = getClass().getClassLoader().getResource(SCRIPT_RESOURCE_DIRECTORY).getPath();
+    private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private final List<String> cleanupDirectories = new LinkedList<>();
     private String scriptFileName = SCRIPT_FILENAME;
     private final String instanceDir = INSTANCE_DIR;
@@ -206,8 +206,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
      */
     public TarantoolContainer cleanUpDirectory(String directoryResourcePath) {
         if (directoryResourcePath == null) {
-            throw new IllegalArgumentException(
-                    String.format("No resource path found for the specified resource %s", directoryResourcePath));
+            throw new IllegalArgumentException("The specified cleanup directory is null");
         }
         this.cleanupDirectories.add(directoryResourcePath);
         return this;
@@ -331,7 +330,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
      * @return script execution result
      * @throws Exception if failed to connect to the instance or execution fails
      */
-    public CompletableFuture<List<Object>> executeScript(String scriptResourcePath) throws Exception {
+    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
         if (!isRunning()) {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
@@ -349,7 +348,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
      * @return command execution result
      * @throws Exception if failed to connect to the instance or execution fails
      */
-    public CompletableFuture<List<Object>> executeCommand(String command, Object... arguments) throws Exception {
+    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception {
         if (!isRunning()) {
             throw new IllegalStateException("Cannot execute commands in stopped container");
         }

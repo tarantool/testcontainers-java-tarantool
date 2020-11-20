@@ -13,11 +13,11 @@ class TarantoolContainerTest {
 
     @Test
     public void testExecuteScript() throws Exception {
-        try (TarantoolContainer container = new TarantoolContainer()) {
+        try (TarantoolContainer<?> container = new TarantoolContainer<>()) {
             container.start();
 
             container.executeScript("org/testcontainers/containers/test.lua").get();
-            List<Object> result = container.executeCommand("return user_function_no_param()").get();
+            List<?> result = container.executeCommand("return user_function_no_param()").get();
             assertEquals(1, result.size());
             assertEquals(5, result.get(0));
         }
@@ -26,7 +26,7 @@ class TarantoolContainerTest {
     @Test
     public void testContainerWithParameters() throws Exception {
         int memory = 256 * 1024 * 1024;
-        try (TarantoolContainer container = new TarantoolContainer()
+        try (TarantoolContainer<?> container = new TarantoolContainer<>()
                 .withDirectoryBinding("io/tarantool")
                 .withScriptFileName("custom.lua")
                 .withUsername("uuuser")
@@ -35,7 +35,7 @@ class TarantoolContainerTest {
                 .withLogLevel(TarantoolLogLevel.INFO)) {
             container.start();
 
-            List<Object> result = container.executeCommand("return box.cfg.memtx_memory").get();
+            List<?> result = container.executeCommand("return box.cfg.memtx_memory").get();
             assertEquals(1, result.size());
             assertEquals(memory, result.get(0));
 

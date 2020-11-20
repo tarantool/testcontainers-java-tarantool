@@ -77,7 +77,8 @@ import java.util.concurrent.TimeoutException;
  *
  * @author Alexey Kuzin
  */
-public class TarantoolCartridgeContainer extends TarantoolContainer {
+public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContainer<SELF>>
+        extends TarantoolContainer<SELF> implements Container<SELF> {
 
     private static final String ROUTER_HOST = "localhost";
     private static final int ROUTER_PORT = 3301;
@@ -243,7 +244,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
     }
 
     @Override
-    public TarantoolCartridgeContainer withDirectoryBinding(String directoryResourcePath) {
+    public TarantoolCartridgeContainer<SELF> withDirectoryBinding(String directoryResourcePath) {
         super.withDirectoryBinding(directoryResourcePath);
         return this;
     }
@@ -263,7 +264,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
      * @param routerHost a hostname, default is "localhost"
      * @return this container instance
      */
-    public TarantoolCartridgeContainer withRouterHost(String routerHost) {
+    public TarantoolCartridgeContainer<SELF> withRouterHost(String routerHost) {
         checkNotRunning();
         this.routerHost = routerHost;
         return this;
@@ -275,7 +276,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
      * @param routerPort router Tarantool node port, usually 3301
      * @return this container instance
      */
-    public TarantoolCartridgeContainer withRouterPort(int routerPort) {
+    public TarantoolCartridgeContainer<SELF> withRouterPort(int routerPort) {
         checkNotRunning();
         this.routerPort = routerPort;
         return this;
@@ -287,7 +288,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
      * @param apiPort HTTP API port, usually 8081
      * @return this container instance
      */
-    public TarantoolCartridgeContainer withAPIPort(int apiPort) {
+    public TarantoolCartridgeContainer<SELF> withAPIPort(int apiPort) {
         checkNotRunning();
         this.apiPort = apiPort;
         return this;
@@ -299,7 +300,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
      * @param routerUsername a user name, default is "admin"
      * @return this container instance
      */
-    public TarantoolCartridgeContainer withRouterUsername(String routerUsername) {
+    public TarantoolCartridgeContainer<SELF> withRouterUsername(String routerUsername) {
         checkNotRunning();
         this.routerUsername = routerUsername;
         return this;
@@ -311,20 +312,20 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
      * @param routerPassword a user password, usually is a value of the "cluster_cookie" option in cartridge.cfg({...})
      * @return this container instance
      */
-    public TarantoolCartridgeContainer withRouterPassword(String routerPassword) {
+    public TarantoolCartridgeContainer<SELF> withRouterPassword(String routerPassword) {
         checkNotRunning();
         this.routerPassword = routerPassword;
         return this;
     }
 
     @Override
-    public TarantoolCartridgeContainer withLogLevel(TarantoolLogLevel logLevel) {
+    public TarantoolCartridgeContainer<SELF> withLogLevel(TarantoolLogLevel logLevel) {
         // not supported
         return this;
     }
 
     @Override
-    public TarantoolCartridgeContainer withMemtxMemory(Integer memtxMemory) {
+    public TarantoolCartridgeContainer<SELF> withMemtxMemory(Integer memtxMemory) {
         // not supported
         return this;
     }
@@ -373,13 +374,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
     }
 
     @Override
-    public TarantoolCartridgeContainer withReuse(boolean reusable) {
-        super.withReuse(reusable);
-        return this;
-    }
-
-    @Override
-    public TarantoolCartridgeContainer cleanUpDirectory(String directoryResourcePath) {
+    public TarantoolCartridgeContainer<SELF> cleanUpDirectory(String directoryResourcePath) {
         super.cleanUpDirectory(directoryResourcePath);
         return this;
     }
