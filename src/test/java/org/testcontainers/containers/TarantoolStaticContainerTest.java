@@ -15,18 +15,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TarantoolStaticContainerTest {
 
     @Container
-    private static TarantoolContainer container = new TarantoolContainer();
+    private static TarantoolContainer<?> container = new TarantoolContainer<>();
 
     @Test
     public void testExecuteCommand() throws Exception {
-        List<Object> result = container.executeCommand("return 1, 2").get();
+        List<?> result = container.executeCommand("return 1, 2").get();
         assertEquals(2, result.size());
         assertEquals(1, result.get(0));
     }
 
     @Test
     public void testExecuteCommandWithArguments() throws Exception {
-        List<Object> result = container.executeCommand(
+        List<?> result = container.executeCommand(
                 "return require('fun').iter({...}):reduce(function(x, acc) return acc+x end, 0)",
                 1, 2, 3)
                 .get();
@@ -37,7 +37,7 @@ public class TarantoolStaticContainerTest {
     @Test
     public void testSetLogLevel() throws Exception {
         container.withLogLevel(TarantoolLogLevel.INFO);
-        List<Object> result = container.executeCommand("return box.cfg.log_level").get();
+        List<?> result = container.executeCommand("return box.cfg.log_level").get();
         assertEquals(1, result.size());
         assertEquals(5, result.get(0));
     }
@@ -46,7 +46,7 @@ public class TarantoolStaticContainerTest {
     public void testSetMemtxMemory() throws Exception {
         int memory = 256 * 1024 * 1024;
         container.withMemtxMemory(memory);
-        List<Object> result = container.executeCommand("return box.cfg.memtx_memory").get();
+        List<?> result = container.executeCommand("return box.cfg.memtx_memory").get();
         assertEquals(1, result.size());
         assertEquals(memory, result.get(0));
     }

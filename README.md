@@ -14,7 +14,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.tarantool</groupId>
   <artifactId>testcontainers-java-tarantool</artifactId>
-  <version>0.2.3</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
@@ -49,7 +49,7 @@ Instantiate a generic TarantoolContainer and use it in your tests:
 public class SomeTest {
 
     @ClassRule
-    static TarantoolContainer container = new TarantoolContainer();
+    static TarantoolContainer<?> container = new TarantoolContainer<>();
 
     @BeforeAll
     public void setUp() {
@@ -171,9 +171,9 @@ Now we can set up a Cartridge container for tests:
 public class SomeOtherTest {
 
     @Container
-    private static final TarantoolCartridgeContainer container =
+    private static final TarantoolCartridgeContainer<?> container =
         // Pass the classpath-relative paths of the instances configuration and topology script files
-        new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
+        new TarantoolCartridgeContainer<>("cartridge/instances.yml", "cartridge/topology.lua")
             // Point out the classpath-relative directory where the application files reside
             .withDirectoryBinding("cartridge")
             .withRouterHost("localhost") // Optional, "localhost" is default
