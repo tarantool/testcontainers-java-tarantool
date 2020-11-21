@@ -154,12 +154,15 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
     }
 
     private static String makeDockerfile(DockerfileBuilder builder, String baseImageName) {
+        String userGroup = String.format("%s:%s", TARANTOOL_SERVER_USER, TARANTOOL_SERVER_GROUP);
         return builder
                 .from(baseImageName)
                 .run("/bin/sh", "-c",
                         "curl -L https://tarantool.io/installer.sh | VER=2.4 /bin/bash -s -- --repo-only && " +
                                 "yum -y install cmake make gcc git cartridge-cli && cartridge version")
-                .user(String.format("%s:%s", TARANTOOL_SERVER_USER, TARANTOOL_SERVER_GROUP))
+                .run(String.format("mkdir %s && chown %s %s", INSTANCE_DIR, userGroup, INSTANCE_DIR))
+                .user(userGroup)
+                .workDir(INSTANCE_DIR)
                 .cmd("cartridge build && cartridge start")
                 .build();
     }
@@ -330,7 +333,6 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
         withUsername(getRouterUsername());
         withPassword(getRouterPassword());
         withEnv("BOOTSTRAP", "ON");
-        withWorkingDirectory(getInstanceDir());
     }
 
     @Override

@@ -49,7 +49,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String SCRIPT_FILENAME = "server.lua";
 
-    private static final String INSTANCE_DIR = "/app";
+    static final String INSTANCE_DIR = "/app";
     private static final String TMP_DIR = "/tmp";
 
     private String username = API_USER;
@@ -59,9 +59,9 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer> {
     private TarantoolLogLevel logLevel = LOG_LEVEL;
     private Integer memtxMemory = MEMTX_MEMORY;
     private String directoryResourcePath = getClass().getClassLoader().getResource(SCRIPT_RESOURCE_DIRECTORY).getPath();
-    private List<String> cleanupDirectories = new LinkedList<>();
+    private final List<String> cleanupDirectories = new LinkedList<>();
     private String scriptFileName = SCRIPT_FILENAME;
-    private String instanceDir = INSTANCE_DIR;
+    private final String instanceDir = INSTANCE_DIR;
 
     private final AtomicReference<TarantoolClient> clientHolder = new AtomicReference<>();
 
