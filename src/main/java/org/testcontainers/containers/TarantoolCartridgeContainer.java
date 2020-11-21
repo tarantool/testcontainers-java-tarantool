@@ -83,6 +83,7 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
     private static final int ROUTER_PORT = 3301;
     private static final String CARTRIDGE_USERNAME = "admin";
     private static final String CARTRIDGE_PASSWORD = "testapp-cluster-cookie";
+    private static final String DOCKERFILE_USE_ROOT_PROPERTY = "dockerfileUseRoot";
     private static final int API_PORT = 8081;
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
 
@@ -154,17 +155,19 @@ public class TarantoolCartridgeContainer extends TarantoolContainer {
     }
 
     private static String makeDockerfile(DockerfileBuilder builder, String baseImageName) {
-        String userGroup = String.format("%s:%s", TARANTOOL_SERVER_USER, TARANTOOL_SERVER_GROUP);
-        return builder
-                .from(baseImageName)
-                .run("/bin/sh", "-c",
-                        "curl -L https://tarantool.io/installer.sh | VER=2.4 /bin/bash -s -- --repo-only && " +
-                                "yum -y install cmake make gcc git cartridge-cli && cartridge version")
-                .run(String.format("mkdir %s && chown %s %s", INSTANCE_DIR, userGroup, INSTANCE_DIR))
-                .user(userGroup)
-                .workDir(INSTANCE_DIR)
-                .cmd("cartridge build && cartridge start")
-                .build();
+        String useRoot = System.getProperty("useRoot");
+        builder
+            .from(baseImageName)
+            .run("/bin/sh", "-c",
+                    "curl -L https://tarantool.io/installer.sh | VER=2.4 /bin/bash -s -- --repo-only && " +
+                            "yum -y install cmake make gcc git cartridge-cli && cartridge version")
+            .workDir(INSTANCE_DIR)
+            .cmd("cartridge build && cartridge start");
+        if (!Boolean.parseBoolean(System.getProperty(DOCKERFILE_USE_ROOT_PROPERTY))) {
+            String userGroup = String.format("%s:%s", TARANTOOL_SERVER_USER, TARANTOOL_SERVER_GROUP);
+            builder.user(userGroup);
+        }
+        return builder.build();
     }
 
     protected TarantoolClient getRouterClient() {
