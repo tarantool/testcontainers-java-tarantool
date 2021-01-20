@@ -13,7 +13,7 @@ class TarantoolContainerTest {
 
     @Test
     public void testExecuteScript() throws Exception {
-        try (TarantoolContainer<?> container = new TarantoolContainer<>()) {
+        try (TarantoolContainer container = new TarantoolContainer()) {
             container.start();
 
             container.executeScript("org/testcontainers/containers/test.lua").get();
@@ -26,7 +26,7 @@ class TarantoolContainerTest {
     @Test
     public void testContainerWithParameters() throws Exception {
         int memory = 256 * 1024 * 1024;
-        try (TarantoolContainer<?> container = new TarantoolContainer<>()
+        try (TarantoolContainer container = new TarantoolContainer()
                 .withDirectoryBinding("io/tarantool")
                 .withScriptFileName("custom.lua")
                 .withUsername("uuuser")
