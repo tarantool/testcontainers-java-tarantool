@@ -1,40 +1,22 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import io.tarantool.driver.StandaloneTarantoolClient;
-import io.tarantool.driver.api.TarantoolClient;
-import io.tarantool.driver.TarantoolClientConfig;
-import io.tarantool.driver.TarantoolServerAddress;
-import io.tarantool.driver.auth.SimpleTarantoolCredentials;
-import io.tarantool.driver.auth.TarantoolCredentials;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.containers.wait.strategy.WaitStrategy;
-import org.testcontainers.utility.MountableFile;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
 
 /**
  * Sets up a Tarantool instance and provides API for configuring it.
  *
  * @author Alexey Kuzin
  */
-public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends GenericContainer<SELF> {
+public class TarantoolContainer extends GenericContainer<TarantoolContainer>
+        implements TarantoolContainerOperations<TarantoolContainer> {
 
-    public static final String TARANTOOL_SERVER_USER = "tarantool";
-    public static final String TARANTOOL_SERVER_GROUP = "tarantool";
     public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
     public static final String DEFAULT_IMAGE_VERSION = "2.x-centos7";
     public static final String DEFAULT_TARANTOOL_BASE_IMAGE =
@@ -48,9 +30,7 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
     private static final Integer MEMTX_MEMORY = 128 * 1024 * 1024; // 128 Mb in bytes
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String SCRIPT_FILENAME = "server.lua";
-
-    static final String INSTANCE_DIR = "/app";
-    private static final String TMP_DIR = "/tmp";
+    private static final String INSTANCE_DIR = "/app";
 
     private String username = API_USER;
     private String password = API_PASSWORD;
@@ -59,11 +39,10 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
     private TarantoolLogLevel logLevel = LOG_LEVEL;
     private Integer memtxMemory = MEMTX_MEMORY;
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
-    private final List<String> cleanupDirectories = new LinkedList<>();
     private String scriptFileName = SCRIPT_FILENAME;
-    private final String instanceDir = INSTANCE_DIR;
+    private String instanceDir = INSTANCE_DIR;
 
-    private final AtomicReference<TarantoolClient> clientHolder = new AtomicReference<>();
+    private final TarantoolContainerClientHelper clientHelper;
 
     public TarantoolContainer() {
         this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION));
@@ -71,10 +50,36 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
 
     public TarantoolContainer(String dockerImageName) {
         super(dockerImageName);
+        clientHelper = new TarantoolContainerClientHelper(this);
     }
 
     public TarantoolContainer(Future<String> image) {
         super(image);
+        clientHelper = new TarantoolContainerClientHelper(this);
+    }
+
+    /**
+     * Specify the host for connecting to Tarantool with.
+     *
+     * @param host valid IP address or hostname
+     * @return this container instance
+     */
+    public TarantoolContainer withHost(String host) {
+        checkNotRunning();
+        this.host = host;
+        return this;
+    }
+
+    /**
+     * Specify the port for connecting to Tarantool with.
+     *
+     * @param port valid port number
+     * @return this container instance
+     */
+    public TarantoolContainer withPort(int port) {
+        checkNotRunning();
+        this.port = port;
+        return this;
     }
 
     @Override
@@ -82,29 +87,17 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
         return host;
     }
 
-    /**
-     * Get the Tarantool server exposed port for connecting the client to
-     *
-     * @return a port
-     */
+    @Override
     public int getPort() {
         return getMappedPort(port);
     }
 
-    /**
-     * Get the Tarantool user name for connecting the client with
-     *
-     * @return a user name
-     */
+    @Override
     public String getUsername() {
         return username;
     }
 
-    /**
-     * Get the Tarantool user password for connecting the client with
-     *
-     * @return a user password
-     */
+    @Override
     public String getPassword() {
         return password;
     }
@@ -179,63 +172,44 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
     }
 
     /**
-     * Specify a directory in the classpath resource which will be mounted to the container. The specified
-     * directory will be mapped to the directory "/app".
+     * Specify a directory in the classpath resource which will be mounted to the container.
      *
      * @param directoryResourcePath classpath resource directory full path
      * @return this container instance
      */
     public TarantoolContainer withDirectoryBinding(String directoryResourcePath) {
         checkNotRunning();
-        URL resource = getClass().getClassLoader().getResource(directoryResourcePath);
-        if (resource == null) {
-            throw new IllegalArgumentException(
-                    String.format("No resource path found for the specified resource %s", directoryResourcePath));
-        }
-        this.directoryResourcePath = resource.getPath();
+        this.directoryResourcePath = directoryResourcePath;
         return this;
     }
 
-    /**
-     * Specify a directory in the classpath resource, which should be cleaned up from data files (Tarantool WALs and
-     * snapshots). Can be called several times for specifying several directories.
-     * The directory will be cleaned recursively when the container will be stopping.
-     *
-     * @param directoryResourcePath classpath resource directory full path
-     * @return this container instance
-     */
-    public TarantoolContainer cleanUpDirectory(String directoryResourcePath) {
-        if (directoryResourcePath == null) {
-            throw new IllegalArgumentException("The specified cleanup directory is null");
-        }
-        this.cleanupDirectories.add(directoryResourcePath);
-        return this;
-    }
-
-    /**
-     * Get the app scripts directory
-     *
-     * @return the app directory
-     * @see #withDirectoryBinding(String)
-     */
-    protected String getDirectoryBinding() {
+    @Override
+    public String getDirectoryBinding() {
         return directoryResourcePath;
     }
 
-
     /**
-     * Get the app scripts directory in the container
+     * Specify the directory inside container that the resource directory will be mounted to. The default value is
+     * "/app".
      *
-     * @return the app scripts directory
+     * @param instanceDir valid directory path
+     * @return this container instance
      */
-    protected String getInstanceDir() {
+    public TarantoolContainer withInstanceDir(String instanceDir) {
+        checkNotRunning();
+        this.instanceDir = instanceDir;
+        return this;
+    }
+
+    @Override
+    public String getInstanceDir() {
         return instanceDir;
     }
 
     /**
      * Specify the server init script file name
      *
-     * @param scriptFileName script file name, relative to the mounted script resource directory
+     * @param scriptFileName script file path, relative to the mounted resource directory
      * @return this container instance
      * @see #withDirectoryBinding(String)
      */
@@ -243,6 +217,15 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
         checkNotRunning();
         this.scriptFileName = scriptFileName;
         return this;
+    }
+
+    /**
+     * Get the server init script file name
+     *
+     * @return file name
+     */
+    public String getScriptFileName() {
+        return scriptFileName;
     }
 
     /**
@@ -254,33 +237,28 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
         }
     }
 
-    protected TarantoolClient getClient(TarantoolClientConfig config, TarantoolServerAddress address) {
-        if (!isRunning()) {
-            throw new IllegalStateException("Cannot connect to Tarantool instance in a stopped container");
-        }
-        if (clientHolder.get() == null) {
-            clientHolder.compareAndSet(null, createClient(config, address));
-        }
-        return clientHolder.get();
-    }
-
-    private TarantoolClient createClient(TarantoolClientConfig config, TarantoolServerAddress address) {
-        return new StandaloneTarantoolClient(config, address);
-    }
-
-    protected WaitStrategy tarantoolWaitStrategy() {
-        return Wait.forLogMessage(".*entering the event loop.*", 1);
-    }
-
     @Override
     protected void configure() {
-        withFileSystemBind(directoryResourcePath, instanceDir, BindMode.READ_WRITE);
+        URL sourceDirectory = getClass().getClassLoader().getResource(getDirectoryBinding());
+        if (sourceDirectory == null) {
+            throw new IllegalArgumentException(
+                    String.format("No resource path found for the specified resource %s", getDirectoryBinding()));
+        }
+
+        String serverScriptPath = Paths.get(getDirectoryBinding(), getScriptFileName()).toString();
+        URL resource = getClass().getClassLoader().getResource(serverScriptPath);
+        if (resource == null) {
+            throw new RuntimeException(
+                String.format("Server configuration script %s is not found", serverScriptPath));
+        }
+
+        withFileSystemBind(sourceDirectory.getPath(), getInstanceDir(), BindMode.READ_WRITE);
         withExposedPorts(port);
 
         withCommand("tarantool",
-                Paths.get(instanceDir, scriptFileName).toString().replace('\\','/'));
+                Paths.get(getInstanceDir(), getScriptFileName()).toString().replace('\\','/'));
 
-        waitingFor(tarantoolWaitStrategy());
+        waitingFor(Wait.forLogMessage(".*entering the event loop.*", 1));
     }
 
     @Override
@@ -302,60 +280,15 @@ public class TarantoolContainer<SELF extends TarantoolContainer<SELF>> extends G
     protected void containerIsStopping(InspectContainerResponse containerInfo) {
         super.containerIsStopping(containerInfo);
         logger().info("Tarantool server is stopping");
-        for (String directory : cleanupDirectories) {
-            URL directoryResource = getClass().getClassLoader().getResource(directoryResourcePath);
-            if (directoryResource != null) {
-                Path directoryPath = Paths.get(directoryResource.getPath());
-                if (Files.isDirectory(directoryPath)) {
-                    logger().info("Removing all Tarantool data files in directory " + directory);
-                    try (Stream<Path> walk = Files.walk(directoryPath)) {
-                        walk.sorted(Comparator.reverseOrder())
-                                .filter(p -> p.endsWith(".xlog") || p.endsWith(".snap") || p.endsWith(".snap.inprogress"))
-                                .map(Path::toFile)
-                                .peek(f -> logger().info("Removing Tarantool data file: " + f.getPath()))
-                                .forEach(File::delete);
-                    } catch (IOException e) {
-                        logger().error("Failed to remove Tarantool data file", e);
-                    }
-                }
-            }
-        }
     }
 
-    /**
-     * Execute a local script in the Tarantool instance. The path must be classpath-relative.
-     * `dofile()` function is executed internally, so possible exceptions will be caught as the client exceptions.
-     *
-     * @param scriptResourcePath the classpath resource path to a script
-     * @return script execution result
-     * @throws Exception if failed to connect to the instance or execution fails
-     */
+    @Override
     public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
-        if (!isRunning()) {
-            throw new IllegalStateException("Cannot execute scripts in stopped container");
-        }
-        String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
-        String containerPath = Paths.get(TMP_DIR, scriptName).toString().replace('\\','/');
-        this.copyFileToContainer(MountableFile.forClasspathResource(scriptResourcePath), containerPath);
-        return executeCommand(String.format("dofile('%s')", containerPath));
+        return clientHelper.executeScript(scriptResourcePath);
     }
 
-    /**
-     * Execute a command in the Tarantool instance. Example of a command: `return 1 + 2, 'foo'`
-     *
-     * @param command a valid Lua command or a sequence of Lua commands
-     * @param arguments command arguments
-     * @return command execution result
-     * @throws Exception if failed to connect to the instance or execution fails
-     */
+    @Override
     public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception {
-        if (!isRunning()) {
-            throw new IllegalStateException("Cannot execute commands in stopped container");
-        }
-
-        TarantoolCredentials credentials = new SimpleTarantoolCredentials(getUsername(), getPassword());
-        TarantoolServerAddress address = new TarantoolServerAddress(getHost(), getPort());
-        TarantoolClientConfig config = TarantoolClientConfig.builder().withCredentials(credentials).build();
-        return getClient(config, address).eval(command, Arrays.asList(arguments));
+        return clientHelper.executeCommand(command, arguments);
     }
 }

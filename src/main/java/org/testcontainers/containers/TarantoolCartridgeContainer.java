@@ -1,14 +1,13 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import io.tarantool.driver.api.TarantoolClient;
-import io.tarantool.driver.TarantoolClientConfig;
-import io.tarantool.driver.TarantoolServerAddress;
-import io.tarantool.driver.auth.SimpleTarantoolCredentials;
-import io.tarantool.driver.auth.TarantoolCredentials;
 import org.testcontainers.images.builder.ImageFromDockerfile;
-import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
 
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -77,51 +76,51 @@ import java.util.concurrent.TimeoutException;
  *
  * @author Alexey Kuzin
  */
-public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContainer<SELF>>
-        extends TarantoolContainer<SELF> implements Container<SELF> {
+public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartridgeContainer>
+        implements TarantoolContainerOperations<TarantoolCartridgeContainer> {
 
     private static final String ROUTER_HOST = "localhost";
     private static final int ROUTER_PORT = 3301;
     private static final String CARTRIDGE_USERNAME = "admin";
     private static final String CARTRIDGE_PASSWORD = "testapp-cluster-cookie";
-    private static final String DOCKERFILE_USE_ROOT_PROPERTY = "dockerfileUseRoot";
+    private static final String DOCKERFILE = "Dockerfile";
     private static final int API_PORT = 8081;
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
+    private static final String SCRIPT_RESOURCE_DIRECTORY = "";
+    private static final String INSTANCE_DIR = "/app";
 
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
     private int apiPort = API_PORT;
     private String routerUsername = CARTRIDGE_USERNAME;
     private String routerPassword = CARTRIDGE_PASSWORD;
+    private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
+    private String instanceDir = INSTANCE_DIR;
     private final String instancesFile;
     private final CartridgeConfigParser instanceFileParser;
     private final String topologyConfigurationFile;
+    private final TarantoolContainerClientHelper clientHelper;
 
     /**
-     * Create a container with default image and specified instances file from the classpath resources
+     * Create a container with default image and specified instances file from the classpath resources. Assumes that
+     * there is a file named Dockerfile in the project resources classpath.
      *
      * @param instancesFile path to instances.yml, relative to the classpath resources
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
-        this(DEFAULT_TARANTOOL_BASE_IMAGE, instancesFile, topologyConfigurationFile);
+        this(buildImage(), instancesFile, topologyConfigurationFile);
     }
 
     /**
-     * Create a container with specified image and specified instances file from the classpath resources
+     * Create a container with default image and specified instances file from the classpath resources
      *
-     * @param dockerImageName Tarantool docker image name with version
-     * @param instancesFile path to instances.yml relative to the classpath resources
+     * @param dockerFile path to a Dockerfile which configures Cartridge and other necessary services
+     * @param instancesFile path to instances.yml, relative to the classpath resources
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
-    public TarantoolCartridgeContainer(String dockerImageName, String instancesFile, String topologyConfigurationFile) {
-        super(buildImage(dockerImageName));
-        if (instancesFile == null || instancesFile.isEmpty()) {
-            throw new IllegalArgumentException("Instance file name must not be null or empty");
-        }
-        this.instancesFile = instancesFile;
-        this.instanceFileParser = new CartridgeConfigParser(instancesFile);
-        this.topologyConfigurationFile = topologyConfigurationFile;
+    public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
+        this(buildImage(dockerFile), instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -129,53 +128,38 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
      * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
      * image is tagged with the provided name and not deleted after tests finishing).
      *
-     * @param dockerImageName Tarantool docker image name with version
+     * @param dockerFile URL resource path to a Dockerfile which configures Cartridge and other necessary services
      * @param buildImageName Specify a stable image name for the test container to prevent rebuilds
-     * @param instancesFile path to instances.yml relative to the classpath resources
-     * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
+     * @param instancesFile URL resource path to instances.yml relative in the classpath
+     * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
      */
-    public TarantoolCartridgeContainer(String dockerImageName, String buildImageName,
+    public TarantoolCartridgeContainer(String dockerFile, String buildImageName,
                                        String instancesFile, String topologyConfigurationFile) {
-        super(buildImage(dockerImageName, buildImageName));
+        this(buildImage(dockerFile, buildImageName), instancesFile, topologyConfigurationFile);
+    }
+
+    private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
+        super(image);
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
         this.instancesFile = instancesFile;
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.topologyConfigurationFile = topologyConfigurationFile;
+        this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static Future<String> buildImage(String baseImageName) {
-        return new ImageFromDockerfile()
-                .withDockerfileFromBuilder(builder -> makeDockerfile(builder, baseImageName));
+    private static Future<String> buildImage() {
+        return buildImage(DOCKERFILE);
     }
 
-    private static Future<String> buildImage(String baseImageName, String buildImageName) {
+    private static Future<String> buildImage(String dockerFile) {
+        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
+    }
+
+    private static Future<String> buildImage(String dockerFile, String buildImageName) {
         return new ImageFromDockerfile(buildImageName, false)
-                .withDockerfileFromBuilder(builder -> makeDockerfile(builder, baseImageName));
-    }
-
-    private static String makeDockerfile(DockerfileBuilder builder, String baseImageName) {
-        String useRoot = System.getProperty("useRoot");
-        builder
-            .from(baseImageName)
-            .run("/bin/sh", "-c",
-                    "curl -L https://tarantool.io/installer.sh | VER=2.4 /bin/bash -s -- --repo-only && " +
-                            "yum -y install cmake make gcc git cartridge-cli && cartridge version")
-            .workDir(INSTANCE_DIR)
-            .cmd("cartridge build && cartridge start");
-        if (!Boolean.parseBoolean(System.getProperty(DOCKERFILE_USE_ROOT_PROPERTY))) {
-            String userGroup = String.format("%s:%s", TARANTOOL_SERVER_USER, TARANTOOL_SERVER_GROUP);
-            builder.user(userGroup);
-        }
-        return builder.build();
-    }
-
-    protected TarantoolClient getRouterClient() {
-        TarantoolCredentials credentials = new SimpleTarantoolCredentials(getUsername(), getPassword());
-        TarantoolServerAddress address = new TarantoolServerAddress(getRouterHost(), getRouterPort());
-        TarantoolClientConfig config = TarantoolClientConfig.builder().withCredentials(credentials).build();
-        return getClient(config, address);
+                .withFileFromClasspath("Dockerfile", dockerFile);
     }
 
     /**
@@ -234,6 +218,29 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
         return getRouterPassword();
     }
 
+    @Override
+    public String getDirectoryBinding() {
+        return directoryResourcePath;
+    }
+
+    /**
+     * Specify the directory inside container that the resource directory will be mounted to. The default value is
+     * "/app".
+     *
+     * @param instanceDir valid directory path
+     * @return this container instance
+     */
+    public TarantoolCartridgeContainer withInstanceDir(String instanceDir) {
+        checkNotRunning();
+        this.instanceDir = instanceDir;
+        return this;
+    }
+
+    @Override
+    public String getInstanceDir() {
+        return instanceDir;
+    }
+
     /**
      * Get Cartridge router HTTP API hostname
      *
@@ -243,9 +250,30 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
         return routerHost;
     }
 
-    @Override
-    public TarantoolCartridgeContainer<SELF> withDirectoryBinding(String directoryResourcePath) {
-        super.withDirectoryBinding(directoryResourcePath);
+    /**
+     * Checks if already running and if so raises an exception to prevent too-late setters.
+     */
+    protected void checkNotRunning() {
+        if (isRunning()) {
+            throw new IllegalStateException("This option can be changed only before the container is running");
+        }
+    }
+
+    /**
+     * Specify the root directory of a Cartridge project relative to the resource classpath.
+     * The default directory is the root resource directory.
+     *
+     * @param directoryResourcePath a valid directory path
+     * @return this container instance
+     */
+    public TarantoolCartridgeContainer withDirectoryBinding(String directoryResourcePath) {
+        checkNotRunning();
+        URL resource = getClass().getClassLoader().getResource(directoryResourcePath);
+        if (resource == null) {
+            throw new IllegalArgumentException(
+                    String.format("No resource path found for the specified resource %s", directoryResourcePath));
+        }
+        this.directoryResourcePath = resource.getPath();
         return this;
     }
 
@@ -264,7 +292,7 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
      * @param routerHost a hostname, default is "localhost"
      * @return this container instance
      */
-    public TarantoolCartridgeContainer<SELF> withRouterHost(String routerHost) {
+    public TarantoolCartridgeContainer withRouterHost(String routerHost) {
         checkNotRunning();
         this.routerHost = routerHost;
         return this;
@@ -276,7 +304,7 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
      * @param routerPort router Tarantool node port, usually 3301
      * @return this container instance
      */
-    public TarantoolCartridgeContainer<SELF> withRouterPort(int routerPort) {
+    public TarantoolCartridgeContainer withRouterPort(int routerPort) {
         checkNotRunning();
         this.routerPort = routerPort;
         return this;
@@ -288,7 +316,7 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
      * @param apiPort HTTP API port, usually 8081
      * @return this container instance
      */
-    public TarantoolCartridgeContainer<SELF> withAPIPort(int apiPort) {
+    public TarantoolCartridgeContainer withAPIPort(int apiPort) {
         checkNotRunning();
         this.apiPort = apiPort;
         return this;
@@ -300,7 +328,7 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
      * @param routerUsername a user name, default is "admin"
      * @return this container instance
      */
-    public TarantoolCartridgeContainer<SELF> withRouterUsername(String routerUsername) {
+    public TarantoolCartridgeContainer withRouterUsername(String routerUsername) {
         checkNotRunning();
         this.routerUsername = routerUsername;
         return this;
@@ -312,21 +340,9 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
      * @param routerPassword a user password, usually is a value of the "cluster_cookie" option in cartridge.cfg({...})
      * @return this container instance
      */
-    public TarantoolCartridgeContainer<SELF> withRouterPassword(String routerPassword) {
+    public TarantoolCartridgeContainer withRouterPassword(String routerPassword) {
         checkNotRunning();
         this.routerPassword = routerPassword;
-        return this;
-    }
-
-    @Override
-    public TarantoolCartridgeContainer<SELF> withLogLevel(TarantoolLogLevel logLevel) {
-        // not supported
-        return this;
-    }
-
-    @Override
-    public TarantoolCartridgeContainer<SELF> withMemtxMemory(Integer memtxMemory) {
-        // not supported
         return this;
     }
 
@@ -334,9 +350,6 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
     protected void configure() {
         withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
         withExposedPorts(instanceFileParser.getExposablePorts());
-        withUsername(getRouterUsername());
-        withPassword(getRouterPassword());
-        withEnv("BOOTSTRAP", "ON");
     }
 
     @Override
@@ -374,8 +387,12 @@ public class TarantoolCartridgeContainer<SELF extends TarantoolCartridgeContaine
     }
 
     @Override
-    public TarantoolCartridgeContainer<SELF> cleanUpDirectory(String directoryResourcePath) {
-        super.cleanUpDirectory(directoryResourcePath);
-        return this;
+    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
+        return clientHelper.executeScript(scriptResourcePath);
+    }
+
+    @Override
+    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception {
+        return clientHelper.executeCommand(command, arguments);
     }
 }

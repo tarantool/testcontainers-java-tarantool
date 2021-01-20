@@ -18,17 +18,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TarantoolCartridgeStaticContainerTest {
 
     @Container
-    private static final TarantoolCartridgeContainer<?> container =
-            new TarantoolCartridgeContainer<>(
-                    TarantoolContainer.DEFAULT_TARANTOOL_BASE_IMAGE,
+    private static final TarantoolCartridgeContainer container =
+            new TarantoolCartridgeContainer(
+                    "Dockerfile",
                     "testcontainers-java-tarantool:test",
                     "cartridge/instances.yml",
                     "cartridge/topology.lua")
                     .withDirectoryBinding("cartridge")
-                    .cleanUpDirectory("cartridge/tmp")
                     .withLogConsumer(new Slf4jLogConsumer(
                             LoggerFactory.getLogger(TarantoolCartridgeStaticContainerTest.class)));
-
 
     @Test
     public void testContainerWithParameters() throws Exception {
