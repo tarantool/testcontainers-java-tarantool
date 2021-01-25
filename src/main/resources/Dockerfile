@@ -11,9 +11,9 @@ RUN groupadd -g $TARANTOOL_SERVER_GID $TARANTOOL_SERVER_GROUP && \
     useradd -u $TARANTOOL_SERVER_UID -g $TARANTOOL_SERVER_GID -m -s /bin/bash $TARANTOOL_SERVER_USER \
     || true
 USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
-RUN ls -l /etc/yum.repos.d/ && cartridge version
+RUN env && cartridge version
 
 FROM tarantool-base AS cartridge-base
 ENV TARANTOOL_WORKDIR="/app"
 WORKDIR $TARANTOOL_WORKDIR
-CMD cartridge build && cartridge start
+CMD env && cartridge build && cartridge start
