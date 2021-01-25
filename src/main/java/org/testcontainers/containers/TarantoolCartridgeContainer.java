@@ -4,8 +4,6 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -88,6 +86,13 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String INSTANCE_DIR = "/app";
+
+    private static final String ENV_TARANTOOL_VERSION="TARANTOOL_VERSION";
+    private static final String ENV_TARANTOOL_SERVER_USER="TARANTOOL_SERVER_USER";
+    private static final String ENV_TARANTOOL_SERVER_UID="TARANTOOL_SERVER_UID";
+    private static final String ENV_TARANTOOL_SERVER_GROUP="TARANTOOL_SERVER_GROUP";
+    private static final String ENV_TARANTOOL_SERVER_GID="TARANTOOL_SERVER_GID";
+    private static final String ENV_TARANTOOL_WORKDIR="TARANTOOL_WORKDIR";
 
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
@@ -350,6 +355,12 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected void configure() {
         withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
         withExposedPorts(instanceFileParser.getExposablePorts());
+        withEnv(ENV_TARANTOOL_VERSION, System.getenv(ENV_TARANTOOL_VERSION));
+        withEnv(ENV_TARANTOOL_SERVER_USER, System.getenv(ENV_TARANTOOL_SERVER_USER));
+        withEnv(ENV_TARANTOOL_SERVER_UID, System.getenv(ENV_TARANTOOL_SERVER_UID));
+        withEnv(ENV_TARANTOOL_SERVER_GROUP, System.getenv(ENV_TARANTOOL_SERVER_GROUP));
+        withEnv(ENV_TARANTOOL_SERVER_GID, System.getenv(ENV_TARANTOOL_SERVER_GID));
+        withEnv(ENV_TARANTOOL_WORKDIR, System.getenv(ENV_TARANTOOL_WORKDIR));
     }
 
     @Override
