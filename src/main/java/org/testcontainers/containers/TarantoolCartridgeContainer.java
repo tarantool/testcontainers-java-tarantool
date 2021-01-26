@@ -114,7 +114,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
-        this(buildImage(), instancesFile, topologyConfigurationFile);
+        this(withArguments(buildImage()), instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -125,7 +125,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
-        this(buildImage(dockerFile), instancesFile, topologyConfigurationFile);
+        this(withArguments(buildImage(dockerFile)), instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -140,7 +140,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName,
                                        String instancesFile, String topologyConfigurationFile) {
-        this(buildImage(dockerFile, buildImageName), instancesFile, topologyConfigurationFile);
+        this(withArguments(buildImage(dockerFile, buildImageName)), instancesFile, topologyConfigurationFile);
     }
 
     private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
@@ -154,15 +154,25 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static Future<String> buildImage() {
+    private static Future<String> withArguments(ImageFromDockerfile image) {
+        return image
+            .withBuildArg(ENV_TARANTOOL_VERSION, System.getenv(ENV_TARANTOOL_VERSION))
+            .withBuildArg(ENV_TARANTOOL_SERVER_USER, System.getenv(ENV_TARANTOOL_SERVER_USER))
+            .withBuildArg(ENV_TARANTOOL_SERVER_UID, System.getenv(ENV_TARANTOOL_SERVER_UID))
+            .withBuildArg(ENV_TARANTOOL_SERVER_GROUP, System.getenv(ENV_TARANTOOL_SERVER_GROUP))
+            .withBuildArg(ENV_TARANTOOL_SERVER_GID, System.getenv(ENV_TARANTOOL_SERVER_GID))
+            .withBuildArg(ENV_TARANTOOL_WORKDIR, System.getenv(ENV_TARANTOOL_WORKDIR));
+    }
+
+    private static ImageFromDockerfile buildImage() {
         return buildImage(DOCKERFILE);
     }
 
-    private static Future<String> buildImage(String dockerFile) {
+    private static ImageFromDockerfile buildImage(String dockerFile) {
         return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
     }
 
-    private static Future<String> buildImage(String dockerFile, String buildImageName) {
+    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
         return new ImageFromDockerfile(buildImageName, false)
                 .withFileFromClasspath("Dockerfile", dockerFile);
     }
@@ -355,12 +365,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected void configure() {
         withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
         withExposedPorts(instanceFileParser.getExposablePorts());
-        withEnv(ENV_TARANTOOL_VERSION, System.getenv(ENV_TARANTOOL_VERSION));
-        withEnv(ENV_TARANTOOL_SERVER_USER, System.getenv(ENV_TARANTOOL_SERVER_USER));
-        withEnv(ENV_TARANTOOL_SERVER_UID, System.getenv(ENV_TARANTOOL_SERVER_UID));
-        withEnv(ENV_TARANTOOL_SERVER_GROUP, System.getenv(ENV_TARANTOOL_SERVER_GROUP));
-        withEnv(ENV_TARANTOOL_SERVER_GID, System.getenv(ENV_TARANTOOL_SERVER_GID));
-        withEnv(ENV_TARANTOOL_WORKDIR, System.getenv(ENV_TARANTOOL_WORKDIR));
     }
 
     @Override
