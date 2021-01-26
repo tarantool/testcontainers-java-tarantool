@@ -93,6 +93,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_SERVER_GROUP="TARANTOOL_SERVER_GROUP";
     private static final String ENV_TARANTOOL_SERVER_GID="TARANTOOL_SERVER_GID";
     private static final String ENV_TARANTOOL_WORKDIR="TARANTOOL_WORKDIR";
+    private static final String ENV_TARANTOOL_RUNDIR="TARANTOOL_RUNDIR";
+    private static final String ENV_TARANTOOL_DATADIR="TARANTOOL_DATADIR";
 
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
@@ -161,7 +163,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
             .withBuildArg(ENV_TARANTOOL_SERVER_UID, System.getenv(ENV_TARANTOOL_SERVER_UID))
             .withBuildArg(ENV_TARANTOOL_SERVER_GROUP, System.getenv(ENV_TARANTOOL_SERVER_GROUP))
             .withBuildArg(ENV_TARANTOOL_SERVER_GID, System.getenv(ENV_TARANTOOL_SERVER_GID))
-            .withBuildArg(ENV_TARANTOOL_WORKDIR, System.getenv(ENV_TARANTOOL_WORKDIR));
+            .withBuildArg(ENV_TARANTOOL_WORKDIR, System.getenv(ENV_TARANTOOL_WORKDIR))
+            .withBuildArg(ENV_TARANTOOL_RUNDIR, System.getenv(ENV_TARANTOOL_RUNDIR))
+            .withBuildArg(ENV_TARANTOOL_DATADIR, System.getenv(ENV_TARANTOOL_DATADIR));
     }
 
     private static ImageFromDockerfile buildImage() {
