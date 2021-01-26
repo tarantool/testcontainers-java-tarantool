@@ -14,7 +14,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.tarantool</groupId>
   <artifactId>testcontainers-java-tarantool</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
 </dependency>
 ```
 
@@ -49,7 +49,7 @@ Instantiate a generic TarantoolContainer and use it in your tests:
 public class SomeTest {
 
     @ClassRule
-    static TarantoolContainer<?> container = new TarantoolContainer<>();
+    static TarantoolContainer container = new TarantoolContainer();
 
     @BeforeAll
     public void setUp() {
@@ -119,27 +119,22 @@ The file `instances.yml` contains the Cartridge nodes configuration, which looks
 
 ```yaml
 testapp.router:
-  workdir: ./tmp/db_dev/3301
   advertise_uri: localhost:3301
   http_port: 8081
 
 testapp.s1-master:
-  workdir: ./tmp/db_dev/3302
   advertise_uri: localhost:3302
   http_port: 8082
 
 testapp.s1-replica:
-  workdir: ./tmp/db_dev/3303
   advertise_uri: localhost:3303
   http_port: 8083
 
 testapp.s2-master:
-  workdir: ./tmp/db_dev/3304
   advertise_uri: localhost:3304
   http_port: 8084
 
 testapp.s2-replica:
-  workdir: ./tmp/db_dev/3305
   advertise_uri: localhost:3305
   http_port: 8085
 ```
@@ -171,9 +166,9 @@ Now we can set up a Cartridge container for tests:
 public class SomeOtherTest {
 
     @Container
-    private static final TarantoolCartridgeContainer<?> container =
+    private static final TarantoolCartridgeContainer container =
         // Pass the classpath-relative paths of the instances configuration and topology script files
-        new TarantoolCartridgeContainer<>("cartridge/instances.yml", "cartridge/topology.lua")
+        new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
             // Point out the classpath-relative directory where the application files reside
             .withDirectoryBinding("cartridge")
             .withRouterHost("localhost") // Optional, "localhost" is default
@@ -183,9 +178,7 @@ public class SomeOtherTest {
             .withRouterPassword("testapp-cluster-cookie") // Specify the actual password, see the "cluster_cookie" parameter
                                                           // in the cartridge.cfg({...}) call in your application.
                                                           // Usually it can be found in the init.lua module
-            .withReuse(true) // allows to reuse the container build once for faster testing
-            .cleanUpDirectory("cartridge/tmp"); // Cleanup Tarantool data files (WAL, snapshots) when stopping the
-                                                // container. Could be repeated several times for different directories
+            .withReuse(true); // allows to reuse the container build once for faster testing
 
     // Use the created container in tests
     public void testFoo() {
