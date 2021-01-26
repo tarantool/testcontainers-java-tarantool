@@ -4,6 +4,12 @@ ARG TARANTOOL_SERVER_USER="tarantool"
 ARG TARANTOOL_SERVER_UID=1000
 ARG TARANTOOL_SERVER_GROUP="tarantool"
 ARG TARANTOOL_SERVER_GID=1000
+ARG TARANTOOL_WORKDIR="/app"
+ARG TARANTOOL_RUNDIR="/tmp/run"
+ARG TARANTOOL_DATADIR="/tmp/data"
+ENV TARANTOOL_WORKDIR=$TARANTOOL_WORKDIR
+ENV TARANTOOL_RUNDIR=$TARANTOOL_RUNDIR
+ENV TARANTOOL_DATADIR=$TARANTOOL_DATADIR
 RUN curl -L https://tarantool.io/installer.sh | VER=$TARANTOOL_VERSION /bin/bash -s -- --repo-only && \
     yum -y install cmake make gcc git unzip tarantool tarantool-devel cartridge-cli && \
     yum clean all
@@ -14,6 +20,5 @@ USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
 RUN cartridge version
 
 FROM tarantool-base AS cartridge-base
-ARG TARANTOOL_WORKDIR="/app"
 WORKDIR $TARANTOOL_WORKDIR
-CMD cartridge build && cartridge start
+CMD cartridge build && cartridge start --run-dir=$TARANTOOL_RUNDIR --data-dir=$TARANTOOL_DATADIR
