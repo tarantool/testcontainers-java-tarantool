@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
+import static org.testcontainers.containers.PathUtils.normalizeBindingPath;
+
 /**
  * Sets up a Tarantool instance and provides API for configuring it.
  *
@@ -179,7 +181,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      */
     public TarantoolContainer withDirectoryBinding(String directoryResourcePath) {
         checkNotRunning();
-        this.directoryResourcePath = directoryResourcePath;
+        this.directoryResourcePath = normalizeBindingPath(directoryResourcePath);
         return this;
     }
 
@@ -244,15 +246,9 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
             throw new IllegalArgumentException(
                     String.format("No resource path found for the specified resource %s", getDirectoryBinding()));
         }
+        String sourceDirectoryPath = normalizeBindingPath(sourceDirectory.getPath());
 
-        String serverScriptPath = Paths.get(getDirectoryBinding(), getScriptFileName()).toString();
-        URL resource = getClass().getClassLoader().getResource(serverScriptPath);
-        if (resource == null) {
-            throw new RuntimeException(
-                String.format("Server configuration script %s is not found", serverScriptPath));
-        }
-
-        withFileSystemBind(sourceDirectory.getPath(), getInstanceDir(), BindMode.READ_WRITE);
+        withFileSystemBind(sourceDirectoryPath, getInstanceDir(), BindMode.READ_WRITE);
         withExposedPorts(port);
 
         withCommand("tarantool",

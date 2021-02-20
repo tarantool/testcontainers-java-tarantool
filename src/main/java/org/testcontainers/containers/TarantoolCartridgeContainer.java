@@ -10,6 +10,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
+import static org.testcontainers.containers.PathUtils.normalizeBindingPath;
+
 /**
  * Sets up a Tarantool Cartridge cluster and provides API for configuring it.
  *
@@ -292,7 +294,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
             throw new IllegalArgumentException(
                     String.format("No resource path found for the specified resource %s", directoryResourcePath));
         }
-        this.directoryResourcePath = resource.getPath();
+        this.directoryResourcePath = normalizeBindingPath(resource.getPath());
         return this;
     }
 
