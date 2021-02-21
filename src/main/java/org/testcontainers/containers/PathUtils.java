@@ -18,7 +18,10 @@ public class PathUtils {
      * @return normalized path for docker
      */
     public static String normalizeBindingPath(String path) {
-        if(path.startsWith("/") && path.length() > 3 && path.charAt(2) == ':' ) {
+        if(path != null 
+           && path.startsWith("/") 
+           && path.length() > 3 
+           && path.charAt(2) == ':' ) {
             return path.substring(1);
         }
         return path;
