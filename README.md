@@ -14,7 +14,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.tarantool</groupId>
   <artifactId>testcontainers-java-tarantool</artifactId>
-  <version>0.4.0</version>
+  <version>0.4.1</version>
 </dependency>
 ```
 
@@ -40,8 +40,6 @@ box.schema.user.grant('api_user', 'read,write,execute', 'universe')
 
 The most necessary part is exposing the port 3301 for external connections -- the container will not start without that
 setting in the startup script.
-
-### Standalone Tarantool server
 
 Instantiate a generic TarantoolContainer and use it in your tests:
 
@@ -69,7 +67,7 @@ public class SomeTest {
             new TarantoolServerAddress(container.getHost(), container.getPort());
 
         // Create TarantoolClient instance and use it in tests
-        try (TarantoolClient client = new StandaloneTarantoolClient(credentials, serverAddress)) {
+        try (ClusterTarantoolTupleClient client = new ClusterTarantoolTupleClient(credentials, serverAddress)) {
             Optional<TarantoolSpaceMetadata> spaceMetadata = client.metadata().getSpaceByName("test");
             ...
 
@@ -141,7 +139,7 @@ testapp.s2-replica:
 
 and the file `topology.lua` conatains a custom script which sets up the cluster topology using the Cartridge API:
 
-```
+```lua
 cartridge = require('cartridge')
 replicasets = {{
     alias = 'app-router',
@@ -189,7 +187,7 @@ public class SomeOtherTest {
         TarantoolCredentials credentials = new SimpleTarantoolCredentials(getRouterUsername(), getRouterPassword());
         TarantoolServerAddress address = new TarantoolServerAddress(getRouterHost(), getRouterPort());
         TarantoolClientConfig config = TarantoolClientConfig.builder().withCredentials(credentials).build();
-        try (TarantoolClient client = new StandaloneTarantoolClient(config, address)) {
+        try (ClusterTarantoolTupleClient client = new ClusterTarantoolTupleClient(config, address)) {
             // Do something with the client...
         }
     }

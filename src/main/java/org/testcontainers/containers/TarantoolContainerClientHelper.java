@@ -1,9 +1,11 @@
 package org.testcontainers.containers;
 
-import io.tarantool.driver.StandaloneTarantoolClient;
+import io.tarantool.driver.ClusterTarantoolTupleClient;
 import io.tarantool.driver.TarantoolClientConfig;
 import io.tarantool.driver.TarantoolServerAddress;
 import io.tarantool.driver.api.TarantoolClient;
+import io.tarantool.driver.api.TarantoolResult;
+import io.tarantool.driver.api.tuple.TarantoolTuple;
 import io.tarantool.driver.auth.SimpleTarantoolCredentials;
 import io.tarantool.driver.auth.TarantoolCredentials;
 import org.testcontainers.utility.MountableFile;
@@ -24,14 +26,16 @@ public final class TarantoolContainerClientHelper {
     private static final String TMP_DIR = "/tmp";
 
     private final TarantoolContainerOperations<? extends Container<?>> container;
-    private final AtomicReference<TarantoolClient> clientHolder = new AtomicReference<>();
+    private final AtomicReference<TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>> clientHolder =
+            new AtomicReference<>();
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
     }
 
-    private TarantoolClient createClient(TarantoolClientConfig config, TarantoolServerAddress address) {
-        return new StandaloneTarantoolClient(config, address);
+    private TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>
+    createClient(TarantoolClientConfig config, TarantoolServerAddress address) {
+        return new ClusterTarantoolTupleClient(config, address);
     }
 
     /**
@@ -41,7 +45,8 @@ public final class TarantoolContainerClientHelper {
      * @param address router host address
      * @return a configured client
      */
-    public TarantoolClient getClient(TarantoolClientConfig config, TarantoolServerAddress address) {
+    public TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>
+    getClient(TarantoolClientConfig config, TarantoolServerAddress address) {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot connect to Tarantool instance in a stopped container");
         }
@@ -51,7 +56,7 @@ public final class TarantoolContainerClientHelper {
         return clientHolder.get();
     }
 
-    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
+    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
@@ -62,7 +67,7 @@ public final class TarantoolContainerClientHelper {
         return executeCommand(String.format("dofile('%s')", containerPath));
     }
 
-    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception {
+    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute commands in stopped container");
         }

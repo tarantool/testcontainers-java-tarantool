@@ -9,7 +9,7 @@
 
     <name>TestContainers for Tarantool</name>
     <description>Dockerized Tarantool and Tarantool Cartridge containers for testing under Testcontainers.</description>
-    <url>https://github.com/akudiyar/testcontainers-java-module-tarantool</url>
+    <url>https://github.com/tarantool/cartridge-java-testcontainers</url>
 
     <licenses>
         <license>
@@ -35,18 +35,18 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/akudiyar/testcontainers-java-module-tarantool/issues/</url>
+        <url>https://github.com/tarantool/cartridge-java-testcontainers/issues/</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git@github.com:akudiyar/testcontainers-java-module-tarantool.git</connection>
-        <developerConnection>scm:git:git@github.com:akudiyar/testcontainers-java-module-tarantool.git</developerConnection>
-        <url>http://github.com/akudiyar/testcontainers-java-module-tarantool/tree/master</url>
+        <connection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</connection>
+        <developerConnection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</developerConnection>
+        <url>http://github.com/tarantool/cartridge-java-testcontainers/tree/master</url>
       <tag>HEAD</tag>
   </scm>
 
     <properties>
-        <driver.version>0.3.3</driver.version>
+        <driver.version>0.4.0</driver.version>
         <testcontainers.version>1.15.1</testcontainers.version>
         <snakeyaml.version>1.26</snakeyaml.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
