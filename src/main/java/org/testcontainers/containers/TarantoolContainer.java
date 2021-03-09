@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
-import static org.testcontainers.containers.PathUtils.normalizeBindingPath;
+import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
  * Sets up a Tarantool instance and provides API for configuring it.
@@ -181,7 +181,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      */
     public TarantoolContainer withDirectoryBinding(String directoryResourcePath) {
         checkNotRunning();
-        this.directoryResourcePath = normalizeBindingPath(directoryResourcePath);
+        this.directoryResourcePath = normalizePath(directoryResourcePath);
         return this;
     }
 
@@ -239,20 +239,31 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         }
     }
 
+    private void checkServerScriptExists() {
+        String serverScriptPath = Paths.get(getDirectoryBinding(), getScriptFileName()).toString();
+        URL resource = getClass().getClassLoader().getResource(serverScriptPath);
+        if (resource == null) {
+            throw new RuntimeException(
+                    String.format("Server configuration script %s is not found", serverScriptPath));
+        }
+    }
+
     @Override
     protected void configure() {
+        checkServerScriptExists();
+
         URL sourceDirectory = getClass().getClassLoader().getResource(getDirectoryBinding());
         if (sourceDirectory == null) {
             throw new IllegalArgumentException(
                     String.format("No resource path found for the specified resource %s", getDirectoryBinding()));
         }
-        String sourceDirectoryPath = normalizeBindingPath(sourceDirectory.getPath());
+        String sourceDirectoryPath = normalizePath(sourceDirectory.getPath());
 
         withFileSystemBind(sourceDirectoryPath, getInstanceDir(), BindMode.READ_WRITE);
         withExposedPorts(port);
 
-        withCommand("tarantool",
-                Paths.get(getInstanceDir(), getScriptFileName()).toString().replace('\\','/'));
+        withCommand("tarantool", normalizePath(
+                Paths.get(getInstanceDir(), getScriptFileName())));
 
         waitingFor(Wait.forLogMessage(".*entering the event loop.*", 1));
     }

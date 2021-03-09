@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.testcontainers.containers.PathUtils.normalizePath;
+
 /**
  * Provides a wrapper around a Tarantool client with helper methods
  *
@@ -62,7 +64,7 @@ public final class TarantoolContainerClientHelper {
         }
 
         String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
-        String containerPath = Paths.get(TMP_DIR, scriptName).toString().replace('\\','/');
+        String containerPath = normalizePath(Paths.get(TMP_DIR, scriptName));
         container.copyFileToContainer(MountableFile.forClasspathResource(scriptResourcePath), containerPath);
         return executeCommand(String.format("dofile('%s')", containerPath));
     }
