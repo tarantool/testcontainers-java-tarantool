@@ -4,7 +4,7 @@
 
 Testcontainers module for the [Tarantool](https://tarantool.io) database and application server and the [Tarantool Cartridge](https://tarantool.io/cartridge) framework.
 
-See [testcontainers.org](https://wwww.testcontainers.org) for more information about TestContainers.
+See [testcontainers.org](https://www.testcontainers.org) for more information about TestContainers.
 
 ## Installation
 
