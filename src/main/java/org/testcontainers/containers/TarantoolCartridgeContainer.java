@@ -4,6 +4,7 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -159,15 +160,22 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private static Future<String> withArguments(ImageFromDockerfile image) {
-        return image
-            .withBuildArg(ENV_TARANTOOL_VERSION, System.getenv(ENV_TARANTOOL_VERSION))
-            .withBuildArg(ENV_TARANTOOL_SERVER_USER, System.getenv(ENV_TARANTOOL_SERVER_USER))
-            .withBuildArg(ENV_TARANTOOL_SERVER_UID, System.getenv(ENV_TARANTOOL_SERVER_UID))
-            .withBuildArg(ENV_TARANTOOL_SERVER_GROUP, System.getenv(ENV_TARANTOOL_SERVER_GROUP))
-            .withBuildArg(ENV_TARANTOOL_SERVER_GID, System.getenv(ENV_TARANTOOL_SERVER_GID))
-            .withBuildArg(ENV_TARANTOOL_WORKDIR, System.getenv(ENV_TARANTOOL_WORKDIR))
-            .withBuildArg(ENV_TARANTOOL_RUNDIR, System.getenv(ENV_TARANTOOL_RUNDIR))
-            .withBuildArg(ENV_TARANTOOL_DATADIR, System.getenv(ENV_TARANTOOL_DATADIR));
+        for (String envVariable : Arrays.asList(
+                ENV_TARANTOOL_VERSION,
+                ENV_TARANTOOL_SERVER_USER,
+                ENV_TARANTOOL_SERVER_UID,
+                ENV_TARANTOOL_SERVER_GROUP,
+                ENV_TARANTOOL_SERVER_GID,
+                ENV_TARANTOOL_WORKDIR,
+                ENV_TARANTOOL_RUNDIR,
+                ENV_TARANTOOL_DATADIR
+        )) {
+            String variableValue = System.getenv(envVariable);
+            if (variableValue != null) {
+                image.withBuildArg(envVariable, variableValue);
+            }
+        }
+        return image;
     }
 
     private static ImageFromDockerfile buildImage() {
