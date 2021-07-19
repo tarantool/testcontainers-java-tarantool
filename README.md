@@ -14,7 +14,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.tarantool</groupId>
   <artifactId>testcontainers-java-tarantool</artifactId>
-  <version>0.4.3</version>
+  <version>0.4.4</version>
 </dependency>
 ```
 
@@ -137,7 +137,7 @@ testapp.s2-replica:
   http_port: 8085
 ```
 
-and the file `topology.lua` conatains a custom script which sets up the cluster topology using the Cartridge API:
+and the file `topology.lua` contains a custom script which sets up the cluster topology using the Cartridge API:
 
 ```lua
 cartridge = require('cartridge')
