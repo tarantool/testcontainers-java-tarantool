@@ -1,8 +1,4 @@
-local crud = require('crud')
 local cartridge = require('cartridge')
-
--- initialize crud
-crud.init()
 
 local function profile_return(a, b, c, d, e, f)
     return a, b, c, d, e, f;
@@ -93,67 +89,9 @@ local function get_schema_metadata()
 	return router:callro(bucket_id, 'storage_get_space_format', {})
 end
 
--- crud cluster API call
-
-local function crud_cluster_api_get(space_name, key, opts)
-	return crud.get(space_name, key, opts)
-end
-
-local function crud_cluster_api_insert(space_name, key_parts, obj, opts)
-	return crud.insert(space_name, key_parts, obj, opts)
-end
-
-local function crud_cluster_api_delete(space_name, key, opts)
-	return crud.delete(space_name, key, opts)
-end
-
-local function crud_cluster_api_replace(space_name, key_parts, obj, opts)
-	return crud.replace(space_name, key_parts, obj, opts)
-end
-
-local function crud_cluster_api_update(space_name, key, operations, opts)
-	return crud.update(space_name, key, operations, opts)
-end
-
-local function crud_cluster_api_upsert(space_name, key_parts, obj, operations, opts)
-	return crud.upsert(space_name, key_parts, obj, operations, opts)
-end
-
-local function crud_cluster_api_select(space_name, key_parts, opts)
-	local objects = {}
-
-    local iter, err = crud.select(space_name, key_parts, opts)
-    if err ~= nil then return nil, err end
-
-	while iter:has_next() do
-		local obj = iter:get()
-		assert(obj ~= nil)
-
-		table.insert(objects, obj)
-	end
-
-	return unpack(objects)
-end
-
-local function crud_cluster_api_get_schema()
-	return crud.get_schema()
-end
-
 local function init(opts)
     if opts.is_master then
     end
-
-
-	rawset(_G, 'crud_cluster_api_get_schema', crud_cluster_api_get_schema)
-
-	rawset(_G, 'crud_cluster_api_get', crud_cluster_api_get)
-	rawset(_G, 'crud_cluster_api_insert', crud_cluster_api_insert)
-	rawset(_G, 'crud_cluster_api_delete', crud_cluster_api_delete)
-	rawset(_G, 'crud_cluster_api_replace', crud_cluster_api_replace)
-	rawset(_G, 'crud_cluster_api_update', crud_cluster_api_update)
-	rawset(_G, 'crud_cluster_api_upsert', crud_cluster_api_upsert)
-	rawset(_G, 'crud_cluster_api_select', crud_cluster_api_select)
-
 
 	rawset(_G, 'profile_return', profile_return)
 
@@ -163,9 +101,6 @@ local function init(opts)
     rawset(_G, 'profile_update', profile_update)
     rawset(_G, 'profile_upsert', profile_upsert)
     rawset(_G, 'profile_get', profile_get)
-	
-
-    rawset(_G, 'get_schema_metadata', get_schema_metadata)
 
     return true
 end
