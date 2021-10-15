@@ -1,6 +1,5 @@
 package org.testcontainers.containers;
 
-import java.io.File;
 import java.nio.file.Path;
 
 /**
@@ -22,9 +21,9 @@ public class PathUtils {
      */
     public static String normalizePath(String path) {
         String result;
-        if( path.startsWith("/")
+        if (path.startsWith("/")
                 && path.length() > 3
-                && path.charAt(2) == ':' ) {
+                && path.charAt(2) == ':') {
             result = path.substring(1);
         } else {
             result = path;

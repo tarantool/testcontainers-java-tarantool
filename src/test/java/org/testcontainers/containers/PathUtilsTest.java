@@ -26,12 +26,12 @@ class PathUtilsTest {
         Assertions.assertEquals("c:/work/server.lua",
                 normalizePath("c:\\work\\server.lua"));
 
-        Assertions.assertEquals("c:/",  normalizePath("c:\\"));
+        Assertions.assertEquals("c:/", normalizePath("c:\\"));
 
-        Assertions.assertEquals("/dummy",  normalizePath("/dummy"));
+        Assertions.assertEquals("/dummy", normalizePath("/dummy"));
 
-        Assertions.assertEquals("/c",  normalizePath("/c"));
+        Assertions.assertEquals("/c", normalizePath("/c"));
 
-        Assertions.assertThrows(NullPointerException.class, () -> normalizePath((String)null));
+        Assertions.assertThrows(NullPointerException.class, () -> normalizePath((String) null));
     }
 }
