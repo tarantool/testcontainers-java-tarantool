@@ -15,7 +15,7 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
  * Sets up a Tarantool Cartridge cluster and provides API for configuring it.
- *
+ * <p>
  * The container constructors accept the classpath resources relative path to the instances.yml file, which contents
  * may look like
  *
@@ -47,7 +47,7 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
  *   http_port: 8085
  * </code>
  * </pre>
- *
+ * <p>
  * and the classpath resources relative path to a topology bootstrap script, which contents may look like
  *
  * <pre>
@@ -69,9 +69,9 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
  * return cartridge.admin_edit_topology({replicasets = replicasets})
  * </code>
  * </pre>
- *
+ * <p>
  * After the topology changes are applied, the vshard bootstrap command will be executed.
- *
+ * <p>
  * The instances.yml file will be analyzed and the ports, specified in advertise_uri options together with the ports,
  * specified in the http_port options, will be exposed.
  *
@@ -90,14 +90,14 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String INSTANCE_DIR = "/app";
 
-    private static final String ENV_TARANTOOL_VERSION="TARANTOOL_VERSION";
-    private static final String ENV_TARANTOOL_SERVER_USER="TARANTOOL_SERVER_USER";
-    private static final String ENV_TARANTOOL_SERVER_UID="TARANTOOL_SERVER_UID";
-    private static final String ENV_TARANTOOL_SERVER_GROUP="TARANTOOL_SERVER_GROUP";
-    private static final String ENV_TARANTOOL_SERVER_GID="TARANTOOL_SERVER_GID";
-    private static final String ENV_TARANTOOL_WORKDIR="TARANTOOL_WORKDIR";
-    private static final String ENV_TARANTOOL_RUNDIR="TARANTOOL_RUNDIR";
-    private static final String ENV_TARANTOOL_DATADIR="TARANTOOL_DATADIR";
+    private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
+    private static final String ENV_TARANTOOL_SERVER_USER = "TARANTOOL_SERVER_USER";
+    private static final String ENV_TARANTOOL_SERVER_UID = "TARANTOOL_SERVER_UID";
+    private static final String ENV_TARANTOOL_SERVER_GROUP = "TARANTOOL_SERVER_GROUP";
+    private static final String ENV_TARANTOOL_SERVER_GID = "TARANTOOL_SERVER_GID";
+    private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
+    private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
+    private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
 
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
@@ -115,7 +115,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * Create a container with default image and specified instances file from the classpath resources. Assumes that
      * there is a file named Dockerfile in the project resources classpath.
      *
-     * @param instancesFile path to instances.yml, relative to the classpath resources
+     * @param instancesFile             path to instances.yml, relative to the classpath resources
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
@@ -125,8 +125,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     /**
      * Create a container with default image and specified instances file from the classpath resources
      *
-     * @param dockerFile path to a Dockerfile which configures Cartridge and other necessary services
-     * @param instancesFile path to instances.yml, relative to the classpath resources
+     * @param dockerFile                path to a Dockerfile which configures Cartridge and other necessary services
+     * @param instancesFile             path to instances.yml, relative to the classpath resources
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
@@ -138,9 +138,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
      * image is tagged with the provided name and not deleted after tests finishing).
      *
-     * @param dockerFile URL resource path to a Dockerfile which configures Cartridge and other necessary services
-     * @param buildImageName Specify a stable image name for the test container to prevent rebuilds
-     * @param instancesFile URL resource path to instances.yml relative in the classpath
+     * @param dockerFile                URL resource path to a Dockerfile which configures Cartridge and other necessary services
+     * @param buildImageName            Specify a stable image name for the test container to prevent rebuilds
+     * @param instancesFile             URL resource path to instances.yml relative in the classpath
      * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName,

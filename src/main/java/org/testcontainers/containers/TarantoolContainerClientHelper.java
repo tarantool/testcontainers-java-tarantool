@@ -1,13 +1,13 @@
 package org.testcontainers.containers;
 
-import io.tarantool.driver.ClusterTarantoolTupleClient;
-import io.tarantool.driver.TarantoolClientConfig;
-import io.tarantool.driver.TarantoolServerAddress;
 import io.tarantool.driver.api.TarantoolClient;
+import io.tarantool.driver.api.TarantoolClientConfig;
 import io.tarantool.driver.api.TarantoolResult;
+import io.tarantool.driver.api.TarantoolServerAddress;
 import io.tarantool.driver.api.tuple.TarantoolTuple;
 import io.tarantool.driver.auth.SimpleTarantoolCredentials;
 import io.tarantool.driver.auth.TarantoolCredentials;
+import io.tarantool.driver.core.ClusterTarantoolTupleClient;
 import org.testcontainers.utility.MountableFile;
 
 import java.nio.file.Paths;
@@ -43,7 +43,7 @@ public final class TarantoolContainerClientHelper {
     /**
      * Configure or return an already configured client connected to a Cartridge router
      *
-     * @param config router instance client config
+     * @param config  router instance client config
      * @param address router host address
      * @return a configured client
      */
