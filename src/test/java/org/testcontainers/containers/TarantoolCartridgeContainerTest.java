@@ -3,15 +3,12 @@ package org.testcontainers.containers;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vladimir Rogach
@@ -41,12 +38,27 @@ public class TarantoolCartridgeContainerTest {
                                 LoggerFactory.getLogger(TarantoolCartridgeContainerTest.class)));
 
         container.start();
+        CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
+    }
 
-        container.executeCommand(
-                "return profile_replace(...)", Arrays.asList(1, "Ivanov Ivan Ivanovich", 33, 100500)).get();
+    @Test
+    public void test_ClusterContainer_StartsSuccessfully_ifFixedPortsAreConfigured() throws Exception {
+        TarantoolCartridgeContainer container =
+                new TarantoolCartridgeContainer(
+                        "Dockerfile",
+                        "testcontainers-java-tarantool:test",
+                        "cartridge/instances.yml",
+                        "cartridge/topology.lua")
+                        .withDirectoryBinding("cartridge")
+                        .withStartupTimeout(Duration.ofSeconds(300))
+                        .withUseFixedPorts(true) //this may be flacky on CI, disable test if needed
+                        .waitingFor(
+                                Wait.forLogMessage(".*Listening HTTP on.*", 1)
+                        )
+                        .withLogConsumer(new Slf4jLogConsumer(
+                                LoggerFactory.getLogger(TarantoolCartridgeContainerTest.class)));
 
-        List<?> result = container.executeCommand("return profile_get(...)", 1).get();
-        assertEquals(1, result.size());
-        assertEquals(33, ((List<?>) result.get(0)).get(3));
+        container.start();
+        CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
     }
 }

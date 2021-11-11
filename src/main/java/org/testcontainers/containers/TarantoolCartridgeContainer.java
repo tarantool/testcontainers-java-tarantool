@@ -109,7 +109,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String routerPassword = CARTRIDGE_PASSWORD;
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
-    private final String instancesFile;
     private final CartridgeConfigParser instanceFileParser;
     private final String topologyConfigurationFile;
     private final TarantoolContainerClientHelper clientHelper;
@@ -122,7 +121,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(), Collections.emptyMap()), instancesFile, topologyConfigurationFile);
+        this(DOCKERFILE, instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -133,7 +132,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(dockerFile), Collections.emptyMap()), instancesFile, topologyConfigurationFile);
+        this(dockerFile, "", instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -148,8 +147,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName,
                                        String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(dockerFile, buildImageName), Collections.emptyMap()),
-                instancesFile, topologyConfigurationFile);
+        this(dockerFile, buildImageName, instancesFile, topologyConfigurationFile, Collections.emptyMap());
     }
 
 
@@ -177,7 +175,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
-        this.instancesFile = instancesFile;
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.topologyConfigurationFile = topologyConfigurationFile;
         this.clientHelper = new TarantoolContainerClientHelper(this);
@@ -205,17 +202,12 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return image;
     }
 
-    private static ImageFromDockerfile buildImage() {
-        return buildImage(DOCKERFILE);
-    }
-
-    private static ImageFromDockerfile buildImage(String dockerFile) {
-        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
-    }
-
     private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
-        return new ImageFromDockerfile(buildImageName, false)
-                .withFileFromClasspath("Dockerfile", dockerFile);
+        if (buildImageName != null && !buildImageName.isEmpty()) {
+            return new ImageFromDockerfile(buildImageName, false)
+                    .withFileFromClasspath("Dockerfile", dockerFile);
+        }
+        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
     }
 
     /**
@@ -233,6 +225,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @return router mapped port
      */
     public int getRouterPort() {
+        if (useFixedPorts) {
+            return routerPort;
+        }
         return getMappedPort(routerPort);
     }
 
@@ -339,6 +334,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @return HTTP API port
      */
     public int getAPIPort() {
+        if (useFixedPorts) {
+            return apiPort;
+        }
         return getMappedPort(apiPort);
     }
 
