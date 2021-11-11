@@ -48,10 +48,12 @@ public class TarantoolCartridgeContainerTest {
                         "Dockerfile",
                         "testcontainers-java-tarantool:test",
                         "cartridge/instances.yml",
-                        "cartridge/topology.lua")
+                        "cartridge/topology_fixedport.lua")
                         .withDirectoryBinding("cartridge")
                         .withStartupTimeout(Duration.ofSeconds(300))
-                        .withUseFixedPorts(true) //this may be flacky on CI, disable test if needed
+                        .withUseFixedPorts(true)
+                        .withAPIPort(18081)
+                        .withRouterPort(13301)
                         .waitingFor(
                                 Wait.forLogMessage(".*Listening HTTP on.*", 1)
                         )
