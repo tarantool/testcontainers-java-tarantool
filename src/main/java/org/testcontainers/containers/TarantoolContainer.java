@@ -43,6 +43,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String scriptFileName = SCRIPT_FILENAME;
     private String instanceDir = INSTANCE_DIR;
+    private boolean useFixedPorts = false;
 
     private final TarantoolContainerClientHelper clientHelper;
 
@@ -58,6 +59,17 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     public TarantoolContainer(Future<String> image) {
         super(image);
         clientHelper = new TarantoolContainerClientHelper(this);
+    }
+
+    /**
+     * Use fixed ports binding.
+     * Defaults to false.
+     *
+     * @return HTTP API port
+     */
+    public TarantoolContainer withUseFixedPorts(boolean useFixedPorts) {
+        this.useFixedPorts = useFixedPorts;
+        return this;
     }
 
     /**
@@ -259,8 +271,16 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         }
         String sourceDirectoryPath = normalizePath(sourceDirectory.getPath());
 
-        withFileSystemBind(sourceDirectoryPath, getInstanceDir(), BindMode.READ_WRITE);
-        withExposedPorts(port);
+        //disable bind if directory is empty
+        if (!sourceDirectoryPath.isEmpty()) {
+            withFileSystemBind(sourceDirectoryPath, getInstanceDir(), BindMode.READ_WRITE);
+        }
+
+        if (useFixedPorts) {
+            addFixedExposedPort(port, port);
+        } else {
+            withExposedPorts(port);
+        }
 
         withCommand("tarantool", normalizePath(
                 Paths.get(getInstanceDir(), getScriptFileName())));

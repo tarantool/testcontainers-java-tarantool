@@ -5,7 +5,9 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -98,6 +100,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
+    private boolean useFixedPorts = false;
 
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
@@ -106,7 +109,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String routerPassword = CARTRIDGE_PASSWORD;
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
-    private final String instancesFile;
     private final CartridgeConfigParser instanceFileParser;
     private final String topologyConfigurationFile;
     private final TarantoolContainerClientHelper clientHelper;
@@ -119,7 +121,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage()), instancesFile, topologyConfigurationFile);
+        this(DOCKERFILE, instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -130,7 +132,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(dockerFile)), instancesFile, topologyConfigurationFile);
+        this(dockerFile, "", instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -145,7 +147,27 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName,
                                        String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(dockerFile, buildImageName)), instancesFile, topologyConfigurationFile);
+        this(dockerFile, buildImageName, instancesFile, topologyConfigurationFile, Collections.emptyMap());
+    }
+
+
+    /**
+     * Create a container with specified image and specified instances file from the classpath resources. By providing
+     * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
+     * image is tagged with the provided name and not deleted after tests finishing).
+     *
+     * @param dockerFile                URL resource path to a Dockerfile which configures Cartridge
+     *                                  and other necessary services
+     * @param buildImageName            Specify a stable image name for the test container to prevent rebuilds
+     * @param instancesFile             URL resource path to instances.yml relative in the classpath
+     * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
+     * @param buildArgs                 a map of arguments that will be passed to docker ARG commands on image build.
+     *                                  This values can be overriden by environment.
+     */
+    public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
+                                       String topologyConfigurationFile, final Map<String, String> buildArgs) {
+        this(withArguments(buildImage(dockerFile, buildImageName), buildArgs),
+                instancesFile, topologyConfigurationFile);
     }
 
     private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
@@ -153,13 +175,15 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
-        this.instancesFile = instancesFile;
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.topologyConfigurationFile = topologyConfigurationFile;
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static Future<String> withArguments(ImageFromDockerfile image) {
+    private static Future<String> withArguments(ImageFromDockerfile image, final Map<String, String> buildArgs) {
+        if (!buildArgs.isEmpty()) {
+            image.withBuildArgs(buildArgs);
+        }
         for (String envVariable : Arrays.asList(
                 ENV_TARANTOOL_VERSION,
                 ENV_TARANTOOL_SERVER_USER,
@@ -178,17 +202,12 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return image;
     }
 
-    private static ImageFromDockerfile buildImage() {
-        return buildImage(DOCKERFILE);
-    }
-
-    private static ImageFromDockerfile buildImage(String dockerFile) {
-        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
-    }
-
     private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
-        return new ImageFromDockerfile(buildImageName, false)
-                .withFileFromClasspath("Dockerfile", dockerFile);
+        if (buildImageName != null && !buildImageName.isEmpty()) {
+            return new ImageFromDockerfile(buildImageName, false)
+                    .withFileFromClasspath("Dockerfile", dockerFile);
+        }
+        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
     }
 
     /**
@@ -206,6 +225,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @return router mapped port
      */
     public int getRouterPort() {
+        if (useFixedPorts) {
+            return routerPort;
+        }
         return getMappedPort(routerPort);
     }
 
@@ -312,7 +334,21 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @return HTTP API port
      */
     public int getAPIPort() {
+        if (useFixedPorts) {
+            return apiPort;
+        }
         return getMappedPort(apiPort);
+    }
+
+    /**
+     * Use fixed ports binding.
+     * Defaults to false.
+     *
+     * @return HTTP API port
+     */
+    public TarantoolCartridgeContainer withUseFixedPorts(boolean useFixedPorts) {
+        this.useFixedPorts = useFixedPorts;
+        return this;
     }
 
     /**
@@ -377,8 +413,17 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     @Override
     protected void configure() {
-        withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
-        withExposedPorts(instanceFileParser.getExposablePorts());
+        if (!getDirectoryBinding().isEmpty()) {
+            withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
+        }
+
+        if (useFixedPorts) {
+            for (Integer port : instanceFileParser.getExposablePorts()) {
+                addFixedExposedPort(port, port);
+            }
+        } else {
+            withExposedPorts(instanceFileParser.getExposablePorts());
+        }
     }
 
     @Override
