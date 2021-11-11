@@ -98,6 +98,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
+    private boolean useFixedPorts = false;
 
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
@@ -316,6 +317,17 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     /**
+     * Use fixed ports binding.
+     * Defaults to false.
+     *
+     * @return HTTP API port
+     */
+    public TarantoolCartridgeContainer withUseFixedPorts(boolean useFixedPorts) {
+        this.useFixedPorts = useFixedPorts;
+        return this;
+    }
+
+    /**
      * Set Cartridge router hostname
      *
      * @param routerHost a hostname, default is "localhost"
@@ -377,8 +389,17 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     @Override
     protected void configure() {
-        withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
-        withExposedPorts(instanceFileParser.getExposablePorts());
+        if (!getDirectoryBinding().isEmpty()) {
+            withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
+        }
+
+        if (useFixedPorts) {
+            for (Integer port : instanceFileParser.getExposablePorts()) {
+                addFixedExposedPort(port, port);
+            }
+        } else {
+            withExposedPorts(instanceFileParser.getExposablePorts());
+        }
     }
 
     @Override
