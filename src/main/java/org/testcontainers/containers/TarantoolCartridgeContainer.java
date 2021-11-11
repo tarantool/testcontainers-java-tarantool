@@ -5,7 +5,9 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -120,7 +122,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage()), instancesFile, topologyConfigurationFile);
+        this(withArguments(buildImage(), Collections.emptyMap()), instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -131,7 +133,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(dockerFile)), instancesFile, topologyConfigurationFile);
+        this(withArguments(buildImage(dockerFile), Collections.emptyMap()), instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -146,7 +148,28 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName,
                                        String instancesFile, String topologyConfigurationFile) {
-        this(withArguments(buildImage(dockerFile, buildImageName)), instancesFile, topologyConfigurationFile);
+        this(withArguments(buildImage(dockerFile, buildImageName), Collections.emptyMap()),
+                instancesFile, topologyConfigurationFile);
+    }
+
+
+    /**
+     * Create a container with specified image and specified instances file from the classpath resources. By providing
+     * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
+     * image is tagged with the provided name and not deleted after tests finishing).
+     *
+     * @param dockerFile                URL resource path to a Dockerfile which configures Cartridge
+     *                                  and other necessary services
+     * @param buildImageName            Specify a stable image name for the test container to prevent rebuilds
+     * @param instancesFile             URL resource path to instances.yml relative in the classpath
+     * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
+     * @param buildArgs                 a map of arguments that will be passed to docker ARG commands on image build.
+     *                                  This values can be overriden by environment.
+     */
+    public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
+                                       String topologyConfigurationFile, final Map<String, String> buildArgs) {
+        this(withArguments(buildImage(dockerFile, buildImageName), buildArgs),
+                instancesFile, topologyConfigurationFile);
     }
 
     private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
@@ -160,7 +183,10 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static Future<String> withArguments(ImageFromDockerfile image) {
+    private static Future<String> withArguments(ImageFromDockerfile image, final Map<String, String> buildArgs) {
+        if (!buildArgs.isEmpty()) {
+            image.withBuildArgs(buildArgs);
+        }
         for (String envVariable : Arrays.asList(
                 ENV_TARANTOOL_VERSION,
                 ENV_TARANTOOL_SERVER_USER,
