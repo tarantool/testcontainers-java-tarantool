@@ -6,6 +6,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class TarantoolCartridgeStaticContainerTest {
                     "cartridge/instances.yml",
                     "cartridge/topology.lua")
                     .withDirectoryBinding("cartridge")
+                    .withStartupTimeout(Duration.ofSeconds(300))
                     .withLogConsumer(new Slf4jLogConsumer(
                             LoggerFactory.getLogger(TarantoolCartridgeStaticContainerTest.class)));
 
