@@ -47,7 +47,7 @@ public class TarantoolCartridgeContainerTest {
                 new TarantoolCartridgeContainer(
                         "Dockerfile",
                         "testcontainers-java-tarantool:test",
-                        "cartridge/instances.yml",
+                        "cartridge/instances_fixedport.yml",
                         "cartridge/topology_fixedport.lua")
                         .withDirectoryBinding("cartridge")
                         .withStartupTimeout(Duration.ofSeconds(300))
