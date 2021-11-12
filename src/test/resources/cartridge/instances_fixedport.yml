@@ -2,8 +2,10 @@ testapp.router-fixedport:
   workdir: ./tmp/db_dev/13301
   advertise_uri: localhost:13301
   http_port: 18081
+  memtx_memory: 60000000
 
 testapp.storage-fixedport:
   workdir: ./tmp/db_dev/13302
   advertise_uri: localhost:13302
   http_port: 18082
+  memtx_memory: 60000000

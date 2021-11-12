@@ -18,7 +18,6 @@ public class TarantoolCartridgeStaticContainerTest {
     private static final TarantoolCartridgeContainer container =
             new TarantoolCartridgeContainer(
                     "Dockerfile",
-                    "testcontainers-java-tarantool:test",
                     "cartridge/instances.yml",
                     "cartridge/topology.lua")
                     .withDirectoryBinding("cartridge")
@@ -27,7 +26,7 @@ public class TarantoolCartridgeStaticContainerTest {
                             LoggerFactory.getLogger(TarantoolCartridgeStaticContainerTest.class)));
 
     @Test
-    public void testContainerWithParameters() throws Exception {
+    public void test_StaticClusterContainer_StartsSuccessfully_ifDirectoryBinndingIsUsed() throws Exception {
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
     }
 }

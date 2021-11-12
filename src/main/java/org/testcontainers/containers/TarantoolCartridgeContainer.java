@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import io.tarantool.driver.exceptions.TarantoolConnectionException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
@@ -431,29 +432,56 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         logger().info("Tarantool Cartridge cluster is starting");
     }
 
-    @Override
-    protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
-        super.containerIsStarted(containerInfo, reused);
-
+    private boolean setupTopology() {
         try {
             executeScript(topologyConfigurationFile).get();
             // The client connection will be closed after that command
         } catch (Exception e) {
-            if (e instanceof ExecutionException && e.getCause() instanceof TimeoutException) {
-                // Do nothing, the cluster is reloading
+            if (e instanceof ExecutionException) {
+                if (e.getCause() instanceof TimeoutException) {
+                    return true;
+                    // Do nothing, the cluster is reloading
+                } else if (e.getCause() instanceof TarantoolConnectionException) {
+                    // Probably cluster is not ready
+                    logger().error("Failed to setup topology: {}", e.getMessage());
+                    return false;
+                }
             } else {
-                logger().error("Failed to change the app topology", e);
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to change the app topology", e);
             }
         }
+        return true;
+    }
 
-        // The client must reconnect automatically
+    private void retryingSetupTopology() {
+        if (!setupTopology()) {
+            try {
+                logger().info("Retrying setup topology in 10 seconds");
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (!setupTopology()) {
+                throw new RuntimeException("Failed to change the app topology after retry");
+            }
+        }
+    }
+
+    private void bootstrapVshard() {
         try {
             executeCommand(VSHARD_BOOTSTRAP_COMMAND).get();
         } catch (Exception e) {
             logger().error("Failed to bootstrap vshard cluster", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
+        super.containerIsStarted(containerInfo, reused);
+
+        retryingSetupTopology();
+        bootstrapVshard();
 
         logger().info("Tarantool Cartridge cluster is started");
         logger().info("Tarantool Cartridge router is listening at {}:{}", getRouterHost(), getRouterPort());
