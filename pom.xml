@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.tarantool</groupId>
@@ -42,11 +43,11 @@
         <connection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</connection>
         <developerConnection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</developerConnection>
         <url>http://github.com/tarantool/cartridge-java-testcontainers/tree/master</url>
-      <tag>v0.4.6</tag>
-  </scm>
+        <tag>v0.4.6</tag>
+    </scm>
 
     <properties>
-        <driver.version>0.6.0</driver.version>
+        <driver.version>0.7.0</driver.version>
         <testcontainers.version>1.16.2</testcontainers.version>
         <snakeyaml.version>1.26</snakeyaml.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -192,7 +193,8 @@
                                 <manifestEntries>
                                     <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
                                     <Bundle-Name>${project.name}</Bundle-Name>
-                                    <Bundle-SymbolicName>${project.groupId}.${project.artifactId}.source</Bundle-SymbolicName>
+                                    <Bundle-SymbolicName>${project.groupId}.${project.artifactId}.source
+                                    </Bundle-SymbolicName>
                                     <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
                                 </manifestEntries>
                             </archive>

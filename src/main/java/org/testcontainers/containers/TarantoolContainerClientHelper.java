@@ -1,13 +1,10 @@
 package org.testcontainers.containers;
 
 import io.tarantool.driver.api.TarantoolClient;
-import io.tarantool.driver.api.TarantoolClientConfig;
+import io.tarantool.driver.api.TarantoolClientFactory;
 import io.tarantool.driver.api.TarantoolResult;
-import io.tarantool.driver.api.TarantoolServerAddress;
+import io.tarantool.driver.api.retry.TarantoolRequestRetryPolicies;
 import io.tarantool.driver.api.tuple.TarantoolTuple;
-import io.tarantool.driver.auth.SimpleTarantoolCredentials;
-import io.tarantool.driver.auth.TarantoolCredentials;
-import io.tarantool.driver.core.ClusterTarantoolTupleClient;
 import org.testcontainers.utility.MountableFile;
 
 import java.nio.file.Paths;
@@ -35,25 +32,28 @@ public final class TarantoolContainerClientHelper {
         this.container = container;
     }
 
-    private TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>
-    createClient(TarantoolClientConfig config, TarantoolServerAddress address) {
-        return new ClusterTarantoolTupleClient(config, address);
+    private TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>> createClient() {
+        return TarantoolClientFactory.createClient()
+                .withCredentials(container.getUsername(), container.getPassword())
+                .withAddress(container.getHost(), container.getPort())
+                .withRequestTimeout(5000)
+                .withRetryingByNumberOfAttempts(10,
+                        TarantoolRequestRetryPolicies.retryNetworkErrors()
+                                .or(TarantoolRequestRetryPolicies.retryNetworkErrors()), b -> b.withDelay(100))
+                .build();
     }
 
     /**
      * Configure or return an already configured client connected to a Cartridge router
      *
-     * @param config  router instance client config
-     * @param address router host address
      * @return a configured client
      */
-    public TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>
-    getClient(TarantoolClientConfig config, TarantoolServerAddress address) {
+    public TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>> getClient() {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot connect to Tarantool instance in a stopped container");
         }
         if (clientHolder.get() == null) {
-            clientHolder.compareAndSet(null, createClient(config, address));
+            clientHolder.compareAndSet(null, createClient());
         }
         return clientHolder.get();
     }
@@ -74,10 +74,6 @@ public final class TarantoolContainerClientHelper {
             throw new IllegalStateException("Cannot execute commands in stopped container");
         }
 
-        TarantoolCredentials credentials = new SimpleTarantoolCredentials(
-                container.getUsername(), container.getPassword());
-        TarantoolServerAddress address = new TarantoolServerAddress(container.getHost(), container.getPort());
-        TarantoolClientConfig config = TarantoolClientConfig.builder().withCredentials(credentials).build();
-        return getClient(config, address).eval(command, Arrays.asList(arguments));
+        return getClient().eval(command, Arrays.asList(arguments));
     }
 }

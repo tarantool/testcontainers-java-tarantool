@@ -101,6 +101,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
+    private static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
     private boolean useFixedPorts = false;
 
     private String routerHost = ROUTER_HOST;
@@ -123,6 +124,20 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile) {
         this(DOCKERFILE, instancesFile, topologyConfigurationFile);
+    }
+
+    /**
+     * Create a container with default image and specified instances file from the classpath resources. Assumes that
+     * there is a file named Dockerfile in the project resources classpath.
+     *
+     * @param instancesFile             path to instances.yml, relative to the classpath resources
+     * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
+     * @param buildArgs                 a map of arguments that will be passed to docker ARG commands on image build.
+     *                                  This values can be overridden by environment.
+     */
+    public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile,
+                                       Map<String, String> buildArgs) {
+        this(DOCKERFILE, "", instancesFile, topologyConfigurationFile, buildArgs);
     }
 
     /**
@@ -163,11 +178,11 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param instancesFile             URL resource path to instances.yml relative in the classpath
      * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
      * @param buildArgs                 a map of arguments that will be passed to docker ARG commands on image build.
-     *                                  This values can be overriden by environment.
+     *                                  This values can be overridden by environment.
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
                                        String topologyConfigurationFile, final Map<String, String> buildArgs) {
-        this(withArguments(buildImage(dockerFile, buildImageName), buildArgs),
+        this(withArguments(buildImage(dockerFile, buildImageName), instancesFile, buildArgs),
                 instancesFile, topologyConfigurationFile);
     }
 
@@ -181,10 +196,12 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static Future<String> withArguments(ImageFromDockerfile image, final Map<String, String> buildArgs) {
+    private static Future<String> withArguments(ImageFromDockerfile image, String instancesFile,
+                                                final Map<String, String> buildArgs) {
         if (!buildArgs.isEmpty()) {
             image.withBuildArgs(buildArgs);
         }
+
         for (String envVariable : Arrays.asList(
                 ENV_TARANTOOL_VERSION,
                 ENV_TARANTOOL_SERVER_USER,
@@ -193,7 +210,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 ENV_TARANTOOL_SERVER_GID,
                 ENV_TARANTOOL_WORKDIR,
                 ENV_TARANTOOL_RUNDIR,
-                ENV_TARANTOOL_DATADIR
+                ENV_TARANTOOL_DATADIR,
+                ENV_TARANTOOL_INSTANCES_FILE
         )) {
             String variableValue = System.getenv(envVariable);
             if (variableValue != null) {
