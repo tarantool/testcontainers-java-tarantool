@@ -101,7 +101,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
-    private static final String ENV_TARANTOOL_INSTANCES_FILE = "INSTANCES_FILE";
+    private static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
     private boolean useFixedPorts = false;
 
     private String routerHost = ROUTER_HOST;
