@@ -101,7 +101,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
-    private static final String ENV_INSTANCES_FILE = "INSTANCES_FILE";
+    private static final String ENV_TARANTOOL_INSTANCES_FILE = "INSTANCES_FILE";
     private boolean useFixedPorts = false;
 
     private String routerHost = ROUTER_HOST;
@@ -211,7 +211,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 ENV_TARANTOOL_WORKDIR,
                 ENV_TARANTOOL_RUNDIR,
                 ENV_TARANTOOL_DATADIR,
-                ENV_INSTANCES_FILE
+                ENV_TARANTOOL_INSTANCES_FILE
         )) {
             String variableValue = System.getenv(envVariable);
             if (variableValue != null) {
