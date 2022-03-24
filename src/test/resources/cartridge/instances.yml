@@ -9,27 +9,3 @@ testapp.s1-master:
   advertise_uri: localhost:3302
   http_port: 8082
   memtx_memory: 60000000
-
-testapp.s1-replica:
-  workdir: ./tmp/db_dev/3303
-  advertise_uri: localhost:3303
-  http_port: 8083
-  memtx_memory: 60000000
-
-testapp.s2-master:
-  workdir: ./tmp/db_dev/3304
-  advertise_uri: localhost:3304
-  http_port: 8084
-  memtx_memory: 60000000
-
-testapp.s2-replica:
-  workdir: ./tmp/db_dev/3305
-  advertise_uri: localhost:3305
-  http_port: 8085
-  memtx_memory: 60000000
-
-testapp-stateboard:
-  workdir: ./tmp/db_dev/3310
-  listen: localhost:3310
-  password: passwd
-  memtx_memory: 60000000
