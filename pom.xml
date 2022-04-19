@@ -99,17 +99,17 @@
             <version>0.4.7</version>
         </dependency>
 
-        <!-- Convert yaml dependencies -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>${version.jackson.dataformat}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${version.jackson.databind}</version>
-        </dependency>
+<!--        &lt;!&ndash; Convert yaml dependencies &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.dataformat</groupId>-->
+<!--            <artifactId>jackson-dataformat-yaml</artifactId>-->
+<!--            <version>${version.jackson.dataformat}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--            <version>${version.jackson.databind}</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

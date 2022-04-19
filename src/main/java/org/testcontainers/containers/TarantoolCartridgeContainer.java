@@ -1,5 +1,6 @@
 package org.testcontainers.containers;
 
+import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.exceptions.TarantoolConnectionException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
@@ -90,6 +91,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String DOCKERFILE = "Dockerfile";
     private static final int API_PORT = 8081;
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
+    private static final String REPLICASETS_BOOTSTRAP_VSHARD_COMMAND = "cartridge setup replicasets --bootstrap-vshard";
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String INSTANCE_DIR = "/app";
 
@@ -112,7 +114,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private final CartridgeConfigParser instanceFileParser;
-    private final String topologyConfigurationFile;
+    private final CartridgeTopologyParser reolicaSetsTopologyParser;
+//    private final String topologyConfigurationFile;
     private final TarantoolContainerClientHelper clientHelper;
 
     /**
@@ -186,13 +189,14 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 instancesFile, topologyConfigurationFile);
     }
 
-    private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
+    private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyreolicaSetsFile) {
         super(image);
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
-        this.topologyConfigurationFile = topologyConfigurationFile;
+        this.reolicaSetsTopologyParser = new CartridgeTopologyParser(topologyreolicaSetsFile);
+//        this.topologyConfigurationFile = topologyConfigurationFile;
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
@@ -451,23 +455,26 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean setupTopology() {
-        try {
-            executeScript(topologyConfigurationFile).get();
-            // The client connection will be closed after that command
-        } catch (Exception e) {
-            if (e instanceof ExecutionException) {
-                if (e.getCause() instanceof TimeoutException) {
-                    return true;
-                    // Do nothing, the cluster is reloading
-                } else if (e.getCause() instanceof TarantoolConnectionException) {
-                    // Probably cluster is not ready
-                    logger().error("Failed to setup topology: {}", e.getMessage());
-                    return false;
-                }
-            } else {
-                throw new RuntimeException("Failed to change the app topology", e);
-            }
-        }
+        String dockerImageName = getDockerImageName();
+        CreateContainerCmd createCommand = dockerClient.createContainerCmd(dockerImageName);
+        createCommand.withCmd(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
+//        try {
+//            executeScript(topologyConfigurationFile).get();
+//            // The client connection will be closed after that command
+//        } catch (Exception e) {
+//            if (e instanceof ExecutionException) {
+//                if (e.getCause() instanceof TimeoutException) {
+//                    return true;
+//                    // Do nothing, the cluster is reloading
+//                } else if (e.getCause() instanceof TarantoolConnectionException) {
+//                    // Probably cluster is not ready
+//                    logger().error("Failed to setup topology: {}", e.getMessage());
+//                    return false;
+//                }
+//            } else {
+//                throw new RuntimeException("Failed to change the app topology", e);
+//            }
+//        }
         return true;
     }
 
