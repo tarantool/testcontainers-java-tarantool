@@ -91,7 +91,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String DOCKERFILE = "Dockerfile";
     private static final int API_PORT = 8081;
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
-    private static final String REPLICASETS_BOOTSTRAP_VSHARD_COMMAND = "cartridge setup replicasets --bootstrap-vshard";
+    private static final String REPLICASETS_BOOTSTRAP_VSHARD_COMMAND = "cartridge replicasets setup --bootstrap-vshard";
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String INSTANCE_DIR = "/app";
 
@@ -115,7 +115,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String instanceDir = INSTANCE_DIR;
     private final CartridgeConfigParser instanceFileParser;
     private final CartridgeTopologyParser reolicaSetsTopologyParser;
-//    private final String topologyConfigurationFile;
+    private final String topologyConfigurationFile;
     private final TarantoolContainerClientHelper clientHelper;
 
     /**
@@ -189,14 +189,20 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 instancesFile, topologyConfigurationFile);
     }
 
-    private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyreolicaSetsFile) {
+    private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topology) {
         super(image);
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
-        this.reolicaSetsTopologyParser = new CartridgeTopologyParser(topologyreolicaSetsFile);
-//        this.topologyConfigurationFile = topologyConfigurationFile;
+        if(topology.contains("replicasets")){
+            this.reolicaSetsTopologyParser = new CartridgeTopologyParser(topology);
+            this.topologyConfigurationFile = "";
+        }
+        else{
+            this.reolicaSetsTopologyParser = null;
+            this.topologyConfigurationFile = topology;
+        }
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
@@ -455,9 +461,15 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean setupTopology() {
-        String dockerImageName = getDockerImageName();
-        CreateContainerCmd createCommand = dockerClient.createContainerCmd(dockerImageName);
-        createCommand.withCmd(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
+        CreateContainerCmd createCommand = dockerClient.createContainerCmd(getDockerImageName());
+        try{
+            createCommand.withCmd(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
+            createCommand.exec();
+            createCommand.close();
+        }catch (Exception e){
+            logger().error("Failed to bootstrap replica sets topology: {}",e.getMessage());
+        }
+
 //        try {
 //            executeScript(topologyConfigurationFile).get();
 //            // The client connection will be closed after that command
