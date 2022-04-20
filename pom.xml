@@ -53,8 +53,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <logging.config>${project.basedir}/src/test/resources/logback-test.xml</logging.config>
         <logging.logLevel>debug</logging.logLevel>
-        <version.jackson.dataformat>2.13.2</version.jackson.dataformat>
-        <version.jackson.databind>2.13.2.2</version.jackson.databind>
     </properties>
 
     <dependencies>
@@ -109,18 +107,6 @@
             <artifactId>testcontainers-java-tarantool</artifactId>
             <version>0.4.7</version>
         </dependency>
-
-<!--        &lt;!&ndash; Convert yaml dependencies &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.dataformat</groupId>-->
-<!--            <artifactId>jackson-dataformat-yaml</artifactId>-->
-<!--            <version>${version.jackson.dataformat}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-databind</artifactId>-->
-<!--            <version>${version.jackson.databind}</version>-->
-<!--        </dependency>-->
     </dependencies>
 
     <build>
