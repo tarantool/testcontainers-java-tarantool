@@ -114,7 +114,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private final CartridgeConfigParser instanceFileParser;
-    private final CartridgeTopologyParser reolicaSetsTopologyParser;
+    private final CartridgeTopologyParser replicaSetsTopologyParser;
     private final String topologyConfigurationFile;
     private final TarantoolContainerClientHelper clientHelper;
 
@@ -196,11 +196,11 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         if(topology.contains("replicasets")){
-            this.reolicaSetsTopologyParser = new CartridgeTopologyParser(topology);
+            this.replicaSetsTopologyParser = new CartridgeTopologyParser(topology);
             this.topologyConfigurationFile = null;
         }
         else{
-            this.reolicaSetsTopologyParser = null;
+            this.replicaSetsTopologyParser = null;
             this.topologyConfigurationFile = topology;
         }
         this.clientHelper = new TarantoolContainerClientHelper(this);
