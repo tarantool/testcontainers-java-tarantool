@@ -197,7 +197,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         if(topology.contains("replicasets")){
             this.reolicaSetsTopologyParser = new CartridgeTopologyParser(topology);
-            this.topologyConfigurationFile = "";
+            this.topologyConfigurationFile = null;
         }
         else{
             this.reolicaSetsTopologyParser = null;
@@ -461,32 +461,34 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean setupTopology() {
-        CreateContainerCmd createCommand = dockerClient.createContainerCmd(getDockerImageName());
-        try{
-            createCommand.withCmd(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
-            createCommand.exec();
-            createCommand.close();
-        }catch (Exception e){
-            logger().error("Failed to bootstrap replica sets topology: {}",e.getMessage());
+        if(topologyConfigurationFile == null) {
+            CreateContainerCmd createCommand = dockerClient.createContainerCmd(getDockerImageName());
+            try {
+                createCommand.withCmd(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
+                createCommand.exec();
+                createCommand.close();
+            } catch (Exception e) {
+                logger().error("Failed to bootstrap replica sets topology: {}", e.getMessage());
+            }
+        }else {
+            try {
+                executeScript(topologyConfigurationFile).get();
+                // The client connection will be closed after that command
+            } catch (Exception e) {
+                if (e instanceof ExecutionException) {
+                    if (e.getCause() instanceof TimeoutException) {
+                        return true;
+                        // Do nothing, the cluster is reloading
+                    } else if (e.getCause() instanceof TarantoolConnectionException) {
+                        // Probably cluster is not ready
+                        logger().error("Failed to setup topology: {}", e.getMessage());
+                        return false;
+                    }
+                } else {
+                    throw new RuntimeException("Failed to change the app topology", e);
+                }
+            }
         }
-
-//        try {
-//            executeScript(topologyConfigurationFile).get();
-//            // The client connection will be closed after that command
-//        } catch (Exception e) {
-//            if (e instanceof ExecutionException) {
-//                if (e.getCause() instanceof TimeoutException) {
-//                    return true;
-//                    // Do nothing, the cluster is reloading
-//                } else if (e.getCause() instanceof TarantoolConnectionException) {
-//                    // Probably cluster is not ready
-//                    logger().error("Failed to setup topology: {}", e.getMessage());
-//                    return false;
-//                }
-//            } else {
-//                throw new RuntimeException("Failed to change the app topology", e);
-//            }
-//        }
         return true;
     }
 
