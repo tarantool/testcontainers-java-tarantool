@@ -462,11 +462,13 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     private boolean setupTopology() {
         if(topologyConfigurationFile == null) {
-            CreateContainerCmd createCommand = dockerClient.createContainerCmd(getDockerImageName());
             try {
-                createCommand.withCmd(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
-                createCommand.exec();
-                createCommand.close();
+                Container.ExecResult lsResult = this.execInContainer(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
+                String stdout = lsResult.getStdout();
+                int exitCode = lsResult.getExitCode();
+                if(exitCode != 0){
+                    logger().error("Failed to bootstrap replica sets topology");
+                }
             } catch (Exception e) {
                 logger().error("Failed to bootstrap replica sets topology: {}", e.getMessage());
             }
