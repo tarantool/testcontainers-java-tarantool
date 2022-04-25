@@ -8,8 +8,10 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -91,9 +93,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String DOCKERFILE = "Dockerfile";
     private static final int API_PORT = 8081;
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
-    private static final String REPLICASETS_BOOTSTRAP_VSHARD_COMMAND = "cartridge replicasets setup --bootstrap-vshard";
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String INSTANCE_DIR = "/app";
+    private static final String REPLICASETS_FILE = "cartridge/replicasets.yml";
 
     private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
     private static final String ENV_TARANTOOL_SERVER_USER = "TARANTOOL_SERVER_USER";
@@ -114,8 +116,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private final CartridgeConfigParser instanceFileParser;
-    private final CartridgeTopologyParser replicaSetsTopologyParser;
-    private final String topologyConfigurationFile;
+    private CartridgeTopologyParser replicaSetsTopologyParser;
+    private String topologyConfigurationFile;
     private final TarantoolContainerClientHelper clientHelper;
 
     /**
@@ -169,7 +171,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this(dockerFile, buildImageName, instancesFile, topologyConfigurationFile, Collections.emptyMap());
     }
 
-
     /**
      * Create a container with specified image and specified instances file from the classpath resources. By providing
      * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
@@ -189,20 +190,44 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 instancesFile, topologyConfigurationFile);
     }
 
+    /**
+     *
+     * @param dockerFile                URL resource path to a Dockerfile which configures Cartridge
+     *                                  and other necessary services
+     * @param buildImageName            Specify a stable image name for the test container to prevent rebuilds
+     * @param instancesFile             URL resource path to instances.yml relative in the classpath
+     * @param buildArgs                 a map of arguments that will be passed to docker ARG commands on image build.
+     *                                  This values can be overridden by environment.
+     */
+    public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
+                                       final Map<String, String> buildArgs) {
+        this(withArguments(buildImage(dockerFile, buildImageName), instancesFile, buildArgs),
+                instancesFile);
+    }
+
     private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topology) {
         super(image);
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
-        if(topology.contains("replicasets")){
-            this.replicaSetsTopologyParser = new CartridgeTopologyParser(topology);
-            this.topologyConfigurationFile = null;
+        this.replicaSetsTopologyParser = new CartridgeTopologyParser(REPLICASETS_FILE);
+        this.topologyConfigurationFile = topology;
+        this.clientHelper = new TarantoolContainerClientHelper(this);
+    }
+
+    /**
+     *
+     * @param image                     Describe image
+     * @param instancesFile             URL resource path to instances.yml relative in the classpath
+     */
+    private TarantoolCartridgeContainer(Future<String> image, String instancesFile) {
+        super(image);
+        if (instancesFile == null || instancesFile.isEmpty()) {
+            throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
-        else{
-            this.replicaSetsTopologyParser = null;
-            this.topologyConfigurationFile = topology;
-        }
+        this.replicaSetsTopologyParser = new CartridgeTopologyParser(REPLICASETS_FILE);
+        this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
@@ -462,12 +487,32 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     private boolean setupTopology() {
         if(topologyConfigurationFile == null) {
+            String runDirPath = null;
+            try{
+                Container.ExecResult envVariablesContainer = this.execInContainer("env");
+                String stdout = envVariablesContainer.getStdout();
+                int exitCode =envVariablesContainer.getExitCode();
+                if(exitCode != 0){
+                    logger().error("Failed to bootstrap replica sets topology: {}", stdout);
+                }
+                int startInd = stdout.lastIndexOf(ENV_TARANTOOL_RUNDIR + "=");
+                try{
+                    runDirPath = stdout.substring(startInd,
+                            stdout.indexOf('\n',startInd)).split("=")[1];
+                }catch (Exception e){
+                    logger().error("Missing dir-run environment variable: {}", e.getMessage());
+                }
+
+            }catch (Exception e){
+                logger().error("Failed to get environment variables: {}", e.getMessage());
+            }
+
             try {
-                Container.ExecResult lsResult = this.execInContainer(REPLICASETS_BOOTSTRAP_VSHARD_COMMAND);
+                Container.ExecResult lsResult = this.execInContainer("cartridge", "replicasets", "--run-dir="+runDirPath, "setup", "--bootstrap-vshard");
                 String stdout = lsResult.getStdout();
                 int exitCode = lsResult.getExitCode();
                 if(exitCode != 0){
-                    logger().error("Failed to bootstrap replica sets topology");
+                    logger().error("Failed to bootstrap replica sets topology: {}", stdout);
                 }
             } catch (Exception e) {
                 logger().error("Failed to bootstrap replica sets topology: {}", e.getMessage());
