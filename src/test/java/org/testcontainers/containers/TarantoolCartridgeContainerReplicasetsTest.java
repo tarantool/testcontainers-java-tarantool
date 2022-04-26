@@ -27,6 +27,7 @@ public class TarantoolCartridgeContainerReplicasetsTest {
                         "Dockerfile",
                         "testcontainers-java-tarantool:test",
                         "cartridge/instances.yml",
+                        "cartridge/replicasets.yml",
                         buildArgs)
                         .withCopyFileToContainer(MountableFile.forClasspathResource("cartridge"), "/app")
                         .withStartupTimeout(Duration.ofSeconds(300))
@@ -38,40 +39,4 @@ public class TarantoolCartridgeContainerReplicasetsTest {
         if(container.isRunning())
             container.stop();
     }
-
-    @Test
-    public void test_ClusterContainer_StartsSuccessfully_ifFixedPortsAreConfigured() throws Exception {
-        Map<String, String> buildArgs = new HashMap<String, String>() {
-            {
-                put("TARANTOOL_SERVER_USER", "root");
-                put("TARANTOOL_SERVER_UID", "0");
-                put("TARANTOOL_SERVER_GROUP", "root");
-                put("TARANTOOL_SERVER_GID", "0");
-            }
-        };
-
-        TarantoolCartridgeContainer container =
-                new TarantoolCartridgeContainer(
-                        "Dockerfile",
-                        "testcontainers-java-tarantool-fixport:test",
-                        "cartridge/instances_fixedport.yml",
-                        buildArgs)
-                        .withCopyFileToContainer(MountableFile.forClasspathResource("cartridge"), "/app")
-                        .withCopyFileToContainer(MountableFile.forClasspathResource("cartridge/instances_fixedport.yml"),"/app/instances.yml")
-                        .withStartupTimeout(Duration.ofSeconds(300))
-                        .withUseFixedPorts(true)
-                        .withAPIPort(18081)
-                        .withRouterPort(13301)
-                        .waitingFor(
-                                Wait.forLogMessage(".*Listening HTTP on.*", 2)
-                        )
-                        .withLogConsumer(new Slf4jLogConsumer(
-                                LoggerFactory.getLogger(TarantoolCartridgeContainerTest.class)));
-
-        container.start();
-        CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
-        if(container.isRunning())
-            container.stop();
-    }
-
 }
