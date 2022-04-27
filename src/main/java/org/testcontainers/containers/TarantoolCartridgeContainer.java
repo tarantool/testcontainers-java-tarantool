@@ -102,8 +102,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
     private static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
+    private final CartridgeConfigParser instanceFileParser;
+    private final TarantoolContainerClientHelper clientHelper;
     private boolean useFixedPorts = false;
-
     private String routerHost = ROUTER_HOST;
     private int routerPort = ROUTER_PORT;
     private int apiPort = API_PORT;
@@ -111,9 +112,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String routerPassword = CARTRIDGE_PASSWORD;
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
-    private final CartridgeConfigParser instanceFileParser;
-    private final String topologyConfigurationFile;
-    private final TarantoolContainerClientHelper clientHelper;
+    private String topologyConfigurationFile;
+    private String replicasetsFileName;
 
     /**
      * Create a container with default image and specified instances file from the classpath resources. Assumes that
@@ -166,7 +166,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this(dockerFile, buildImageName, instancesFile, topologyConfigurationFile, Collections.emptyMap());
     }
 
-
     /**
      * Create a container with specified image and specified instances file from the classpath resources. By providing
      * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
@@ -186,13 +185,22 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 instancesFile, topologyConfigurationFile);
     }
 
+
     private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
         super(image);
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
+        if (topologyConfigurationFile == null || topologyConfigurationFile.isEmpty()) {
+            throw new IllegalArgumentException("Topology configuration file must not be null or empty");
+        }
+        String fileType = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('.') + 1);
+        if (fileType.equals("lua")) {
+            this.topologyConfigurationFile = topologyConfigurationFile;
+        }else{
+            this.replicasetsFileName = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('/')+1);
+        }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
-        this.topologyConfigurationFile = topologyConfigurationFile;
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
@@ -435,7 +443,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (!getDirectoryBinding().isEmpty()) {
             withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
         }
-
         if (useFixedPorts) {
             for (Integer port : instanceFileParser.getExposablePorts()) {
                 addFixedExposedPort(port, port);
@@ -451,21 +458,55 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean setupTopology() {
-        try {
-            executeScript(topologyConfigurationFile).get();
-            // The client connection will be closed after that command
-        } catch (Exception e) {
-            if (e instanceof ExecutionException) {
-                if (e.getCause() instanceof TimeoutException) {
-                    return true;
-                    // Do nothing, the cluster is reloading
-                } else if (e.getCause() instanceof TarantoolConnectionException) {
-                    // Probably cluster is not ready
-                    logger().error("Failed to setup topology: {}", e.getMessage());
-                    return false;
+        if (topologyConfigurationFile == null) {
+            String runDirPath = null;
+            try {
+                Container.ExecResult envVariablesContainer = this.execInContainer("env");
+                String stdout = envVariablesContainer.getStdout();
+                int exitCode = envVariablesContainer.getExitCode();
+                if (exitCode != 0) {
+                    logger().error("Failed to bootstrap replica sets topology: {}", stdout);
                 }
-            } else {
-                throw new RuntimeException("Failed to change the app topology", e);
+                int startInd = stdout.lastIndexOf(ENV_TARANTOOL_RUNDIR + "=");
+                try {
+                    runDirPath = stdout.substring(startInd,
+                            stdout.indexOf('\n', startInd)).split("=")[1];
+                } catch (Exception e) {
+                    logger().error("Missing dir-run environment variable: {}", e.getMessage());
+                }
+
+            } catch (Exception e) {
+                logger().error("Failed to get environment variables: {}", e.getMessage());
+            }
+
+            try {
+                Container.ExecResult lsResult = this.execInContainer("cartridge", "replicasets", "--run-dir=" + runDirPath,
+                                                                    "--file=" + this.replicasetsFileName, "setup", "--bootstrap-vshard");
+                String stdout = lsResult.getStdout();
+                int exitCode = lsResult.getExitCode();
+                if (exitCode != 0) {
+                    logger().error("Failed to bootstrap replica sets topology: {}", stdout);
+                }
+            } catch (Exception e) {
+                logger().error("Failed to bootstrap replica sets topology: {}", e.getMessage());
+            }
+        } else {
+            try {
+                executeScript(topologyConfigurationFile).get();
+                // The client connection will be closed after that command
+            } catch (Exception e) {
+                if (e instanceof ExecutionException) {
+                    if (e.getCause() instanceof TimeoutException) {
+                        return true;
+                        // Do nothing, the cluster is reloading
+                    } else if (e.getCause() instanceof TarantoolConnectionException) {
+                        // Probably cluster is not ready
+                        logger().error("Failed to setup topology: {}", e.getMessage());
+                        return false;
+                    }
+                } else {
+                    throw new RuntimeException("Failed to change the app topology", e);
+                }
             }
         }
         return true;
