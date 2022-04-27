@@ -113,6 +113,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private String topologyConfigurationFile;
+    private String replicasetsFileName;
 
     /**
      * Create a container with default image and specified instances file from the classpath resources. Assumes that
@@ -193,9 +194,11 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (topologyConfigurationFile == null || topologyConfigurationFile.isEmpty()) {
             throw new IllegalArgumentException("Topology configuration file must not be null or empty");
         }
-        String instances = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('.') + 1);
-        if (instances.equals("lua")) {
+        String fileType = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('.') + 1);
+        if (fileType.equals("lua")) {
             this.topologyConfigurationFile = topologyConfigurationFile;
+        }else{
+            this.replicasetsFileName = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('/')+1);
         }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.clientHelper = new TarantoolContainerClientHelper(this);
@@ -440,7 +443,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (!getDirectoryBinding().isEmpty()) {
             withFileSystemBind(getDirectoryBinding(), getInstanceDir(), BindMode.READ_WRITE);
         }
-
         if (useFixedPorts) {
             for (Integer port : instanceFileParser.getExposablePorts()) {
                 addFixedExposedPort(port, port);
@@ -478,7 +480,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
             }
 
             try {
-                Container.ExecResult lsResult = this.execInContainer("cartridge", "replicasets", "--run-dir=" + runDirPath, "setup", "--bootstrap-vshard");
+                Container.ExecResult lsResult = this.execInContainer("cartridge", "replicasets", "--run-dir=" + runDirPath,
+                                                                    "--file=" + this.replicasetsFileName, "setup", "--bootstrap-vshard");
                 String stdout = lsResult.getStdout();
                 int exitCode = lsResult.getExitCode();
                 if (exitCode != 0) {
