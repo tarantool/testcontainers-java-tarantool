@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.testcontainers.containers.builder.TarantoolContainerBuilderImpl;
 
 import java.util.List;
 
@@ -9,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Alexey Kuzin
  */
-class TarantoolContainerTest {
+public class TarantoolContainerTest {
 
     @Test
     public void testExecuteScript() throws Exception {
-        try (TarantoolContainer container = new TarantoolContainer()) {
+        try (TarantoolContainer<DefaultTarantoolContainerImpl> container = new DefaultTarantoolContainerImpl()) {
             container.start();
 
             container.executeScript("org/testcontainers/containers/test.lua").get();
@@ -26,13 +27,15 @@ class TarantoolContainerTest {
     @Test
     public void testContainerWithParameters() throws Exception {
         int memory = 256 * 1024 * 1024;
-        try (TarantoolContainer container = new TarantoolContainer()
+        try (TarantoolContainer<DefaultTarantoolContainerImpl> container = new TarantoolContainerBuilderImpl()
                 .withDirectoryBinding("io/tarantool")
                 .withScriptFileName("custom.lua")
                 .withUsername("uuuser")
                 .withPassword("secret")
                 .withMemtxMemory(memory)
-                .withLogLevel(TarantoolLogLevel.INFO)) {
+                .withLogLevel(TarantoolLogLevel.INFO)
+                .build()
+        ) {
             container.start();
 
             List<?> result = container.executeCommand("return box.cfg.memtx_memory").get();

@@ -9,40 +9,9 @@ import java.util.concurrent.CompletableFuture;
  * @author Alexey Kuzin
  */
 public interface TarantoolContainerOperations<T extends Container<T>> extends Container<T> {
-    /**
-     * Get the Tarantool server exposed port for connecting the client to
-     *
-     * @return a port
-     */
-    int getPort();
 
-    /**
-     * Get the Tarantool user name for connecting the client with
-     *
-     * @return a user name
-     */
-    String getUsername();
-
-    /**
-     * Get the Tarantool user password for connecting the client with
-     *
-     * @return a user password
-     */
-    String getPassword();
-
-    /**
-     * Get the app scripts directory
-     *
-     * @return the app directory
-     */
-    String getDirectoryBinding();
-
-    /**
-     * Get the app scripts directory in the container
-     *
-     * @return the app scripts directory
-     */
-    String getInstanceDir();
+    //todo: move to TarantoolContainer interface after refactoring TarantoolCartridgeContainer
+    TarantoolContainerSettings getSettings();
 
     /**
      * Execute a local script in the Tarantool instance. The path must be classpath-relative.
@@ -57,7 +26,7 @@ public interface TarantoolContainerOperations<T extends Container<T>> extends Co
     /**
      * Execute a command in the Tarantool instance. Example of a command: `return 1 + 2, 'foo'`
      *
-     * @param command a valid Lua command or a sequence of Lua commands
+     * @param command   a valid Lua command or a sequence of Lua commands
      * @param arguments command arguments
      * @return command execution result
      * @throws Exception if failed to connect to the instance or execution fails

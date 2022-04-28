@@ -33,9 +33,11 @@ public final class TarantoolContainerClientHelper {
     }
 
     private TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>> createClient() {
+        final TarantoolContainerSettings settings = container.getSettings();
+
         return TarantoolClientFactory.createClient()
-                .withCredentials(container.getUsername(), container.getPassword())
-                .withAddress(container.getHost(), container.getPort())
+                .withCredentials(settings.getUsername(), settings.getPassword())
+                .withAddress(settings.getHost(), container.getMappedPort(settings.getPort()))
                 .withRequestTimeout(5000)
                 .withRetryingByNumberOfAttempts(10,
                         TarantoolRequestRetryPolicies.retryNetworkErrors()

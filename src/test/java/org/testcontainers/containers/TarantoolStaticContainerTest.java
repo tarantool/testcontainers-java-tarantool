@@ -1,12 +1,14 @@
 package org.testcontainers.containers;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.testcontainers.containers.builder.TarantoolContainerBuilderImpl;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
+
 
 /**
  * @author Alexey Kuzin
@@ -15,7 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TarantoolStaticContainerTest {
 
     @Container
-    private static TarantoolContainer container = new TarantoolContainer();
+    private static final TarantoolContainer<DefaultTarantoolContainerImpl> container =
+            new TarantoolContainerBuilderImpl().build();
 
     @Test
     public void testExecuteCommand() throws Exception {

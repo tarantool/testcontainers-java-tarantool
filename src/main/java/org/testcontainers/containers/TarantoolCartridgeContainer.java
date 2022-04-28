@@ -2,7 +2,6 @@ package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.exceptions.TarantoolConnectionException;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -14,6 +13,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
+import static org.testcontainers.containers.ContainerUtils.buildImage;
+import static org.testcontainers.containers.ContainerUtils.imageWithArguments;
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
@@ -182,8 +183,22 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
                                        String topologyConfigurationFile, final Map<String, String> buildArgs) {
-        this(withArguments(buildImage(dockerFile, buildImageName), instancesFile, buildArgs),
+        this(imageWithArguments(buildImage("Dockerfile", dockerFile, buildImageName), getVariables(), buildArgs),
                 instancesFile, topologyConfigurationFile);
+    }
+
+    private static List<String> getVariables() {
+        return Arrays.asList(
+                ENV_TARANTOOL_VERSION,
+                ENV_TARANTOOL_SERVER_USER,
+                ENV_TARANTOOL_SERVER_UID,
+                ENV_TARANTOOL_SERVER_GROUP,
+                ENV_TARANTOOL_SERVER_GID,
+                ENV_TARANTOOL_WORKDIR,
+                ENV_TARANTOOL_RUNDIR,
+                ENV_TARANTOOL_DATADIR,
+                ENV_TARANTOOL_INSTANCES_FILE
+        );
     }
 
     private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
@@ -194,39 +209,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.topologyConfigurationFile = topologyConfigurationFile;
         this.clientHelper = new TarantoolContainerClientHelper(this);
-    }
-
-    private static Future<String> withArguments(ImageFromDockerfile image, String instancesFile,
-                                                final Map<String, String> buildArgs) {
-        if (!buildArgs.isEmpty()) {
-            image.withBuildArgs(buildArgs);
-        }
-
-        for (String envVariable : Arrays.asList(
-                ENV_TARANTOOL_VERSION,
-                ENV_TARANTOOL_SERVER_USER,
-                ENV_TARANTOOL_SERVER_UID,
-                ENV_TARANTOOL_SERVER_GROUP,
-                ENV_TARANTOOL_SERVER_GID,
-                ENV_TARANTOOL_WORKDIR,
-                ENV_TARANTOOL_RUNDIR,
-                ENV_TARANTOOL_DATADIR,
-                ENV_TARANTOOL_INSTANCES_FILE
-        )) {
-            String variableValue = System.getenv(envVariable);
-            if (variableValue != null) {
-                image.withBuildArg(envVariable, variableValue);
-            }
-        }
-        return image;
-    }
-
-    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
-        if (buildImageName != null && !buildImageName.isEmpty()) {
-            return new ImageFromDockerfile(buildImageName, false)
-                    .withFileFromClasspath("Dockerfile", dockerFile);
-        }
-        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
     }
 
     /**
@@ -273,22 +255,22 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return getRouterHost();
     }
 
-    @Override
+    //    @Override
     public int getPort() {
         return getRouterPort();
     }
 
-    @Override
+    //    @Override
     public String getUsername() {
         return getRouterUsername();
     }
 
-    @Override
+    //    @Override
     public String getPassword() {
         return getRouterPassword();
     }
 
-    @Override
+    //    @Override
     public String getDirectoryBinding() {
         return directoryResourcePath;
     }
@@ -306,7 +288,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return this;
     }
 
-    @Override
+    //    @Override
     public String getInstanceDir() {
         return instanceDir;
     }
@@ -506,8 +488,14 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         logger().info("Tarantool Cartridge HTTP API is available at {}:{}", getAPIHost(), getAPIPort());
     }
 
+    //todo: implement it
     @Override
-    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
+    public TarantoolContainerSettings getSettings() {
+        return null;
+    }
+
+    @Override
+    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) {
         return clientHelper.executeScript(scriptResourcePath);
     }
 
