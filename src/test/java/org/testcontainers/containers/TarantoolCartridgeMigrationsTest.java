@@ -140,6 +140,6 @@ public class TarantoolCartridgeMigrationsTest {
     public static void clear_stop_container(){
         if (container.isRunning()){
             container.stop();
-        } 
+        }
     }
 }
