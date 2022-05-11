@@ -56,6 +56,11 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         clientHelper = new TarantoolContainerClientHelper(this);
     }
 
+    public TarantoolContainer(TarantoolImageParams tarantoolImageParams) {
+        super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
+        clientHelper = new TarantoolContainerClientHelper(this);
+    }
+
     public TarantoolContainer(Future<String> image) {
         super(image);
         clientHelper = new TarantoolContainerClientHelper(this);
