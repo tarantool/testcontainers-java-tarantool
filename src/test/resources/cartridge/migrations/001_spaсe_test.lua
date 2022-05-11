@@ -3,8 +3,8 @@ return{
     up = function()
         local utils = require('migrator.utils')
 
-        local routerSessionContexts = box.schema.space.create('spaceTest', { if_not_exists = true })
-        routerSessionContexts:format({
+        local spaceTest = box.schema.space.create('spaceTest', { if_not_exists = true })
+        spaceTest:format({
             { name = 'sessionId', type = 'string' },
             { name = 'data', type = 'map', is_nullable = true },
             { name = 'ts', type = 'number' },
@@ -13,11 +13,11 @@ return{
             { name = 'bucket_id', type = 'unsigned', is_nullable = false },
         })
 
-        routerSessionContexts:create_index('primary', { parts = { { field = 'sessionId' } },
+        spaceTest:create_index('primary', { parts = { { field = 'sessionId' } },
                                                         unique = true,
                                                         if_not_exists = true })
 
-        routerSessionContexts:create_index('bucket_id', {
+        spaceTest:create_index('bucket_id', {
             parts = { 'bucket_id' },
             unique = false,
             if_not_exists = true
@@ -26,7 +26,6 @@ return{
         utils.register_sharding_key('spaceTest', { 'sessionId' })
 
         return true
-
 
     end
 }
