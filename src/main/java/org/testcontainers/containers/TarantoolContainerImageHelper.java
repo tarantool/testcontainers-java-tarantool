@@ -4,6 +4,7 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.DockerClientBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +32,11 @@ class TarantoolContainerImageHelper {
      */
     static String getImage(TarantoolImageParams imageParams) {
         final String sdkVersion = imageParams.getSdkVersion();
+
+        if (StringUtils.isEmpty(sdkVersion)) {
+            throw new IllegalArgumentException("SDK version is null or empty!");
+        }
+
         if (!hasImage(sdkVersion)) {
             buildImage(imageParams);
         }
@@ -43,11 +49,11 @@ class TarantoolContainerImageHelper {
      *
      * @param imageParams parameters for building tarantool image
      */
-    static void buildImage(TarantoolImageParams imageParams) {
+    private static void buildImage(TarantoolImageParams imageParams) {
         final String sdkVersion = imageParams.getSdkVersion();
         final String uri = System.getenv("URI");
 
-        if (uri.isEmpty()) {
+        if (StringUtils.isEmpty(uri)) {
             throw new IllegalStateException("URI environment variable must be specified!");
         }
 
@@ -65,7 +71,7 @@ class TarantoolContainerImageHelper {
      * @param imageName image name for searching
      * @return true if image exist and false if not
      */
-    static boolean hasImage(String imageName) {
+    private static boolean hasImage(String imageName) {
         final List<Image> images = dockerClient.listImagesCmd().exec();
         return images.stream()
                 .map(Image::getRepoTags)
