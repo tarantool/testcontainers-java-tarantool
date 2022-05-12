@@ -26,7 +26,7 @@ public class TarantoolCartridgeStaticContainerTest {
                             LoggerFactory.getLogger(TarantoolCartridgeStaticContainerTest.class)));
 
     @Test
-    public void test_StaticClusterContainer_StartsSuccessfully_ifDirectoryBinndingIsUsed() throws Exception {
+    public void test_StaticClusterContainer_StartsSuccessfully_ifDirectoryBindingIsUsed() throws Exception {
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
     }
 }

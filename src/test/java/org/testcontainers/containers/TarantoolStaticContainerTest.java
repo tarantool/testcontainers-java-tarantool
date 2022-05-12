@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TarantoolStaticContainerTest {
 
     @Container
-    private static TarantoolContainer container = new TarantoolContainer();
+    private static final TarantoolContainer container = new TarantoolContainer();
 
     @Test
     public void testExecuteCommand() throws Exception {

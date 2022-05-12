@@ -6,14 +6,12 @@ import io.tarantool.driver.api.TarantoolClient;
 import io.tarantool.driver.api.TarantoolClientFactory;
 import io.tarantool.driver.api.TarantoolResult;
 import io.tarantool.driver.api.tuple.TarantoolTuple;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Oleg Kuznetsov
@@ -21,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 public class TarantoolSdkContainerTest {
 
     @Test
-    public void test_should_createTarantoolContainerFromSdk() {
+    void test_should_createTarantoolContainerFromSdk() {
         try (final TarantoolContainer tarantoolContainer = new TarantoolContainer(
                 new TarantoolImageParams("tarantool-enterprise-bundle-2.8.3-21-g7d35cd2be-r470")
         )) {
@@ -36,13 +34,13 @@ public class TarantoolSdkContainerTest {
             final List<?> result = client.eval("return 'test'").join();
             final TarantoolVersion version = client.getVersion();
 
-            assertEquals("test", result.get(0));
-            assertTrue(version.toString().startsWith("Tarantool 2.8.3 (Binary)"));
+            Assertions.assertEquals("test", result.get(0));
+            Assertions.assertTrue(version.toString().startsWith("Tarantool 2.8.3 (Binary)"));
         }
     }
 
     @Test
-    public void test_should_createTarantoolContainerFromSdk_ifDockerfileSpecified() throws URISyntaxException {
+    void test_should_createTarantoolContainerFromSdk_ifDockerfileSpecified() throws URISyntaxException {
         final File dockerfile = new File(
                 TarantoolSdkContainerTest.class.getClassLoader().getResource("testsdk/Dockerfile").toURI()
         );
@@ -62,8 +60,8 @@ public class TarantoolSdkContainerTest {
             final List<?> result = client.eval("return 'test'").join();
             final TarantoolVersion version = client.getVersion();
 
-            assertEquals("test", result.get(0));
-            assertTrue(version.toString().startsWith("Tarantool 2.7.3 (Binary)"));
+            Assertions.assertEquals("test", result.get(0));
+            Assertions.assertTrue(version.toString().startsWith("Tarantool 2.7.3 (Binary)"));
         }
     }
 }
