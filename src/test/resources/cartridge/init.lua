@@ -28,6 +28,7 @@ end
 
 -- For faster set up, discovery all buckets at once
 require('vshard.consts').BUCKET_CHUNK_SIZE = 30000
+require('migrator')
 
 local cartridge = require('cartridge')
 local ok, err = cartridge.cfg({
@@ -38,6 +39,7 @@ local ok, err = cartridge.cfg({
         'app.roles.api_router',
         'app.roles.api_storage',
         'app.roles.custom',
+        'migrator',
     },
     cluster_cookie = 'testapp-cluster-cookie',
 })
