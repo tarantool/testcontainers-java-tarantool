@@ -3,7 +3,6 @@ package org.testcontainers.containers;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.MountableFile;
 
 import java.time.Duration;
@@ -36,7 +35,7 @@ public class TarantoolCartridgeContainerReplicasetsTest {
 
         container.start();
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
-        if(container.isRunning())
+        if (container.isRunning())
             container.stop();
     }
 }

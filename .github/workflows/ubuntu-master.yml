@@ -30,4 +30,5 @@ jobs:
         env:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
+          URI: ${{ secrets.URI }}
         run: mvn -B verify --file pom.xml
