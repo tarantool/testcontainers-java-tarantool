@@ -1,7 +1,8 @@
 package org.testcontainers.containers;
 
 import java.io.File;
-import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Tarantool image parameters holder
@@ -10,35 +11,31 @@ import java.net.URISyntaxException;
  */
 public class TarantoolImageParams {
 
-    private final String sdkVersion;
+    private final String tag;
     private final File dockerfile;
+    private final Map<String, String> buildArgs;
 
     /**
-     * Basic constructor for tarantool image parameters
+     * Custom constructor for tarantool image parameters
      *
-     * @param sdkVersion version of tarantool sdk which will be downloaded from specified in env variables URI,
-     *                   for example: tarantool-enterprise-bundle-2.8.3-21-g7d35cd2be-r470
+     * @param tag        docker image tag
+     * @param dockerfile dockerfile for building custom tarantool image
      */
-    public TarantoolImageParams(String sdkVersion) {
-        this.sdkVersion = sdkVersion;
-        try {
-            this.dockerfile = new File(TarantoolImageParams.class.getClassLoader()
-                    .getResource("sdk/Dockerfile").toURI());
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("Can't access to Dockerfile for testcontainers");
-        }
+    public TarantoolImageParams(String tag, File dockerfile) {
+        this(tag, dockerfile, Collections.emptyMap());
     }
 
     /**
      * Custom constructor for tarantool image parameters
      *
-     * @param sdkVersion version of tarantool sdk which will be downloaded from specified in env variables URI,
-     *                   for example: tarantool-enterprise-bundle-2.8.3-21-g7d35cd2be-r470
+     * @param tag        docker image tag
      * @param dockerfile dockerfile for building custom tarantool image
+     * @param buildArgs  args for building docker image
      */
-    public TarantoolImageParams(String sdkVersion, File dockerfile) {
-        this.sdkVersion = sdkVersion;
+    public TarantoolImageParams(String tag, File dockerfile, Map<String, String> buildArgs) {
+        this.tag = tag;
         this.dockerfile = dockerfile;
+        this.buildArgs = buildArgs;
     }
 
     /**
@@ -46,8 +43,8 @@ public class TarantoolImageParams {
      *
      * @return sdk version
      */
-    public String getSdkVersion() {
-        return sdkVersion;
+    public String getTag() {
+        return tag;
     }
 
     /**
@@ -57,5 +54,14 @@ public class TarantoolImageParams {
      */
     public File getDockerfile() {
         return dockerfile;
+    }
+
+    /**
+     * Getter for buildArgs
+     *
+     * @return dockerfile
+     */
+    Map<String, String> getBuildArgs() {
+        return buildArgs;
     }
 }

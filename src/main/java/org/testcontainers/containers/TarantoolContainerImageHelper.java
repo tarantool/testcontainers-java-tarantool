@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.BuildImageCmd;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.DockerClientBuilder;
@@ -11,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class for working with docker directly
@@ -31,17 +33,17 @@ class TarantoolContainerImageHelper {
      * @return image name
      */
     static String getImage(TarantoolImageParams imageParams) {
-        final String sdkVersion = imageParams.getSdkVersion();
+        final String tag = imageParams.getTag();
 
-        if (StringUtils.isEmpty(sdkVersion)) {
-            throw new IllegalArgumentException("SDK version is null or empty!");
+        if (StringUtils.isEmpty(tag)) {
+            throw new IllegalArgumentException("Image tag is null or empty!");
         }
 
-        if (!hasImage(sdkVersion)) {
+        if (!hasImage(tag)) {
             buildImage(imageParams);
         }
 
-        return sdkVersion;
+        return tag;
     }
 
     /**
@@ -50,17 +52,14 @@ class TarantoolContainerImageHelper {
      * @param imageParams parameters for building tarantool image
      */
     private static void buildImage(TarantoolImageParams imageParams) {
-        final String sdkVersion = imageParams.getSdkVersion();
-        final String uri = System.getenv("URI");
+        final BuildImageCmd buildImageCmd = dockerClient.buildImageCmd(imageParams.getDockerfile());
 
-        if (StringUtils.isEmpty(uri)) {
-            throw new IllegalStateException("URI environment variable must be specified!");
+        final Map<String, String> buildArgs = imageParams.getBuildArgs();
+        for (Map.Entry<String, String> entry : buildArgs.entrySet()) {
+            buildImageCmd.withBuildArg(entry.getKey(), entry.getValue());
         }
 
-        dockerClient.buildImageCmd(imageParams.getDockerfile())
-                .withTags(new HashSet<>(Collections.singletonList(sdkVersion)))
-                .withBuildArg("SDK_VERSION", sdkVersion)
-                .withBuildArg("URI", uri)
+        buildImageCmd.withTags(new HashSet<>(Collections.singletonList(imageParams.getTag())))
                 .exec(new BuildImageResultCallback())
                 .awaitImageId();
     }
@@ -68,15 +67,15 @@ class TarantoolContainerImageHelper {
     /**
      * Checks image for existing by name
      *
-     * @param imageName image name for searching
+     * @param tag image tag for searching
      * @return true if image exist and false if not
      */
-    private static boolean hasImage(String imageName) {
+    private static boolean hasImage(String tag) {
         final List<Image> images = dockerClient.listImagesCmd().exec();
         return images.stream()
                 .map(Image::getRepoTags)
                 .map(Arrays::asList)
                 .flatMap(Collection::stream)
-                .anyMatch(tag -> tag.equals(imageName + ":latest"));
+                .anyMatch(repoTag -> repoTag.equals(tag));
     }
 }

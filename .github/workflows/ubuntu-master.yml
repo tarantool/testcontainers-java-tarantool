@@ -30,5 +30,11 @@ jobs:
         env:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
-          URI: ${{ secrets.URI }}
         run: mvn -B verify --file pom.xml
+
+      - name: Run enterprise tests
+        env:
+          TARANTOOL_SERVER_USER: root
+          TARANTOOL_SERVER_GROUP: root
+          DOWNLOAD_SDK_URI: ${{ secrets.DOWNLOAD_SDK_URI }}
+        run: mvn -B test -P enterprise --file pom.xml
