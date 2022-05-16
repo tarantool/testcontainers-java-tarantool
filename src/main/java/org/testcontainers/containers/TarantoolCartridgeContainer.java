@@ -223,6 +223,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         )) {
             String variableValue = System.getenv(envVariable);
             if (variableValue != null) {
+
+                //FIXME
                 image.withBuildArg(envVariable, variableValue);
             }
         }
