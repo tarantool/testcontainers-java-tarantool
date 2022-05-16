@@ -4,15 +4,17 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageCmd;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.model.Image;
-import org.apache.commons.lang3.StringUtils;
 import org.testcontainers.DockerClientFactory;
 
+import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Class for working with docker directly
@@ -33,7 +35,7 @@ class TarantoolContainerImageHelper {
     static String getImage(TarantoolImageParams imageParams) {
         final String tag = imageParams.getTag();
 
-        if (StringUtils.isEmpty(tag)) {
+        if (tag.isEmpty()) {
             throw new IllegalArgumentException("Image tag is null or empty!");
         }
 
@@ -50,7 +52,18 @@ class TarantoolContainerImageHelper {
      * @param imageParams parameters for building tarantool image
      */
     private static void buildImage(TarantoolImageParams imageParams) {
-        final BuildImageCmd buildImageCmd = getDockerClient().buildImageCmd(imageParams.getDockerfile());
+        final File dockerfile;
+        try {
+            dockerfile = new File(
+                    Objects.requireNonNull(TarantoolContainerImageHelper.class.getClassLoader().getResource(
+                            imageParams.getDockerfile())).toURI()
+            );
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Failed to build docker image from resource '"
+                    + imageParams.getDockerfile() + "'", e);
+        }
+
+        final BuildImageCmd buildImageCmd = getDockerClient().buildImageCmd(dockerfile);
 
         final Map<String, String> buildArgs = imageParams.getBuildArgs();
         for (Map.Entry<String, String> entry : buildArgs.entrySet()) {

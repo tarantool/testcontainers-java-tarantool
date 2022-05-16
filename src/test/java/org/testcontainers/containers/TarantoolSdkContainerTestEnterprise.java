@@ -9,7 +9,6 @@ import io.tarantool.driver.api.tuple.TarantoolTuple;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
@@ -22,16 +21,13 @@ public class TarantoolSdkContainerTestEnterprise {
 
     @Test
     void test_should_createTarantoolContainerFromSdk() throws URISyntaxException {
-        final File dockerfile = new File(
-                TarantoolSdkContainerTestEnterprise.class.getClassLoader().getResource("testsdk/Dockerfile").toURI()
-        );
         final Map<String, String> buildArgs = new HashMap<>();
         //Official SDK URIs look like: https://user:password@download.tarantool.io/enterprise
         buildArgs.put("DOWNLOAD_SDK_URI", System.getenv("DOWNLOAD_SDK_URI"));
         buildArgs.put("SDK_VERSION", "tarantool-enterprise-bundle-2.7.3-0-gdddf926c3-r443");
 
         try (final TarantoolContainer tarantoolContainer = new TarantoolContainer(
-                new TarantoolImageParams("tarantool-enterprise-bundle:latest", dockerfile, buildArgs))
+                new TarantoolImageParams("tarantool-enterprise-bundle:latest", "testsdk/Dockerfile", buildArgs))
                 .withDirectoryBinding("testsdk")) {
 
             tarantoolContainer.start();

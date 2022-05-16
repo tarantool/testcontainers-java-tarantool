@@ -2,16 +2,15 @@ package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.exceptions.TarantoolConnectionException;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import static org.testcontainers.containers.PathUtils.normalizePath;
@@ -88,16 +87,13 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String CARTRIDGE_USERNAME = "admin";
     private static final String CARTRIDGE_PASSWORD = "testapp-cluster-cookie";
     private static final String DOCKERFILE = "Dockerfile";
+    private static final String BUILD_IMAGE_NAME = "tarantool_cartridge_app";
     private static final int API_PORT = 8081;
     private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
     private static final String SCRIPT_RESOURCE_DIRECTORY = "";
     private static final String INSTANCE_DIR = "/app";
 
     private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
-    private static final String ENV_TARANTOOL_SERVER_USER = "TARANTOOL_SERVER_USER";
-    private static final String ENV_TARANTOOL_SERVER_UID = "TARANTOOL_SERVER_UID";
-    private static final String ENV_TARANTOOL_SERVER_GROUP = "TARANTOOL_SERVER_GROUP";
-    private static final String ENV_TARANTOOL_SERVER_GID = "TARANTOOL_SERVER_GID";
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
@@ -137,7 +133,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String instancesFile, String topologyConfigurationFile,
                                        Map<String, String> buildArgs) {
-        this(DOCKERFILE, "", instancesFile, topologyConfigurationFile, buildArgs);
+        this(DOCKERFILE, BUILD_IMAGE_NAME, instancesFile, topologyConfigurationFile, buildArgs);
     }
 
     /**
@@ -148,7 +144,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * @param topologyConfigurationFile path to a topology bootstrap script, relative to the classpath resources
      */
     public TarantoolCartridgeContainer(String dockerFile, String instancesFile, String topologyConfigurationFile) {
-        this(dockerFile, "", instancesFile, topologyConfigurationFile);
+        this(dockerFile, BUILD_IMAGE_NAME, instancesFile, topologyConfigurationFile);
     }
 
     /**
@@ -185,8 +181,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
 
-    private TarantoolCartridgeContainer(Future<String> image, String instancesFile, String topologyConfigurationFile) {
-        super(image);
+    private TarantoolCartridgeContainer(TarantoolImageParams tarantoolImageParams, String instancesFile, String topologyConfigurationFile) {
+        super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
+
         if (instancesFile == null || instancesFile.isEmpty()) {
             throw new IllegalArgumentException("Instance file name must not be null or empty");
         }
@@ -203,17 +200,10 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static ImageFromDockerfile withArguments(ImageFromDockerfile image, final Map<String, String> buildArgs) {
-        if (!buildArgs.isEmpty()) {
-            image.withBuildArgs(buildArgs);
-        }
-
+    private static Map<String, String> mergeBuildArgsWithEnv(final Map<String, String> buildArgs) {
+        Map<String, String> args = new HashMap<>(buildArgs);
         for (String envVariable : Arrays.asList(
                 ENV_TARANTOOL_VERSION,
-                ENV_TARANTOOL_SERVER_USER,
-                ENV_TARANTOOL_SERVER_UID,
-                ENV_TARANTOOL_SERVER_GROUP,
-                ENV_TARANTOOL_SERVER_GID,
                 ENV_TARANTOOL_WORKDIR,
                 ENV_TARANTOOL_RUNDIR,
                 ENV_TARANTOOL_DATADIR,
@@ -221,23 +211,25 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         )) {
             String variableValue = System.getenv(envVariable);
             // env values do not override build args from code
-            if (variableValue != null && !buildArgs.containsKey(envVariable)) {
-                image.withBuildArg(envVariable, variableValue);
+            if (variableValue != null && !args.containsKey(envVariable)) {
+                args.put(envVariable, variableValue);
             }
         }
-        return image;
+        return args;
     }
 
-    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName, Map<String, String> buildArgs) {
-        ImageFromDockerfile result;
-        if (buildImageName != null && !buildImageName.isEmpty()) {
-            result = new ImageFromDockerfile(buildImageName, false)
-                    .withFileFromClasspath("Dockerfile", dockerFile);
+    private static String getImageTag(String buildImageName) {
+        if (!buildImageName.contains(":")) {
+            return buildImageName + ":latest";
         }
-        result = new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
-
-        return withArguments(result, buildArgs);
+        return buildImageName;
     }
+
+    private static TarantoolImageParams buildImage(String dockerFile, String buildImageName, Map<String, String> buildArgs) {
+        Map<String, String> args = mergeBuildArgsWithEnv(buildArgs);
+        return new TarantoolImageParams(getImageTag(buildImageName), dockerFile, args);
+    }
+
 
     /**
      * Get the router host

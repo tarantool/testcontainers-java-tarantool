@@ -18,6 +18,7 @@ public class TarantoolCartridgeStaticContainerTest {
     private static final TarantoolCartridgeContainer container =
             new TarantoolCartridgeContainer(
                     "Dockerfile",
+                    "tarantool-community:latest",
                     "cartridge/instances.yml",
                     "cartridge/topology.lua")
                     .withDirectoryBinding("cartridge")

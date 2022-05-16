@@ -12,27 +12,27 @@ import java.util.Map;
 public class TarantoolImageParams {
 
     private final String tag;
-    private final File dockerfile;
+    private final String dockerfile;
     private final Map<String, String> buildArgs;
 
     /**
      * Custom constructor for tarantool image parameters
      *
-     * @param tag        docker image tag
+     * @param tag        docker image tag. For example: "tarantool-enterprise-bundle:latest"
      * @param dockerfile dockerfile for building custom tarantool image
      */
-    public TarantoolImageParams(String tag, File dockerfile) {
+    public TarantoolImageParams(String tag, String dockerfile) {
         this(tag, dockerfile, Collections.emptyMap());
     }
 
     /**
      * Custom constructor for tarantool image parameters
      *
-     * @param tag        docker image tag
+     * @param tag        docker image tag. For example: "tarantool-enterprise-bundle:latest"
      * @param dockerfile dockerfile for building custom tarantool image
      * @param buildArgs  args for building docker image
      */
-    public TarantoolImageParams(String tag, File dockerfile, Map<String, String> buildArgs) {
+    public TarantoolImageParams(String tag, String dockerfile, Map<String, String> buildArgs) {
         this.tag = tag;
         this.dockerfile = dockerfile;
         this.buildArgs = buildArgs;
@@ -52,7 +52,7 @@ public class TarantoolImageParams {
      *
      * @return dockerfile
      */
-    public File getDockerfile() {
+    public String getDockerfile() {
         return dockerfile;
     }
 
