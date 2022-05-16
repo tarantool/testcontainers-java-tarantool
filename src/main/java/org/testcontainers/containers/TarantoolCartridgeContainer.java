@@ -181,8 +181,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
                                        String topologyConfigurationFile, final Map<String, String> buildArgs) {
-        this(withArguments(buildImage(dockerFile, buildImageName), instancesFile, buildArgs),
-                instancesFile, topologyConfigurationFile);
+        this(buildImage(dockerFile, buildImageName, buildArgs), instancesFile, topologyConfigurationFile);
     }
 
 
@@ -197,15 +196,14 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         String fileType = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('.') + 1);
         if (fileType.equals("lua")) {
             this.topologyConfigurationFile = topologyConfigurationFile;
-        }else{
-            this.replicasetsFileName = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('/')+1);
+        } else {
+            this.replicasetsFileName = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('/') + 1);
         }
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static Future<String> withArguments(ImageFromDockerfile image, String instancesFile,
-                                                final Map<String, String> buildArgs) {
+    private static ImageFromDockerfile withArguments(ImageFromDockerfile image, final Map<String, String> buildArgs) {
         if (!buildArgs.isEmpty()) {
             image.withBuildArgs(buildArgs);
         }
@@ -222,21 +220,23 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 ENV_TARANTOOL_INSTANCES_FILE
         )) {
             String variableValue = System.getenv(envVariable);
-            if (variableValue != null) {
-
-                //FIXME
+            // env values do not override build args from code
+            if (variableValue != null && !buildArgs.containsKey(envVariable)) {
                 image.withBuildArg(envVariable, variableValue);
             }
         }
         return image;
     }
 
-    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
+    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName, Map<String, String> buildArgs) {
+        ImageFromDockerfile result;
         if (buildImageName != null && !buildImageName.isEmpty()) {
-            return new ImageFromDockerfile(buildImageName, false)
+            result = new ImageFromDockerfile(buildImageName, false)
                     .withFileFromClasspath("Dockerfile", dockerFile);
         }
-        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
+        result = new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
+
+        return withArguments(result, buildArgs);
     }
 
     /**
@@ -483,7 +483,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
             try {
                 Container.ExecResult lsResult = this.execInContainer("cartridge", "replicasets", "--run-dir=" + runDirPath,
-                                                                    "--file=" + this.replicasetsFileName, "setup", "--bootstrap-vshard");
+                        "--file=" + this.replicasetsFileName, "setup", "--bootstrap-vshard");
                 String stdout = lsResult.getStdout();
                 int exitCode = lsResult.getExitCode();
                 if (exitCode != 0) {
