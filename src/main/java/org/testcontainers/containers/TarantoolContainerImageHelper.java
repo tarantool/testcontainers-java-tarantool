@@ -4,8 +4,8 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageCmd;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.core.DockerClientBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.testcontainers.DockerClientFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,13 +21,11 @@ import java.util.Map;
  */
 class TarantoolContainerImageHelper {
 
-    private static final DockerClient dockerClient = DockerClientBuilder.getInstance().build();
-
     private TarantoolContainerImageHelper() {
     }
 
     /**
-     * Checks image for existing by name and build if it not exist
+     * Checks image for existing by name and build if it not exists
      *
      * @param imageParams parameters for building tarantool image
      * @return image name
@@ -52,7 +50,7 @@ class TarantoolContainerImageHelper {
      * @param imageParams parameters for building tarantool image
      */
     private static void buildImage(TarantoolImageParams imageParams) {
-        final BuildImageCmd buildImageCmd = dockerClient.buildImageCmd(imageParams.getDockerfile());
+        final BuildImageCmd buildImageCmd = getDockerClient().buildImageCmd(imageParams.getDockerfile());
 
         final Map<String, String> buildArgs = imageParams.getBuildArgs();
         for (Map.Entry<String, String> entry : buildArgs.entrySet()) {
@@ -71,11 +69,15 @@ class TarantoolContainerImageHelper {
      * @return true if image exist and false if not
      */
     private static boolean hasImage(String tag) {
-        final List<Image> images = dockerClient.listImagesCmd().exec();
+        final List<Image> images = getDockerClient().listImagesCmd().exec();
         return images.stream()
                 .map(Image::getRepoTags)
                 .map(Arrays::asList)
                 .flatMap(Collection::stream)
                 .anyMatch(repoTag -> repoTag.equals(tag));
+    }
+
+    private static DockerClient getDockerClient() {
+        return DockerClientFactory.instance().client();
     }
 }

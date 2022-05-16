@@ -7,7 +7,6 @@ import io.tarantool.driver.api.TarantoolClientFactory;
 import io.tarantool.driver.api.TarantoolResult;
 import io.tarantool.driver.api.tuple.TarantoolTuple;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -27,6 +26,7 @@ public class TarantoolSdkContainerTestEnterprise {
                 TarantoolSdkContainerTestEnterprise.class.getClassLoader().getResource("testsdk/Dockerfile").toURI()
         );
         final Map<String, String> buildArgs = new HashMap<>();
+        //Official SDK URIs look like: https://user:password@download.tarantool.io/enterprise
         buildArgs.put("DOWNLOAD_SDK_URI", System.getenv("DOWNLOAD_SDK_URI"));
         buildArgs.put("SDK_VERSION", "tarantool-enterprise-bundle-2.7.3-0-gdddf926c3-r443");
 

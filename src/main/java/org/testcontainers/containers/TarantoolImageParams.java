@@ -39,9 +39,9 @@ public class TarantoolImageParams {
     }
 
     /**
-     * Getter for sdk version
+     * Getter for docker image tag
      *
-     * @return sdk version
+     * @return docker image tag
      */
     public String getTag() {
         return tag;
