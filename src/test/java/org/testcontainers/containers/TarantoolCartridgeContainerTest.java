@@ -1,8 +1,12 @@
 package org.testcontainers.containers;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
 
 import java.time.Duration;
@@ -12,10 +16,19 @@ import java.time.Duration;
  */
 public class TarantoolCartridgeContainerTest {
 
+    @Container
+    TarantoolCartridgeContainer container;
+
+    @AfterEach
+    public void setUp() {
+        if (container != null && container.isRunning()) {
+            container.stop();
+        }
+    }
+
     @Test
     public void test_ClusterContainer_StartsSuccessfully_ifFilesAreCopied() throws Exception {
-        TarantoolCartridgeContainer container =
-                new TarantoolCartridgeContainer(
+        container = new TarantoolCartridgeContainer(
                         "Dockerfile",
                         "tarantool-community:latest",
                         "cartridge/instances.yml",
@@ -27,14 +40,11 @@ public class TarantoolCartridgeContainerTest {
 
         container.start();
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
-        if (container.isRunning())
-            container.stop();
     }
 
     @Test
     public void test_ClusterContainer_StartsSuccessfully_ifFixedPortsAreConfigured() throws Exception {
-        TarantoolCartridgeContainer container =
-                new TarantoolCartridgeContainer(
+        container = new TarantoolCartridgeContainer(
                         "Dockerfile",
                         "tarantool-community:latest",
                         "cartridge/instances_fixedport.yml",
@@ -50,15 +60,12 @@ public class TarantoolCartridgeContainerTest {
 
         container.start();
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
-        if (container.isRunning())
-            container.stop();
     }
 
 
     @Test
     public void test_CartridgeContainer_shouldBootStrapFromYaml() throws Exception {
-        TarantoolCartridgeContainer container =
-                new TarantoolCartridgeContainer(
+        container = new TarantoolCartridgeContainer(
                         "Dockerfile",
                         "tarantool-community:latest",
                         "cartridge/instances.yml",
@@ -70,7 +77,5 @@ public class TarantoolCartridgeContainerTest {
 
         container.start();
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
-        if (container.isRunning())
-            container.stop();
     }
 }

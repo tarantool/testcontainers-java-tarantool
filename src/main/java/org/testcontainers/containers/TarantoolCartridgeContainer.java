@@ -506,20 +506,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return true;
     }
 
-    private void retryingSetupTopology() {
-        if (!setupTopology()) {
-            try {
-                logger().info("Retrying setup topology in 10 seconds");
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            if (!setupTopology()) {
-                throw new RuntimeException("Failed to change the app topology after retry");
-            }
-        }
-    }
-
     private void bootstrapVshard() {
         try {
             executeCommand(VSHARD_BOOTSTRAP_COMMAND).get();
@@ -533,12 +519,41 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
         super.containerIsStarted(containerInfo, reused);
 
-        retryingSetupTopology();
+        setupTopology();
         bootstrapVshard();
+        waitUntilCartridgeIsHealthy(60);
 
         logger().info("Tarantool Cartridge cluster is started");
         logger().info("Tarantool Cartridge router is listening at {}:{}", getRouterHost(), getRouterPort());
         logger().info("Tarantool Cartridge HTTP API is available at {}:{}", getAPIHost(), getAPIPort());
+    }
+
+    private void waitUntilCartridgeIsHealthy(int secondsToWait) {
+        int secondsPassed = 0;
+        boolean healthy = isCartridgeHealthy();
+        while (!healthy && secondsPassed < secondsToWait) {
+            healthy = isCartridgeHealthy();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        if (!healthy) {
+            throw new RuntimeException("Failed to change the app topology after retry");
+        }
+    }
+
+    private boolean isCartridgeHealthy() {
+        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
+                " return assert(cartridge) and assert(cartridge.is_healthy())";
+        try {
+            List<?> result = executeCommand(healthyCmd).get();
+            return (Boolean) result.get(0);
+        } catch (Exception e) {
+            logger().warn("Error while waiting for cartridge healthy state: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override
