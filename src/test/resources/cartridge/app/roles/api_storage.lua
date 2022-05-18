@@ -28,33 +28,6 @@ local function init_space()
         unique = false,
         if_not_exists = true,
     })
-
-    local test_space = box.schema.space.create(
-        'test_space', -- имя спейса для хранения профилей 
-        {
-            -- формат хранимых кортежей
-            format = {
-                {'id', 'unsigned'},
-                {'bucket_id', 'unsigned'},
-                {'field1', 'string'},
-                {'field2', 'unsigned'},
-            },
-            -- создадим спейс, только если его не было
-            if_not_exists = true,
-        }
-    )
-
-    -- создадим индекс по id профиля
-    test_space:create_index('id', {
-        parts = {'id'},
-        if_not_exists = true,
-    })
-
-    test_space:create_index('bucket_id', {
-        parts = {'bucket_id'},
-        unique = false,
-        if_not_exists = true,
-    })
 end
 
 local function profile_storage_select(id)
