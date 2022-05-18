@@ -204,7 +204,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private static ImageFromDockerfile withBuildArgs(ImageFromDockerfile image, Map<String, String> buildArgs) {
-        HashMap<String, String> args = mergeBuildArguments(buildArgs);
+        Map<String, String> args = mergeBuildArguments(buildArgs);
 
         if (!args.isEmpty()) {
             image.withBuildArgs(args);
@@ -213,8 +213,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return image;
     }
 
-    private static HashMap<String, String> mergeBuildArguments(Map<String, String> buildArgs) {
-        HashMap<String, String> args = new HashMap<>(buildArgs);
+    private static Map<String, String> mergeBuildArguments(Map<String, String> buildArgs) {
+        Map<String, String> args = new HashMap<>(buildArgs);
 
         for (String envVariable : Arrays.asList(
                 ENV_TARANTOOL_VERSION,
@@ -236,14 +236,11 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
-        ImageFromDockerfile image;
         if (buildImageName != null && !buildImageName.isEmpty()) {
-            image = new ImageFromDockerfile(buildImageName, false)
+            return new ImageFromDockerfile(buildImageName, false)
                     .withFileFromClasspath("Dockerfile", dockerFile);
-        } else {
-            image = new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
         }
-        return image;
+        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
     }
 
     /**
