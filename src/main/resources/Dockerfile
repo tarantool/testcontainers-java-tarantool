@@ -13,7 +13,7 @@ ENV TARANTOOL_INSTANCES_FILE=$TARANTOOL_INSTANCES_FILE
 RUN curl -L https://tarantool.io/installer.sh | VER=$TARANTOOL_VERSION /bin/bash -s -- --repo-only && \
     yum -y install cmake make gcc gcc-c++ git unzip tarantool tarantool-devel cartridge-cli && \
     yum clean all
-RUN groupadd  $TARANTOOL_SERVER_GROUP && useradd -m -s /bin/bash $TARANTOOL_SERVER_USER || true
+RUN groupadd $TARANTOOL_SERVER_GROUP && useradd -m -s /bin/bash $TARANTOOL_SERVER_USER || true
 USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
 RUN cartridge version
 
