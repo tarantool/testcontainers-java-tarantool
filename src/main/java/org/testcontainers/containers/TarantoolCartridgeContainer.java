@@ -2,7 +2,6 @@ package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.exceptions.TarantoolConnectionException;
-import org.glassfish.jersey.internal.util.Producer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
@@ -14,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
@@ -552,11 +552,11 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         waitUntilTrue(secondsToWait, this::isCartridgeHealthy);
     }
 
-    private void waitUntilTrue(int secondsToWait, Producer<Boolean> waitFunc) {
+    private void waitUntilTrue(int secondsToWait, Supplier<Boolean> waitFunc) {
         int secondsPassed = 0;
-        boolean result = waitFunc.call();
+        boolean result = waitFunc.get();
         while (!result && secondsPassed < secondsToWait) {
-            result = waitFunc.call();
+            result = waitFunc.get();
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
