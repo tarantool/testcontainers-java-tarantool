@@ -2,6 +2,7 @@ package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.exceptions.TarantoolConnectionException;
+import org.glassfish.jersey.internal.util.Producer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
@@ -535,12 +536,63 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
         super.containerIsStarted(containerInfo, reused);
 
+        waitUntilRouterIsUp(60);
         retryingSetupTopology();
+        // wait until Roles are configured
+        waitUntilCartridgeIsHealthy(10);
         bootstrapVshard();
 
         logger().info("Tarantool Cartridge cluster is started");
         logger().info("Tarantool Cartridge router is listening at {}:{}", getRouterHost(), getRouterPort());
         logger().info("Tarantool Cartridge HTTP API is available at {}:{}", getAPIHost(), getAPIPort());
+    }
+
+    private void waitUntilRouterIsUp(int secondsToWait) {
+        waitUntilTrue(secondsToWait, this::routerIsUp);
+    }
+
+    private void waitUntilCartridgeIsHealthy(int secondsToWait) {
+        waitUntilTrue(secondsToWait, this::isCartridgeHealthy);
+    }
+
+    private void waitUntilTrue(int secondsToWait, Producer<Boolean> waitFunc) {
+        int secondsPassed = 0;
+        boolean result = waitFunc.call();
+        while (!result && secondsPassed < secondsToWait) {
+            result = waitFunc.call();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        if (!result) {
+            throw new RuntimeException("Failed to change the app topology after retry");
+        }
+    }
+
+    private boolean routerIsUp() {
+        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
+                " return assert(cartridge ~= nil)";
+        try {
+            List<?> result = executeCommand(healthyCmd).get();
+            return (Boolean) result.get(0);
+        } catch (Exception e) {
+            logger().warn("Error while waiting for router instance to be up: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isCartridgeHealthy() {
+        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
+                " return assert(cartridge) and assert(cartridge.is_healthy())";
+        try {
+            List<?> result = executeCommand(healthyCmd).get();
+            return (Boolean) result.get(0);
+        } catch (Exception e) {
+            logger().warn("Error while waiting for cartridge healthy state: " + e.getMessage());
+            return false;
+        }
     }
 
     @Override

@@ -38,8 +38,7 @@ public final class TarantoolContainerClientHelper {
                 .withAddress(container.getHost(), container.getPort())
                 .withRequestTimeout(5000)
                 .withRetryingByNumberOfAttempts(15,
-                        TarantoolRequestRetryPolicies.retryNetworkErrors()
-                                .or(TarantoolRequestRetryPolicies.retryTarantoolNoSuchProcedureErrors()),
+                        TarantoolRequestRetryPolicies.retryNetworkErrors(),
                         b -> b.withDelay(100))
                 .build();
     }
