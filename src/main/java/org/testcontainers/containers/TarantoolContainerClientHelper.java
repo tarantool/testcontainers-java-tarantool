@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import io.tarantool.driver.api.TarantoolClient;
+import io.tarantool.driver.api.TarantoolClientBuilder;
 import io.tarantool.driver.api.TarantoolClientFactory;
 import io.tarantool.driver.api.TarantoolResult;
 import io.tarantool.driver.api.retry.TarantoolRequestRetryPolicies;
@@ -27,13 +28,21 @@ public final class TarantoolContainerClientHelper {
     private final TarantoolContainerOperations<? extends Container<?>> container;
     private final AtomicReference<TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>> clientHolder =
             new AtomicReference<>();
+    private final TarantoolClientBuilder clientBuilder;
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
+        this.clientBuilder = TarantoolClientFactory.createClient();
+    }
+
+    TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container,
+                                   TarantoolClientBuilder clientBuilder) {
+        this.container = container;
+        this.clientBuilder = clientBuilder;
     }
 
     private TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>> createClient() {
-        return TarantoolClientFactory.createClient()
+        return clientBuilder
                 .withCredentials(container.getUsername(), container.getPassword())
                 .withAddress(container.getHost(), container.getPort())
                 .withRequestTimeout(5000)
