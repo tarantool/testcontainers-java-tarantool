@@ -4,7 +4,6 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageCmd;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.model.Image;
-import org.apache.commons.lang3.StringUtils;
 import org.testcontainers.DockerClientFactory;
 
 import java.util.Arrays;
@@ -33,7 +32,7 @@ class TarantoolContainerImageHelper {
     static String getImage(TarantoolImageParams imageParams) {
         final String tag = imageParams.getTag();
 
-        if (StringUtils.isEmpty(tag)) {
+        if (tag == null || tag.isEmpty()) {
             throw new IllegalArgumentException("Image tag is null or empty!");
         }
 
