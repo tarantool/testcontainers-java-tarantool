@@ -24,6 +24,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                     .withCopyFileToContainer(MountableFile.forClasspathResource("cartridge"), "/app")
                     .withCopyFileToContainer(MountableFile.forClasspathResource("cartridge/instances_fixedport.yml"),"/app/instances.yml")
                     .withStartupTimeout(Duration.ofSeconds(300))
+                    .withUseFixedPorts(true)
                     .withAPIPort(18081)
                     .withRouterPort(13301)
                     .withLogConsumer(new Slf4jLogConsumer(
