@@ -32,7 +32,11 @@ public final class TarantoolContainerClientHelper {
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
-        this.clientBuilder = TarantoolClientFactory.createClient();
+        this.clientBuilder = TarantoolClientFactory.createClient()
+                .withRequestTimeout(5000)
+                .withRetryingByNumberOfAttempts(15,
+                        TarantoolRequestRetryPolicies.retryNetworkErrors(),
+                        b -> b.withDelay(100));
     }
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container,
@@ -45,10 +49,6 @@ public final class TarantoolContainerClientHelper {
         return clientBuilder
                 .withCredentials(container.getUsername(), container.getPassword())
                 .withAddress(container.getHost(), container.getPort())
-                .withRequestTimeout(5000)
-                .withRetryingByNumberOfAttempts(15,
-                        TarantoolRequestRetryPolicies.retryNetworkErrors(),
-                        b -> b.withDelay(100))
                 .build();
     }
 
