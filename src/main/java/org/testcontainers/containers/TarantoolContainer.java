@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
+import io.tarantool.driver.api.TarantoolClientBuilder;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.net.URL;
@@ -47,23 +48,86 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
 
     private final TarantoolContainerClientHelper clientHelper;
 
+    /**
+     * Constructor for {@link TarantoolContainer}
+     */
     public TarantoolContainer() {
         this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION));
     }
 
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param clientBuilder client builder with custom client settings for setting up container
+     */
+    public TarantoolContainer(TarantoolClientBuilder clientBuilder) {
+        this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION), clientBuilder);
+    }
+
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param dockerImageName docker image name for container creating
+     */
     public TarantoolContainer(String dockerImageName) {
         super(dockerImageName);
         clientHelper = new TarantoolContainerClientHelper(this);
     }
 
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param dockerImageName docker image name for container creating
+     * @param clientBuilder   client builder with custom client settings for setting up container
+     */
+    public TarantoolContainer(String dockerImageName,
+                              TarantoolClientBuilder clientBuilder) {
+        super(dockerImageName);
+        clientHelper = new TarantoolContainerClientHelper(this, clientBuilder);
+    }
+
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param tarantoolImageParams params for cached image creating
+     */
     public TarantoolContainer(TarantoolImageParams tarantoolImageParams) {
         super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
         clientHelper = new TarantoolContainerClientHelper(this);
     }
 
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param tarantoolImageParams params for cached image creating
+     * @param clientBuilder        client builder with custom client settings for setting up container
+     */
+    public TarantoolContainer(TarantoolImageParams tarantoolImageParams,
+                              TarantoolClientBuilder clientBuilder) {
+        super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
+        clientHelper = new TarantoolContainerClientHelper(this, clientBuilder);
+    }
+
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param image future with image name
+     */
     public TarantoolContainer(Future<String> image) {
         super(image);
         clientHelper = new TarantoolContainerClientHelper(this);
+    }
+
+    /**
+     * Constructor for {@link TarantoolContainer}
+     *
+     * @param image         future with image name
+     * @param clientBuilder client builder with custom client settings for setting up container
+     */
+    public TarantoolContainer(Future<String> image,
+                              TarantoolClientBuilder clientBuilder) {
+        super(image);
+        clientHelper = new TarantoolContainerClientHelper(this, clientBuilder);
     }
 
     /**
