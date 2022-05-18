@@ -7,7 +7,8 @@ source  = {
 dependencies = {
     'tarantool',
     'lua >= 5.1',
-    'cartridge == 2.7.4-1',
+    -- Be careful when updating to 2.7.4. Tarantool doesn't bind ports before roles are configured.
+    'cartridge == 2.7.3-1',
     'crud == 0.11.1-1',
     'migrations == 0.4.2-1',
 }
