@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.1] - 2022-10-28
+- Bump cartridge-java to 0.9.1
+- Bump testcontainers to 1.17.4
+
 ## [0.5.0] - 2022-05-18
 - Added ability to configure cluster from yaml (#40)
 - Added migrations example in tests (#42)
