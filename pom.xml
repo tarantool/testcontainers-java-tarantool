@@ -46,8 +46,8 @@
     </scm>
 
     <properties>
-        <driver.version>0.7.0</driver.version>
-        <testcontainers.version>1.16.2</testcontainers.version>
+        <driver.version>0.9.1</driver.version>
+        <testcontainers.version>1.17.4</testcontainers.version>
         <snakeyaml.version>1.26</snakeyaml.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
