@@ -134,6 +134,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      * Use fixed ports binding.
      * Defaults to false.
      *
+     * @param useFixedPorts fixed ports for tarantool
      * @return HTTP API port
      */
     public TarantoolContainer withUseFixedPorts(boolean useFixedPorts) {

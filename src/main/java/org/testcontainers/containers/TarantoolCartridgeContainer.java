@@ -378,6 +378,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * Use fixed ports binding.
      * Defaults to false.
      *
+     * @param useFixedPorts fixed ports for tarantool
      * @return HTTP API port
      */
     public TarantoolCartridgeContainer withUseFixedPorts(boolean useFixedPorts) {
