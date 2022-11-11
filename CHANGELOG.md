@@ -1,7 +1,10 @@
 # Changelog
 
-## [0.5.2] - 2022-10-28
+## [0.5.2] - 2022-11-11
 - Add dependency management
+- Bump snakeyaml to 1.33
+- Bump junit-jupiter to 5.9.0
+- Bump logback-classic to 1.2.11
 
 ## [0.5.1] - 2022-10-28
 - Bump cartridge-java to 0.9.1
