@@ -42,7 +42,7 @@
         <connection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</connection>
         <developerConnection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</developerConnection>
         <url>http://github.com/tarantool/cartridge-java-testcontainers/tree/master</url>
-        <tag>v0.5.1</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
