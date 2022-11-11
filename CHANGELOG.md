@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.5.2] - 2022-10-28
+- Add dependency management
+
 ## [0.5.1] - 2022-10-28
 - Bump cartridge-java to 0.9.1
 - Bump testcontainers to 1.17.4
