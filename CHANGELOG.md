@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.3] - 2022-11-14
+- Bump logback-classic to 1.3.4 to fix logging
+- Bump slf4j-api to 2.0.3
+- Remove redundant junit-jupiter dependency
+
 ## [0.5.2] - 2022-11-11
 - Add dependency management
 - Bump snakeyaml to 1.33
