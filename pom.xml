@@ -5,7 +5,7 @@
     <groupId>io.tarantool</groupId>
     <artifactId>testcontainers-java-tarantool</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.2</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>TestContainers for Tarantool</name>
     <description>Dockerized Tarantool and Tarantool Cartridge containers for testing under Testcontainers.</description>
@@ -42,7 +42,7 @@
         <connection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</connection>
         <developerConnection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</developerConnection>
         <url>http://github.com/tarantool/cartridge-java-testcontainers/tree/master</url>
-        <tag>v0.5.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
