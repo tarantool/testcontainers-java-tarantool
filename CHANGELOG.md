@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.5.4] - 2023-03-31
+- Use tarantool image as base instead of centos in cartridge container
+
 ## [0.5.3] - 2022-11-14
 - Bump logback-classic to 1.3.4 to fix logging
 - Bump slf4j-api to 2.0.3
