@@ -75,7 +75,7 @@ public final class TarantoolContainerClientHelper {
         String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
         String containerPath = normalizePath(Paths.get(TMP_DIR, scriptName));
         container.copyFileToContainer(MountableFile.forClasspathResource(scriptResourcePath), containerPath);
-        return executeCommand(String.format("dofile('%s')", containerPath));
+        return executeCommand(String.format("return dofile('%s')", containerPath));
     }
 
     public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) {

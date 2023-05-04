@@ -2,6 +2,8 @@ package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import io.tarantool.driver.exceptions.TarantoolConnectionException;
+
+import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
@@ -478,16 +480,21 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                         "--run-dir=" + TARANTOOL_RUN_DIR,
                         "--file=" + replicasetsFileName, "setup", "--bootstrap-vshard");
                 if (result.getExitCode() != 0) {
-                    throw new RuntimeException("Failed to change the app topology via cartridge CLI: "
-                            + result.getStdout());
+                    throw new CartridgeTopologyException("Failed to change the app topology via cartridge CLI: "
+                                                             + result.getStdout());
                 }
             } catch (Exception e) {
-                throw new RuntimeException("Failed to change the app topology: " + e.getMessage());
+                throw new CartridgeTopologyException(e);
             }
 
         } else {
             try {
-                executeScript(topologyConfigurationFile).get();
+                List<?> res = executeScript(topologyConfigurationFile).get();
+                if (res.size() >= 2 && res.get(1) != null && res.get(1) instanceof Map) {
+                    HashMap<?, ?> error = ((HashMap<?, ?>) res.get(1));
+                    // that means topology already exists
+                    return error.get("str").toString().contains("collision with another server");
+                }
                 // The client connection will be closed after that command
             } catch (Exception e) {
                 if (e instanceof ExecutionException) {
@@ -500,7 +507,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                         return false;
                     }
                 } else {
-                    throw new RuntimeException("Failed to change the app topology", e);
+                    throw new CartridgeTopologyException(e);
                 }
             }
         }
@@ -516,7 +523,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 throw new RuntimeException(e);
             }
             if (!setupTopology()) {
-                throw new RuntimeException("Failed to change the app topology after retry");
+                throw new CartridgeTopologyException("Failed to change the app topology after retry");
             }
         }
     }
