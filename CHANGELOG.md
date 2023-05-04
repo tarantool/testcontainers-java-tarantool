@@ -1,5 +1,8 @@
 # Changelog
 
+## [Unreleased]
+- Fix problem if topology isn't applied correctly
+
 ## [0.5.4] - 2023-03-31
 - Use tarantool image as base instead of centos in cartridge container
 
