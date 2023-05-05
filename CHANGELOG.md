@@ -3,6 +3,7 @@
 ## [Unreleased]
 - Fix problem if topology isn't applied correctly
 - Bump testcontainers to 1.18.0
+- Move rocks building in build phase
 
 ## [0.5.4] - 2023-03-31
 - Use tarantool image as base instead of centos in cartridge container

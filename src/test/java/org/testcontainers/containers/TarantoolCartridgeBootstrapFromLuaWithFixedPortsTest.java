@@ -7,7 +7,6 @@ import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.MountableFile;
 
 import java.time.Duration;
 
@@ -26,7 +25,6 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                     "Dockerfile",
                     "cartridge/instances_fixedport.yml",
                     "cartridge/topology_fixedport.lua")
-                    .withDirectoryBinding("cartridge")
                     .withEnv("TARANTOOL_INSTANCES_FILE", "instances_fixedport.yml")
                     .withStartupTimeout(Duration.ofSeconds(300))
                     .withUseFixedPorts(true)
@@ -47,7 +45,6 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                      "Dockerfile",
                      "cartridge/instances.yml",
                      "cartridge/incorrect_topology.lua")
-                     .withDirectoryBinding("cartridge")
                      .withLogConsumer(new Slf4jLogConsumer(
                          LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)))) {
             ContainerLaunchException ex = assertThrows(ContainerLaunchException.class, testContainer::start);
