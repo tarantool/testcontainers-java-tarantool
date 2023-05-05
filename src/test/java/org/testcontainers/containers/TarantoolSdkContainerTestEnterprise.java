@@ -6,14 +6,16 @@ import io.tarantool.driver.api.TarantoolClient;
 import io.tarantool.driver.api.TarantoolClientFactory;
 import io.tarantool.driver.api.TarantoolResult;
 import io.tarantool.driver.api.tuple.TarantoolTuple;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Oleg Kuznetsov
@@ -44,8 +46,8 @@ public class TarantoolSdkContainerTestEnterprise {
             final List<?> result = client.eval("return 'test'").join();
             final TarantoolVersion version = client.getVersion();
 
-            Assertions.assertEquals("test", result.get(0));
-            Assertions.assertTrue(version.toString().startsWith("Tarantool 2.7.3 (Binary)"));
+            assertEquals("test", result.get(0));
+            assertTrue(version.toString().startsWith("Tarantool 2.7.3 (Binary)"));
         }
     }
 }

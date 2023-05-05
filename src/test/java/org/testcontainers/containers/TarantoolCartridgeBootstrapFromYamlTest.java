@@ -1,6 +1,5 @@
 package org.testcontainers.containers;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -10,6 +9,8 @@ import org.testcontainers.utility.MountableFile;
 
 import java.time.Duration;
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Alexey Kuzin
@@ -37,6 +38,6 @@ public class TarantoolCartridgeBootstrapFromYamlTest {
     @Test
     public void test_migrator_executesOk() throws Exception {
         List<?> result = container.executeCommand("return require('migrator').up()").get();
-        Assertions.assertEquals("001_ddl.lua", ((List<?>)result.get(0)).get(0));
+        assertEquals("001_ddl.lua", ((List<?>)result.get(0)).get(0));
     }
 }

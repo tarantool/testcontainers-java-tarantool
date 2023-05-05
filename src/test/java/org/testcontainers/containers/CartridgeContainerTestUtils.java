@@ -3,7 +3,7 @@ package org.testcontainers.containers;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vladimir Rogach
