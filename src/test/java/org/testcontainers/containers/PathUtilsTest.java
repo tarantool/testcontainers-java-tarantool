@@ -1,8 +1,8 @@
 package org.testcontainers.containers;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
@@ -14,24 +14,24 @@ class PathUtilsTest {
 
     @Test
     void normalizePathTest() {
-        Assertions.assertEquals("c:/work/server.lua",
+        assertEquals("c:/work/server.lua",
                 normalizePath("c:/work/server.lua"));
 
-        Assertions.assertEquals("c:/work/server.lua",
+        assertEquals("c:/work/server.lua",
                 normalizePath("/c:/work/server.lua"));
 
-        Assertions.assertEquals("c:/work/server.lua",
+        assertEquals("c:/work/server.lua",
                 normalizePath("/c:\\work\\server.lua"));
 
-        Assertions.assertEquals("c:/work/server.lua",
+        assertEquals("c:/work/server.lua",
                 normalizePath("c:\\work\\server.lua"));
 
-        Assertions.assertEquals("c:/", normalizePath("c:\\"));
+        assertEquals("c:/", normalizePath("c:\\"));
 
-        Assertions.assertEquals("/dummy", normalizePath("/dummy"));
+        assertEquals("/dummy", normalizePath("/dummy"));
 
-        Assertions.assertEquals("/c", normalizePath("/c"));
+        assertEquals("/c", normalizePath("/c"));
 
-        Assertions.assertThrows(NullPointerException.class, () -> normalizePath((String) null));
+        assertThrows(NullPointerException.class, () -> normalizePath((String) null));
     }
 }
