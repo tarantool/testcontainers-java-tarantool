@@ -186,7 +186,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      */
     public TarantoolCartridgeContainer(String dockerFile, String buildImageName, String instancesFile,
                                        String topologyConfigurationFile, final Map<String, String> buildArgs) {
-        this(buildImage(dockerFile, buildImageName), instancesFile, topologyConfigurationFile, buildArgs);
+        this(buildImage(dockerFile, buildImageName, buildArgs), instancesFile, topologyConfigurationFile, buildArgs);
     }
 
     private TarantoolCartridgeContainer(ImageFromDockerfile image, String instancesFile, String topologyConfigurationFile,
@@ -238,12 +238,17 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return args;
     }
 
-    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName) {
+    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName,
+            final Map<String, String> buildArgs) {
+        ImageFromDockerfile image;
         if (buildImageName != null && !buildImageName.isEmpty()) {
-            return new ImageFromDockerfile(buildImageName, false)
-                    .withFileFromClasspath("Dockerfile", dockerFile);
+            image = new ImageFromDockerfile(buildImageName, false);
+        } else {
+            image = new ImageFromDockerfile();
         }
-        return new ImageFromDockerfile().withFileFromClasspath("Dockerfile", dockerFile);
+        return image.withFileFromClasspath("Dockerfile", dockerFile)
+                   .withFileFromClasspath("cartridge", buildArgs.get("CARTRIDGE_SRC_DIR") == null ?
+                                                           "cartridge" : buildArgs.get("CARTRIDGE_SRC_DIR"));
     }
 
     /**

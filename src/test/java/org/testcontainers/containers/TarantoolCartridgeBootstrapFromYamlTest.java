@@ -24,7 +24,6 @@ public class TarantoolCartridgeBootstrapFromYamlTest {
                     "Dockerfile",
                     "cartridge/instances.yml",
                     "cartridge/replicasets.yml")
-                    .withCopyFileToContainer(MountableFile.forClasspathResource("cartridge"), "/app")
                     .withStartupTimeout(Duration.ofSeconds(300))
                     .withLogConsumer(new Slf4jLogConsumer(
                             LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
