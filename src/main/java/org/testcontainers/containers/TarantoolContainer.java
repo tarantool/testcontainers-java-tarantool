@@ -1,13 +1,10 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import io.tarantool.driver.api.TarantoolClientBuilder;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.net.URL;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import static org.testcontainers.containers.PathUtils.normalizePath;
@@ -16,6 +13,7 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
  * Sets up a Tarantool instance and provides API for configuring it.
  *
  * @author Alexey Kuzin
+ * @author Ivan Dneprov
  */
 public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
@@ -39,6 +37,9 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     private String password = API_PASSWORD;
     private String host = DEFAULT_HOST;
     private Integer port = DEFAULT_PORT;
+    private Boolean sslIsActive = false;
+    private String keyFile = "";
+    private String certFile = "";
     private TarantoolLogLevel logLevel = LOG_LEVEL;
     private Integer memtxMemory = MEMTX_MEMORY;
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
@@ -58,15 +59,6 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     /**
      * Constructor for {@link TarantoolContainer}
      *
-     * @param clientBuilder client builder with custom client settings for setting up container
-     */
-    public TarantoolContainer(TarantoolClientBuilder clientBuilder) {
-        this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION), clientBuilder);
-    }
-
-    /**
-     * Constructor for {@link TarantoolContainer}
-     *
      * @param dockerImageName docker image name for container creating
      */
     public TarantoolContainer(String dockerImageName) {
@@ -77,35 +69,11 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     /**
      * Constructor for {@link TarantoolContainer}
      *
-     * @param dockerImageName docker image name for container creating
-     * @param clientBuilder   client builder with custom client settings for setting up container
-     */
-    public TarantoolContainer(String dockerImageName,
-                              TarantoolClientBuilder clientBuilder) {
-        super(dockerImageName);
-        clientHelper = new TarantoolContainerClientHelper(this, clientBuilder);
-    }
-
-    /**
-     * Constructor for {@link TarantoolContainer}
-     *
      * @param tarantoolImageParams params for cached image creating
      */
     public TarantoolContainer(TarantoolImageParams tarantoolImageParams) {
         super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
-        clientHelper = new TarantoolContainerClientHelper(this);
-    }
-
-    /**
-     * Constructor for {@link TarantoolContainer}
-     *
-     * @param tarantoolImageParams params for cached image creating
-     * @param clientBuilder        client builder with custom client settings for setting up container
-     */
-    public TarantoolContainer(TarantoolImageParams tarantoolImageParams,
-                              TarantoolClientBuilder clientBuilder) {
-        super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
-        clientHelper = new TarantoolContainerClientHelper(this, clientBuilder);
+        clientHelper = new TarantoolContainerClientHelper(this, "/sdk/tarantoolctl");
     }
 
     /**
@@ -116,18 +84,6 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     public TarantoolContainer(Future<String> image) {
         super(image);
         clientHelper = new TarantoolContainerClientHelper(this);
-    }
-
-    /**
-     * Constructor for {@link TarantoolContainer}
-     *
-     * @param image         future with image name
-     * @param clientBuilder client builder with custom client settings for setting up container
-     */
-    public TarantoolContainer(Future<String> image,
-                              TarantoolClientBuilder clientBuilder) {
-        super(image);
-        clientHelper = new TarantoolContainerClientHelper(this, clientBuilder);
     }
 
     /**
@@ -213,6 +169,34 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         return this;
     }
 
+
+    /**
+     * Specify SSL as connection transport.
+     * Warning! SSL must be set as default transport on your tarantool cluster.
+     * Supported only in Tarantool Enterprise
+     *
+     * @return this container instance
+     */
+    public TarantoolContainer withSsl() {
+        checkNotRunning();
+        this.sslIsActive = true;
+        return this;
+    }
+
+    /**
+     * Specify path to key and cert files inside your container for SSL connection.
+     * Warning! SSL must be set as default transport on your tarantool cluster.
+     * Supported only in Tarantool Enterprise
+     *
+     * @return this container instance
+     */
+    public TarantoolContainer withKeyAndCertFiles(String keyFile, String certFile) {
+        checkNotRunning();
+        this.keyFile = keyFile;
+        this.certFile = certFile;
+        return this;
+    }
+
     /**
      * Change the log_level setting on the Tarantool instance
      *
@@ -223,7 +207,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         this.logLevel = logLevel;
         if (isRunning()) {
             try {
-                executeCommand(logLevel.toCommand()).get();
+                executeCommand(logLevel.toCommand());
             } catch (Exception e) {
                 logger().error(String.format("Failed to set log_level to %s", logLevel.toString()), e);
                 throw new RuntimeException(e);
@@ -246,7 +230,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         this.memtxMemory = memtxMemory;
         if (isRunning()) {
             try {
-                executeCommand(String.format("box.cfg{memtx_memory=%d}", memtxMemory)).get();
+                executeCommand(String.format("box.cfg{memtx_memory=%d}", memtxMemory));
             } catch (Exception e) {
                 logger().error(String.format("Failed to set memtx_memory to %d", memtxMemory), e);
                 throw new RuntimeException(e);
@@ -288,6 +272,11 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     @Override
     public String getInstanceDir() {
         return instanceDir;
+    }
+
+    @Override
+    public int getInternalPort() {
+        return port;
     }
 
     /**
@@ -380,12 +369,22 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     }
 
     @Override
-    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
-        return clientHelper.executeScript(scriptResourcePath);
+    public Container.ExecResult executeScript(String scriptResourcePath) throws Exception {
+        return clientHelper.executeScript(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
     }
 
     @Override
-    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception {
-        return clientHelper.executeCommand(command, arguments);
+    public <T> T executeScriptDecoded(String scriptResourcePath) throws Exception {
+        return clientHelper.executeScriptDecoded(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
+    }
+
+    @Override
+    public Container.ExecResult executeCommand(String command) throws Exception {
+        return clientHelper.executeCommand(command, this.sslIsActive, this.keyFile, this.certFile);
+    }
+
+    @Override
+    public <T> T executeCommandDecoded(String command) throws Exception {
+        return clientHelper.executeCommandDecoded(command, this.sslIsActive, this.keyFile, this.certFile);
     }
 }

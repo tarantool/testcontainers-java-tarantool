@@ -1,18 +1,10 @@
 package org.testcontainers.containers;
 
-import io.tarantool.driver.api.TarantoolClient;
-import io.tarantool.driver.api.TarantoolClientBuilder;
-import io.tarantool.driver.api.TarantoolClientFactory;
-import io.tarantool.driver.api.TarantoolResult;
-import io.tarantool.driver.api.retry.TarantoolRequestRetryPolicies;
-import io.tarantool.driver.api.tuple.TarantoolTuple;
 import org.testcontainers.utility.MountableFile;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
@@ -20,54 +12,32 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
  * Provides a wrapper around a Tarantool client with helper methods
  *
  * @author Alexey Kuzin
+ * @author Artyom Dubinin
+ * @author Ivan Dneprov
  */
 public final class TarantoolContainerClientHelper {
 
     private static final String TMP_DIR = "/tmp";
+    private static final Yaml yaml = new Yaml();
 
     private final TarantoolContainerOperations<? extends Container<?>> container;
-    private final AtomicReference<TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>>> clientHolder =
-            new AtomicReference<>();
-    private final TarantoolClientBuilder clientBuilder;
+    private final String tarantoolctlPath;
+    private final String EXECUTE_SCRIPT_ERROR_TEMPLATE =
+        "Executed script %s with exit code %d, stderr: \"%s\", stdout: \"%s\"";
+    private final String EXECUTE_COMMAND_ERROR_TEMPLATE =
+        "Executed command \"%s\" with exit code %d, stderr: \"%s\", stdout: \"%s\"";
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
-        this.clientBuilder = TarantoolClientFactory.createClient()
-                .withRequestTimeout(5000)
-                .withRetryingByNumberOfAttempts(15,
-                        TarantoolRequestRetryPolicies.retryNetworkErrors(),
-                        b -> b.withDelay(100));
+        this.tarantoolctlPath = "tarantoolctl";
     }
 
-    TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container,
-                                   TarantoolClientBuilder clientBuilder) {
+    TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container, String tarantoolctlPath) {
         this.container = container;
-        this.clientBuilder = clientBuilder;
+        this.tarantoolctlPath = tarantoolctlPath;
     }
 
-    private TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>> createClient() {
-        return clientBuilder
-                .withCredentials(container.getUsername(), container.getPassword())
-                .withAddress(container.getHost(), container.getPort())
-                .build();
-    }
-
-    /**
-     * Configure or return an already configured client connected to a Cartridge router
-     *
-     * @return a configured client
-     */
-    public TarantoolClient<TarantoolTuple, TarantoolResult<TarantoolTuple>> getClient() {
-        if (!container.isRunning()) {
-            throw new IllegalStateException("Cannot connect to Tarantool instance in a stopped container");
-        }
-        if (clientHolder.get() == null) {
-            clientHolder.compareAndSet(null, createClient());
-        }
-        return clientHolder.get();
-    }
-
-    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) {
+    public Container.ExecResult executeScript(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
@@ -75,14 +45,65 @@ public final class TarantoolContainerClientHelper {
         String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
         String containerPath = normalizePath(Paths.get(TMP_DIR, scriptName));
         container.copyFileToContainer(MountableFile.forClasspathResource(scriptResourcePath), containerPath);
-        return executeCommand(String.format("return dofile('%s')", containerPath));
+        return executeCommand(String.format("return dofile('%s')", containerPath), sslIsActive, keyFile, certFile);
     }
 
-    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) {
+    public <T> T executeScriptDecoded(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
+        Container.ExecResult result = executeScript(scriptResourcePath, sslIsActive, keyFile, certFile);
+
+        if (result.getExitCode() != 0) {
+
+            throw new IllegalStateException(String.format(EXECUTE_SCRIPT_ERROR_TEMPLATE,
+                scriptResourcePath, result.getExitCode(),
+                result.getStderr(), result.getStdout()));
+        }
+
+        return yaml.load(result.getStdout());
+    }
+
+    public Container.ExecResult executeCommand(String command, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute commands in stopped container");
         }
 
-        return getClient().eval(command, Arrays.asList(arguments));
+        command = command.replace("\"", "\\\"");
+
+        String bashCommand;
+        if (keyFile != "" && certFile != "") {
+            bashCommand = String.format("echo \"print(require('yaml').encode(require('net.box').connect({ uri='%s:%d', " +
+                    "params = { transport='ssl', ssl_key_file = '%s', ssl_cert_file = '%s' }}, " +
+                    "{ user = '%s', password = '%s' } ):eval('return %s'))); os.exit();\" | tarantool",
+                container.getHost(), container.getInternalPort(),
+                keyFile, certFile,
+                container.getUsername(), container.getPassword(),
+                command
+            );
+        } else if (sslIsActive) {
+                bashCommand = String.format("echo \"print(require('yaml').encode(require('net.box').connect({ uri='%s:%d', " +
+                        "params = { transport='ssl' }}, " +
+                        "{ user = '%s', password = '%s' } ):eval('return %s'))); os.exit();\" | tarantool",
+                container.getHost(), container.getInternalPort(),
+                container.getUsername(), container.getPassword(),
+                command
+                );
+        } else {
+            bashCommand = String.format("echo \"%s\" | %s connect %s:%s@%s:%s",
+                command, tarantoolctlPath, container.getUsername(), container.getPassword(),
+                container.getHost(), container.getInternalPort());
+        }
+
+        return container.execInContainer("sh", "-c", bashCommand);
     }
+
+    public <T> T executeCommandDecoded(String command, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
+        Container.ExecResult result = executeCommand(command, sslIsActive, keyFile, certFile);
+
+        if (result.getExitCode() != 0) {
+            throw new IllegalStateException(String.format(EXECUTE_COMMAND_ERROR_TEMPLATE,
+                command, result.getExitCode(), result.getStderr(), result.getStdout()));
+        }
+
+        return yaml.load(result.getStdout());
+    }
+
 }

@@ -1,18 +1,12 @@
 package org.testcontainers.containers;
 
 import com.github.dockerjava.api.command.InspectContainerResponse;
-import io.tarantool.driver.exceptions.TarantoolConnectionException;
 
 import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -82,6 +76,9 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
  * specified in the http_port options, will be exposed.
  *
  * @author Alexey Kuzin
+ * @authorm Artyom Dubinin
+ * @author Ivan Dneprov
+ *
  */
 public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartridgeContainer>
         implements TarantoolContainerOperations<TarantoolCartridgeContainer> {
@@ -119,6 +116,9 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private String topologyConfigurationFile;
+    private Boolean sslIsActive = false;
+    private String keyFile = "";
+    private String certFile = "";
 
     /**
      * Create a container with default image and specified instances file from the classpath resources. Assumes that
@@ -247,6 +247,33 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     /**
+     * Specify SSL as connection transport.
+     * Warning! SSL must be set as default transport on your tarantool cluster.
+     * Supported only in Tarantool Enterprise
+     *
+     * @return this container instance
+     */
+    public TarantoolCartridgeContainer withSsl() {
+        checkNotRunning();
+        this.sslIsActive = true;
+        return this;
+    }
+
+    /**
+     * Specify path to key and cert files inside your container for SSL connection.
+     * Warning! SSL must be set as default transport on your tarantool cluster.
+     * Supported only in Tarantool Enterprise
+     *
+     * @return this container instance
+     */
+    public TarantoolCartridgeContainer withKeyAndCertFiles(String keyFile, String certFile) {
+        checkNotRunning();
+        this.keyFile = keyFile;
+        this.certFile = certFile;
+        return this;
+    }
+
+    /**
      * Get the router host
      *
      * @return router hostname
@@ -326,6 +353,11 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     @Override
     public String getInstanceDir() {
         return instanceDir;
+    }
+
+    @Override
+    public int getInternalPort() {
+        return routerPort;
     }
 
     /**
@@ -489,7 +521,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
         } else {
             try {
-                List<?> res = executeScript(topologyConfigurationFile).get();
+                ArrayList<?> res = executeScriptDecoded(topologyConfigurationFile);
                 if (res.size() >= 2 && res.get(1) != null && res.get(1) instanceof Map) {
                     HashMap<?, ?> error = ((HashMap<?, ?>) res.get(1));
                     // that means topology already exists
@@ -501,10 +533,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                     if (e.getCause() instanceof TimeoutException) {
                         return true;
                         // Do nothing, the cluster is reloading
-                    } else if (e.getCause() instanceof TarantoolConnectionException) {
-                        // Probably cluster is not ready
-                        logger().error("Failed to setup topology: {}", e.getMessage());
-                        return false;
                     }
                 } else {
                     throw new CartridgeTopologyException(e);
@@ -530,7 +558,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     private void bootstrapVshard() {
         try {
-            executeCommand(VSHARD_BOOTSTRAP_COMMAND).get();
+            executeCommand(VSHARD_BOOTSTRAP_COMMAND);
         } catch (Exception e) {
             logger().error("Failed to bootstrap vshard cluster", e);
             throw new RuntimeException(e);
@@ -580,8 +608,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         String healthyCmd = " local cartridge = package.loaded['cartridge']" +
                 " return assert(cartridge ~= nil)";
         try {
-            List<?> result = executeCommand(healthyCmd).get();
-            return (Boolean) result.get(0);
+            Container.ExecResult result = executeCommand(healthyCmd);
+            return result.getStdout().equals("---\n- true\n...\n\n");
         } catch (Exception e) {
             logger().warn("Error while waiting for router instance to be up: " + e.getMessage());
             return false;
@@ -592,8 +620,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         String healthyCmd = " local cartridge = package.loaded['cartridge']" +
                 " return assert(cartridge) and assert(cartridge.is_healthy())";
         try {
-            List<?> result = executeCommand(healthyCmd).get();
-            return (Boolean) result.get(0);
+            Container.ExecResult result = executeCommand(healthyCmd);
+            return result.getStdout().equals("---\n- true\n...\n\n");
         } catch (Exception e) {
             logger().warn("Error while waiting for cartridge healthy state: " + e.getMessage());
             return false;
@@ -601,12 +629,22 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     @Override
-    public CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception {
-        return clientHelper.executeScript(scriptResourcePath);
+    public Container.ExecResult executeScript(String scriptResourcePath) throws Exception {
+        return clientHelper.executeScript(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
     }
 
     @Override
-    public CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception {
-        return clientHelper.executeCommand(command, arguments);
+    public <T> T executeScriptDecoded(String scriptResourcePath) throws Exception {
+        return clientHelper.executeScriptDecoded(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
+    }
+
+    @Override
+    public Container.ExecResult executeCommand(String command) throws Exception {
+        return clientHelper.executeCommand(command, this.sslIsActive, this.keyFile, this.certFile);
+    }
+
+    @Override
+    public <T> T executeCommandDecoded(String command) throws Exception {
+        return clientHelper.executeCommandDecoded(command, this.sslIsActive, this.keyFile, this.certFile);
     }
 }

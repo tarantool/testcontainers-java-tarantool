@@ -7,12 +7,14 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
+import org.testcontainers.containers.Container.ExecResult;
 
 import java.time.Duration;
-import java.util.List;
 
 /**
  * @author Alexey Kuzin
+ * @author Valdimir Rogach
+ * @author Ivan Dneprov
  */
 @Testcontainers
 public class TarantoolCartridgeBootstrapFromYamlTest {
@@ -36,7 +38,10 @@ public class TarantoolCartridgeBootstrapFromYamlTest {
 
     @Test
     public void test_migrator_executesOk() throws Exception {
-        List<?> result = container.executeCommand("return require('migrator').up()").get();
-        Assertions.assertEquals("001_ddl.lua", ((List<?>)result.get(0)).get(0));
+        ExecResult result = container.executeCommand("return require('migrator').up()");
+        Assertions.assertEquals("---\n" +
+            "- - 001_ddl.lua\n" +
+            "...\n" +
+            "\n", result.getStdout());
     }
 }

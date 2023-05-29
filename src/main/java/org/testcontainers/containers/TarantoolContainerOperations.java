@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
  * Represents operations available on a Tarantool Container
  *
  * @author Alexey Kuzin
+ * @author Ivan Dneprov
  */
 public interface TarantoolContainerOperations<T extends Container<T>> extends Container<T> {
     /**
@@ -45,6 +46,13 @@ public interface TarantoolContainerOperations<T extends Container<T>> extends Co
     String getInstanceDir();
 
     /**
+     * Get the Tarantool server internal port for connecting the client to
+     *
+     * @return a port
+     */
+    int getInternalPort();
+
+    /**
      * Execute a local script in the Tarantool instance. The path must be classpath-relative.
      * `dofile()` function is executed internally, so possible exceptions will be caught as the client exceptions.
      *
@@ -52,15 +60,33 @@ public interface TarantoolContainerOperations<T extends Container<T>> extends Co
      * @return script execution result
      * @throws Exception if failed to connect to the instance or execution fails
      */
-    CompletableFuture<List<?>> executeScript(String scriptResourcePath) throws Exception;
+    Container.ExecResult executeScript(String scriptResourcePath) throws Exception;
+
+    /**
+     * Execute a local script in the Tarantool instance. The path must be classpath-relative.
+     * `dofile()` function is executed internally, so possible exceptions will be caught as the client exceptions.
+     *
+     * @param scriptResourcePath the classpath resource path to a script
+     * @return script execution result in {@link Container.ExecResult}
+     * @throws Exception if failed to connect to the instance or execution fails
+     */
+    <T> T executeScriptDecoded(String scriptResourcePath) throws Exception;
 
     /**
      * Execute a command in the Tarantool instance. Example of a command: `return 1 + 2, 'foo'`
      *
      * @param command a valid Lua command or a sequence of Lua commands
-     * @param arguments command arguments
      * @return command execution result
      * @throws Exception if failed to connect to the instance or execution fails
      */
-    CompletableFuture<List<?>> executeCommand(String command, Object... arguments) throws Exception;
+    Container.ExecResult executeCommand(String command) throws Exception;
+
+    /**
+     * Execute a command in the Tarantool instance. Example of a command: `return 1 + 2, 'foo'`
+     *
+     * @param command a valid Lua command or a sequence of Lua commands
+     * @return command execution result in {@link Container.ExecResult}
+     * @throws Exception if failed to connect to the instance or execution fails
+     */
+    <T> T executeCommandDecoded(String command) throws Exception;
 }

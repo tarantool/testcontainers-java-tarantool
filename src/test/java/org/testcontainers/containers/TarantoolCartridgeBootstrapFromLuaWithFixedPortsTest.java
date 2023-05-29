@@ -7,7 +7,6 @@ import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.MountableFile;
 
 import java.time.Duration;
 

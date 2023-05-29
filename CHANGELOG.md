@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 - Fix problem if topology isn't applied correctly
+- **[breaking change]** Update executeScript and executeCommand methods to execute code viva execInContainer  
+  (now it returns yaml string in Container.ExecResult not CompletableFuture).
+- **[breaking change]** Remove TarantoolContainer containers with TarantoolClientBuilder parameter.
+- **[breaking change]** Remove getClient method from TarantoolContainerClientHelper.
+- **[breaking change]** Remove io.tarantool.cartridge-driver dependency.
+  because cartridge-java client was also removed.
+- Add executeScriptDecoded and executeCommandDecoded methods to return parsed yaml not string.
+- Add withSsl and withKeyAndCertFiles methods to TarantoolContainer and TarantoolCartridgeContainer.
+- Rewrite tests and add new cases to support new API.
+- Update org.yaml.snakeyaml to 2.0 version.
 
 ## [0.5.4] - 2023-03-31
 - Use tarantool image as base instead of centos in cartridge container
