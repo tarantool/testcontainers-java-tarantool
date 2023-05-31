@@ -6,7 +6,11 @@ import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
@@ -507,7 +511,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                     .substring(topologyConfigurationFile.lastIndexOf('/') + 1);
 
             try {
-                Container.ExecResult result = execInContainer("cartridge",
+                ExecResult result = execInContainer("cartridge",
                         "replicasets",
                         "--run-dir=" + TARANTOOL_RUN_DIR,
                         "--file=" + replicasetsFileName, "setup", "--bootstrap-vshard");
@@ -521,7 +525,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
         } else {
             try {
-                ArrayList<?> res = executeScriptDecoded(topologyConfigurationFile);
+                List<?> res = executeScriptDecoded(topologyConfigurationFile);
                 if (res.size() >= 2 && res.get(1) != null && res.get(1) instanceof Map) {
                     HashMap<?, ?> error = ((HashMap<?, ?>) res.get(1));
                     // that means topology already exists
@@ -608,7 +612,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         String healthyCmd = " local cartridge = package.loaded['cartridge']" +
                 " return assert(cartridge ~= nil)";
         try {
-            Container.ExecResult result = executeCommand(healthyCmd);
+            ExecResult result = executeCommand(healthyCmd);
             return result.getStdout().equals("---\n- true\n...\n\n");
         } catch (Exception e) {
             logger().warn("Error while waiting for router instance to be up: " + e.getMessage());
@@ -620,7 +624,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         String healthyCmd = " local cartridge = package.loaded['cartridge']" +
                 " return assert(cartridge) and assert(cartridge.is_healthy())";
         try {
-            Container.ExecResult result = executeCommand(healthyCmd);
+            ExecResult result = executeCommand(healthyCmd);
             return result.getStdout().equals("---\n- true\n...\n\n");
         } catch (Exception e) {
             logger().warn("Error while waiting for cartridge healthy state: " + e.getMessage());
@@ -629,7 +633,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     @Override
-    public Container.ExecResult executeScript(String scriptResourcePath) throws Exception {
+    public ExecResult executeScript(String scriptResourcePath) throws Exception {
         return clientHelper.executeScript(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
     }
 
@@ -639,7 +643,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     @Override
-    public Container.ExecResult executeCommand(String command) throws Exception {
+    public ExecResult executeCommand(String command) throws Exception {
         return clientHelper.executeCommand(command, this.sslIsActive, this.keyFile, this.certFile);
     }
 

@@ -5,6 +5,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
@@ -48,10 +49,17 @@ public final class TarantoolContainerClientHelper {
         return executeCommand(String.format("return dofile('%s')", containerPath), sslIsActive, keyFile, certFile);
     }
 
-    public <T> T executeScriptDecoded(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
+    public <T> T executeScriptDecoded(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException, ExecutionException {
         Container.ExecResult result = executeScript(scriptResourcePath, sslIsActive, keyFile, certFile);
 
         if (result.getExitCode() != 0) {
+
+            if (result.getExitCode() == 3) {
+                throw new ExecutionException(String.format(EXECUTE_SCRIPT_ERROR_TEMPLATE,
+                    scriptResourcePath, result.getExitCode(),
+                    result.getStderr(), result.getStdout()),
+                    new Throwable());
+            }
 
             throw new IllegalStateException(String.format(EXECUTE_SCRIPT_ERROR_TEMPLATE,
                 scriptResourcePath, result.getExitCode(),
