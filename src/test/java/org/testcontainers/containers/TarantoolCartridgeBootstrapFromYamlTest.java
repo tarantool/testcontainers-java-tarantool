@@ -22,6 +22,7 @@ public class TarantoolCartridgeBootstrapFromYamlTest {
     private static final TarantoolCartridgeContainer container =
             new TarantoolCartridgeContainer(
                     "Dockerfile",
+                    "cartridge",
                     "cartridge/instances.yml",
                     "cartridge/replicasets.yml")
                     .withStartupTimeout(Duration.ofSeconds(300))
