@@ -1,9 +1,11 @@
-package org.testcontainers.containers;
+package org.testcontainers.containers.Enterprise;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.TarantoolContainer;
+import org.testcontainers.containers.TarantoolImageParams;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +31,11 @@ public class TarantoolSdkContainerTestEnterprise {
 
             tarantoolContainer.start();
 
-            final ArrayList<?> result = tarantoolContainer.executeCommandDecoded("return 'test'");
-            final ArrayList<?> versionAnswer = tarantoolContainer.executeCommandDecoded("return _TARANTOOL");
+            final String result = tarantoolContainer.executeCommandDecoded("'test'");
+            final String versionAnswer = tarantoolContainer.executeCommandDecoded("_TARANTOOL");
 
-            Assertions.assertEquals("test", result.get(0));
-            Assertions.assertEquals("2.10.6-0-g5d09e81a6-r557-nogc64", versionAnswer.get(0));
+            Assertions.assertEquals("test", result);
+            Assertions.assertEquals("2.10.6-0-g5d09e81a6-r557-nogc64", versionAnswer);
         }
     }
 }

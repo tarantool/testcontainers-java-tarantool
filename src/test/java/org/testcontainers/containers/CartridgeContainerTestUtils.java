@@ -1,6 +1,6 @@
 package org.testcontainers.containers;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,8 +17,8 @@ public class CartridgeContainerTestUtils {
         container.executeCommand(
                 "return profile_replace({1, \"Ivanov Ivan Ivanovich\", 33, 100500})");
 
-        ArrayList<?> result = container.executeCommandDecoded("return profile_get(1)");
+        List<?> result = container.executeCommandDecoded("return profile_get(1)");
         assertEquals(1, result.size());
-        assertEquals(33, ((ArrayList<?>) result.get(0)).get(3));
+        assertEquals(33, ((List<?>) result.get(0)).get(3));
     }
 }

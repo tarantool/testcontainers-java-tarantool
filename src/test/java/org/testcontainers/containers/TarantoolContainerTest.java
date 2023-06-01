@@ -2,7 +2,7 @@ package org.testcontainers.containers;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -17,7 +17,7 @@ class TarantoolContainerTest {
         try (TarantoolContainer container = new TarantoolContainer()) {
             container.start();
             container.executeScript("org/testcontainers/containers/test.lua");
-            ArrayList<?> result = container.executeCommandDecoded("return user_function_no_param()");
+            List<?> result = container.executeCommandDecoded("return user_function_no_param()");
             assertEquals(1, result.size());
             assertEquals(5, result.get(0));
         }
@@ -35,7 +35,7 @@ class TarantoolContainerTest {
                 .withLogLevel(TarantoolLogLevel.INFO)) {
             container.start();
 
-            ArrayList<?> result = container.executeCommandDecoded("return box.cfg.memtx_memory");
+            List<?> result = container.executeCommandDecoded("return box.cfg.memtx_memory");
             assertEquals(1, result.size());
             assertEquals(memory, result.get(0));
 

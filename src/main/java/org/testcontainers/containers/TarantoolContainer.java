@@ -73,7 +73,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      */
     public TarantoolContainer(TarantoolImageParams tarantoolImageParams) {
         super(TarantoolContainerImageHelper.getImage(tarantoolImageParams));
-        clientHelper = new TarantoolContainerClientHelper(this, "/sdk/tarantoolctl");
+        clientHelper = new TarantoolContainerClientHelper(this);
     }
 
     /**

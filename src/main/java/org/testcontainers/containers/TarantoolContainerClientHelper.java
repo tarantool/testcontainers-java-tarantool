@@ -22,22 +22,44 @@ public final class TarantoolContainerClientHelper {
     private static final Yaml yaml = new Yaml();
 
     private final TarantoolContainerOperations<? extends Container<?>> container;
-    private final String tarantoolctlPath;
     private final String EXECUTE_SCRIPT_ERROR_TEMPLATE =
         "Executed script %s with exit code %d, stderr: \"%s\", stdout: \"%s\"";
     private final String EXECUTE_COMMAND_ERROR_TEMPLATE =
         "Executed command \"%s\" with exit code %d, stderr: \"%s\", stdout: \"%s\"";
+    private final String MTLS_COMMAND_TEMPLATE =
+        "echo \" " +
+        "    print(require('yaml').encode( " +
+        "        require('net.box').connect( " +
+        "            { uri='%s:%d', params = { transport='ssl', ssl_key_file = '%s', ssl_cert_file = '%s' }},  " +
+        "            { user = '%s', password = '%s' } " +
+        "            ):eval('return %s')) " +
+        "        ); " +
+        "    os.exit(); " +
+        "\" | tarantool";
+    private final String SSL_COMMAND_TEMPLATE =
+        "echo \" " +
+        "    print(require('yaml').encode( " +
+        "        require('net.box').connect( " +
+        "            { uri='%s:%d', params = { transport='ssl' }},  " +
+        "            { user = '%s', password = '%s' } " +
+        "            ):eval('return %s')) " +
+        "        ); " +
+        "    os.exit(); " +
+        "\" | tarantool";
+    private final String COMMAND_TEMPLATE = "echo \" " +
+        "    print(require('yaml').encode( " +
+        "        require('net.box').connect( " +
+        "            { uri='%s:%d' },  " +
+        "            { user = '%s', password = '%s' } " +
+        "            ):eval('return %s')) " +
+        "        ); " +
+        "    os.exit(); " +
+        "\" | tarantool";
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
-        this.tarantoolctlPath = "tarantoolctl";
     }
-
-    TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container, String tarantoolctlPath) {
-        this.container = container;
-        this.tarantoolctlPath = tarantoolctlPath;
-    }
-
+    
     public Container.ExecResult executeScript(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
@@ -75,29 +97,27 @@ public final class TarantoolContainerClientHelper {
         }
 
         command = command.replace("\"", "\\\"");
+        command = command.replace("\'", "\\\'");
 
         String bashCommand;
-        if (keyFile != "" && certFile != "") {
-            bashCommand = String.format("echo \"print(require('yaml').encode(require('net.box').connect({ uri='%s:%d', " +
-                    "params = { transport='ssl', ssl_key_file = '%s', ssl_cert_file = '%s' }}, " +
-                    "{ user = '%s', password = '%s' } ):eval('return %s'))); os.exit();\" | tarantool",
+        if (!keyFile.isEmpty() && !certFile.isEmpty()) {
+            bashCommand = String.format(MTLS_COMMAND_TEMPLATE,
                 container.getHost(), container.getInternalPort(),
                 keyFile, certFile,
                 container.getUsername(), container.getPassword(),
                 command
             );
-        } else if (sslIsActive) {
-                bashCommand = String.format("echo \"print(require('yaml').encode(require('net.box').connect({ uri='%s:%d', " +
-                        "params = { transport='ssl' }}, " +
-                        "{ user = '%s', password = '%s' } ):eval('return %s'))); os.exit();\" | tarantool",
+        } else {
+            String commandTemplate = COMMAND_TEMPLATE;
+            if (sslIsActive) {
+                commandTemplate = SSL_COMMAND_TEMPLATE;
+            }
+
+            bashCommand = String.format(commandTemplate,
                 container.getHost(), container.getInternalPort(),
                 container.getUsername(), container.getPassword(),
                 command
-                );
-        } else {
-            bashCommand = String.format("echo \"%s\" | %s connect %s:%s@%s:%s",
-                command, tarantoolctlPath, container.getUsername(), container.getPassword(),
-                container.getHost(), container.getInternalPort());
+            );
         }
 
         return container.execInContainer("sh", "-c", bashCommand);
