@@ -29,7 +29,7 @@ public class TarantoolSdkContainerTestEnterprise {
         );
         final Map<String, String> buildArgs = new HashMap<>();
         buildArgs.put("DOWNLOAD_SDK_URI", System.getenv("DOWNLOAD_SDK_URI"));
-        buildArgs.put("SDK_VERSION", "tarantool-enterprise-bundle-2.7.3-0-gdddf926c3-r443");
+        buildArgs.put("SDK_VERSION", "tarantool-enterprise-sdk-nogc64-2.10.6-0-r557.linux.x86_64");
 
         try (final TarantoolContainer tarantoolContainer = new TarantoolContainer(
                 new TarantoolImageParams("tarantool-enterprise-bundle:latest", dockerfile, buildArgs))
@@ -47,7 +47,7 @@ public class TarantoolSdkContainerTestEnterprise {
             final TarantoolVersion version = client.getVersion();
 
             assertEquals("test", result.get(0));
-            assertTrue(version.toString().startsWith("Tarantool 2.7.3 (Binary)"));
+            assertTrue(version.toString().startsWith("Tarantool 2.10.6 (Binary)"));
         }
     }
 }
