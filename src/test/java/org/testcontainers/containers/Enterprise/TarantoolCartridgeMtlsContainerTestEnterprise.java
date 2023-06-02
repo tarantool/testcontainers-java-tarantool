@@ -1,18 +1,12 @@
 package org.testcontainers.containers.Enterprise;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.CartridgeContainerTestUtils;
-import org.testcontainers.containers.Container.ExecResult;
-import org.testcontainers.containers.SslContext;
-import org.testcontainers.containers.TarantoolCartridgeBootstrapFromYamlTest;
 import org.testcontainers.containers.TarantoolCartridgeContainer;
-import org.testcontainers.containers.TarantoolContainer;
 import org.testcontainers.containers.TarantoolImageParams;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
 

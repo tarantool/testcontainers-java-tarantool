@@ -24,9 +24,9 @@ public final class TarantoolContainerClientHelper {
     private final TarantoolContainerOperations<? extends Container<?>> container;
     private final String EXECUTE_SCRIPT_ERROR_TEMPLATE =
         "Executed script %s with exit code %d, stderr: \"%s\", stdout: \"%s\"";
-    private final String EXECUTE_COMMAND_ERROR_TEMPLATE =
+    private static final String EXECUTE_COMMAND_ERROR_TEMPLATE =
         "Executed command \"%s\" with exit code %d, stderr: \"%s\", stdout: \"%s\"";
-    private final String MTLS_COMMAND_TEMPLATE =
+    private static final String MTLS_COMMAND_TEMPLATE =
         "echo \" " +
         "    print(require('yaml').encode( " +
         "        require('net.box').connect( " +
@@ -36,7 +36,7 @@ public final class TarantoolContainerClientHelper {
         "        ); " +
         "    os.exit(); " +
         "\" | tarantool";
-    private final String SSL_COMMAND_TEMPLATE =
+    private static final String SSL_COMMAND_TEMPLATE =
         "echo \" " +
         "    print(require('yaml').encode( " +
         "        require('net.box').connect( " +
@@ -46,7 +46,7 @@ public final class TarantoolContainerClientHelper {
         "        ); " +
         "    os.exit(); " +
         "\" | tarantool";
-    private final String COMMAND_TEMPLATE = "echo \" " +
+    private static final String COMMAND_TEMPLATE = "echo \" " +
         "    print(require('yaml').encode( " +
         "        require('net.box').connect( " +
         "            { uri='%s:%d' },  " +

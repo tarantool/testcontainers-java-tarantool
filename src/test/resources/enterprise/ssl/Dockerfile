@@ -29,4 +29,7 @@ RUN curl https://curl.se/ca/cacert.pem -o /etc/pki/tls/certs/ca-bundle.crt && \
     mv ./tmp_sdk/tarantool-enterprise $SDK_TGT_DIR && rm $SDK_TGZ && \
     cp $SDK_TGT_DIR/tarantool /usr/bin/tarantool
 
+RUN /usr/bin/tarantool/cartridge version
+
 WORKDIR $TARANTOOL_WORKDIR
+CMD /usr/bin/tarantool/cartridge build && /usr/bin/tarantool/cartridge start --run-dir=$TARANTOOL_RUNDIR --data-dir=$TARANTOOL_DATADIR --cfg=$TARANTOOL_INSTANCES_FILE
