@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 - Fix problem if topology isn't applied correctly
+- Bump testcontainers to 1.18.0
 - **[breaking change]** Update executeScript and executeCommand methods to execute code viva execInContainer  
   (now it returns yaml string in Container.ExecResult not CompletableFuture).
 - **[breaking change]** Remove TarantoolContainer containers with TarantoolClientBuilder parameter.
