@@ -37,15 +37,13 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     private String password = API_PASSWORD;
     private String host = DEFAULT_HOST;
     private Integer port = DEFAULT_PORT;
-    private Boolean sslIsActive = false;
-    private String keyFile = "";
-    private String certFile = "";
     private TarantoolLogLevel logLevel = LOG_LEVEL;
     private Integer memtxMemory = MEMTX_MEMORY;
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String scriptFileName = SCRIPT_FILENAME;
     private String instanceDir = INSTANCE_DIR;
     private boolean useFixedPorts = false;
+    private SslContext sslContext;
 
     private final TarantoolContainerClientHelper clientHelper;
 
@@ -171,29 +169,15 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
 
 
     /**
-     * Specify SSL as connection transport.
+     * Specify SSL as connection transport. And path to key and cert files inside your container for mTLS connection
      * Warning! SSL must be set as default transport on your tarantool cluster.
      * Supported only in Tarantool Enterprise
      *
      * @return this container instance
      */
-    public TarantoolContainer withSsl() {
+    public TarantoolContainer withSslContext(SslContext sslContext) {
         checkNotRunning();
-        this.sslIsActive = true;
-        return this;
-    }
-
-    /**
-     * Specify path to key and cert files inside your container for SSL connection.
-     * Warning! SSL must be set as default transport on your tarantool cluster.
-     * Supported only in Tarantool Enterprise
-     *
-     * @return this container instance
-     */
-    public TarantoolContainer withKeyAndCertFiles(String keyFile, String certFile) {
-        checkNotRunning();
-        this.keyFile = keyFile;
-        this.certFile = certFile;
+        this.sslContext = sslContext;
         return this;
     }
 
@@ -370,21 +354,21 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
 
     @Override
     public Container.ExecResult executeScript(String scriptResourcePath) throws Exception {
-        return clientHelper.executeScript(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeScript(scriptResourcePath, this.sslContext);
     }
 
     @Override
     public <T> T executeScriptDecoded(String scriptResourcePath) throws Exception {
-        return clientHelper.executeScriptDecoded(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeScriptDecoded(scriptResourcePath, this.sslContext);
     }
 
     @Override
     public Container.ExecResult executeCommand(String command) throws Exception {
-        return clientHelper.executeCommand(command, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeCommand(command, this.sslContext);
     }
 
     @Override
     public <T> T executeCommandDecoded(String command) throws Exception {
-        return clientHelper.executeCommandDecoded(command, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeCommandDecoded(command, this.sslContext);
     }
 }

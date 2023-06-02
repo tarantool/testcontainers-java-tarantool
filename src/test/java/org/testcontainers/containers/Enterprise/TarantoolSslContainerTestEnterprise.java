@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.SslContext;
 import org.testcontainers.containers.TarantoolContainer;
 import org.testcontainers.containers.TarantoolImageParams;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -40,7 +41,7 @@ public class TarantoolSslContainerTestEnterprise {
             .withPassword("test_password")
             .withMemtxMemory(256 * 1024 * 1024)
             .withDirectoryBinding("enterprise/ssl")
-            .withSsl()
+            .withSslContext(SslContext.getSslContext())
             .withLogConsumer(new Slf4jLogConsumer(log));
 
         if (!containerWithSsl.isRunning()) {

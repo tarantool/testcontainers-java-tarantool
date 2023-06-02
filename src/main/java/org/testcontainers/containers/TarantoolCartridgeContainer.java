@@ -120,9 +120,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private String topologyConfigurationFile;
-    private Boolean sslIsActive = false;
-    private String keyFile = "";
-    private String certFile = "";
+    private SslContext sslContext ;
 
     /**
      * Create a container with default image and specified instances file from the classpath resources. Assumes that
@@ -193,6 +191,21 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this(buildImage(dockerFile, buildImageName), instancesFile, topologyConfigurationFile, buildArgs);
     }
 
+    /**
+     * Create a container with specified image and specified instances file from the classpath resources. By providing
+     * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
+     * image is tagged with the provided name and not deleted after tests finishing).
+     *
+     * @param tarantoolImageParams params for cached image creating
+     * @param instancesFile             URL resource path to instances.yml relative in the classpath
+     * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
+     */
+    public TarantoolCartridgeContainer(TarantoolImageParams tarantoolImageParams, String instancesFile,
+                                       String topologyConfigurationFile) {
+        this(new ImageFromDockerfile(TarantoolContainerImageHelper.getImage(tarantoolImageParams)), instancesFile,
+            topologyConfigurationFile, tarantoolImageParams.getBuildArgs());
+    }
+
     private TarantoolCartridgeContainer(ImageFromDockerfile image, String instancesFile, String topologyConfigurationFile,
                                         Map<String, String> buildArgs) {
         super(withBuildArgs(image, buildArgs));
@@ -251,29 +264,15 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     /**
-     * Specify SSL as connection transport.
+     * Specify SSL as connection transport. And path to key and cert files inside your container for mTLS connection
      * Warning! SSL must be set as default transport on your tarantool cluster.
      * Supported only in Tarantool Enterprise
      *
      * @return this container instance
      */
-    public TarantoolCartridgeContainer withSsl() {
+    public TarantoolCartridgeContainer withSslContext(SslContext sslContext) {
         checkNotRunning();
-        this.sslIsActive = true;
-        return this;
-    }
-
-    /**
-     * Specify path to key and cert files inside your container for SSL connection.
-     * Warning! SSL must be set as default transport on your tarantool cluster.
-     * Supported only in Tarantool Enterprise
-     *
-     * @return this container instance
-     */
-    public TarantoolCartridgeContainer withKeyAndCertFiles(String keyFile, String certFile) {
-        checkNotRunning();
-        this.keyFile = keyFile;
-        this.certFile = certFile;
+        this.sslContext = sslContext;
         return this;
     }
 
@@ -634,21 +633,21 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     @Override
     public ExecResult executeScript(String scriptResourcePath) throws Exception {
-        return clientHelper.executeScript(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeScript(scriptResourcePath, this.sslContext);
     }
 
     @Override
     public <T> T executeScriptDecoded(String scriptResourcePath) throws Exception {
-        return clientHelper.executeScriptDecoded(scriptResourcePath, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeScriptDecoded(scriptResourcePath, this.sslContext);
     }
 
     @Override
     public ExecResult executeCommand(String command) throws Exception {
-        return clientHelper.executeCommand(command, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeCommand(command, this.sslContext);
     }
 
     @Override
     public <T> T executeCommandDecoded(String command) throws Exception {
-        return clientHelper.executeCommandDecoded(command, this.sslIsActive, this.keyFile, this.certFile);
+        return clientHelper.executeCommandDecoded(command, this.sslContext);
     }
 }

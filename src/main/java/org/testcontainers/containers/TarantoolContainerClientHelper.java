@@ -60,7 +60,7 @@ public final class TarantoolContainerClientHelper {
         this.container = container;
     }
     
-    public Container.ExecResult executeScript(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
+    public Container.ExecResult executeScript(String scriptResourcePath, SslContext sslContext) throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
@@ -68,11 +68,11 @@ public final class TarantoolContainerClientHelper {
         String scriptName = Paths.get(scriptResourcePath).getFileName().toString();
         String containerPath = normalizePath(Paths.get(TMP_DIR, scriptName));
         container.copyFileToContainer(MountableFile.forClasspathResource(scriptResourcePath), containerPath);
-        return executeCommand(String.format("return dofile('%s')", containerPath), sslIsActive, keyFile, certFile);
+        return executeCommand(String.format("return dofile('%s')", containerPath), sslContext);
     }
 
-    public <T> T executeScriptDecoded(String scriptResourcePath, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException, ExecutionException {
-        Container.ExecResult result = executeScript(scriptResourcePath, sslIsActive, keyFile, certFile);
+    public <T> T executeScriptDecoded(String scriptResourcePath, SslContext sslContext) throws IOException, InterruptedException, ExecutionException {
+        Container.ExecResult result = executeScript(scriptResourcePath, sslContext);
 
         if (result.getExitCode() != 0) {
 
@@ -91,7 +91,7 @@ public final class TarantoolContainerClientHelper {
         return yaml.load(result.getStdout());
     }
 
-    public Container.ExecResult executeCommand(String command, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
+    public Container.ExecResult executeCommand(String command, SslContext sslContext) throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute commands in stopped container");
         }
@@ -100,20 +100,24 @@ public final class TarantoolContainerClientHelper {
         command = command.replace("\'", "\\\'");
 
         String bashCommand;
-        if (!keyFile.isEmpty() && !certFile.isEmpty()) {
-            bashCommand = String.format(MTLS_COMMAND_TEMPLATE,
+        // No SSL
+        if (sslContext == null) {
+            bashCommand = String.format(COMMAND_TEMPLATE,
                 container.getHost(), container.getInternalPort(),
-                keyFile, certFile,
                 container.getUsername(), container.getPassword(),
                 command
             );
+        // mTLS
+        } else if (sslContext.getKeyFile() != null && sslContext.getCertFile() != null) {
+            bashCommand = String.format(MTLS_COMMAND_TEMPLATE,
+                container.getHost(), container.getInternalPort(),
+                sslContext.getKeyFile(), sslContext.getCertFile(),
+                container.getUsername(), container.getPassword(),
+                command
+            );
+        // SSL
         } else {
-            String commandTemplate = COMMAND_TEMPLATE;
-            if (sslIsActive) {
-                commandTemplate = SSL_COMMAND_TEMPLATE;
-            }
-
-            bashCommand = String.format(commandTemplate,
+            bashCommand = String.format(SSL_COMMAND_TEMPLATE,
                 container.getHost(), container.getInternalPort(),
                 container.getUsername(), container.getPassword(),
                 command
@@ -123,8 +127,8 @@ public final class TarantoolContainerClientHelper {
         return container.execInContainer("sh", "-c", bashCommand);
     }
 
-    public <T> T executeCommandDecoded(String command, Boolean sslIsActive, String keyFile, String certFile) throws IOException, InterruptedException {
-        Container.ExecResult result = executeCommand(command, sslIsActive, keyFile, certFile);
+    public <T> T executeCommandDecoded(String command, SslContext sslContext) throws IOException, InterruptedException {
+        Container.ExecResult result = executeCommand(command, sslContext);
 
         if (result.getExitCode() != 0) {
             throw new IllegalStateException(String.format(EXECUTE_COMMAND_ERROR_TEMPLATE,
