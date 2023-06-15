@@ -349,7 +349,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         if (useFixedPorts) {
             addFixedExposedPort(port, port);
         } else {
-            withExposedPorts(port);
+            addExposedPorts(port);
         }
 
         withCommand("tarantool", normalizePath(

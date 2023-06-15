@@ -5,6 +5,7 @@ import io.tarantool.driver.exceptions.TarantoolConnectionException;
 
 import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.shaded.org.apache.commons.lang3.ArrayUtils;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -463,7 +464,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 addFixedExposedPort(port, port);
             }
         } else {
-            withExposedPorts(instanceFileParser.getExposablePorts());
+            addExposedPorts(ArrayUtils.toPrimitive(instanceFileParser.getExposablePorts()));
         }
     }
 
