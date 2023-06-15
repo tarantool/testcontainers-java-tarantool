@@ -217,6 +217,16 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return image;
     }
 
+    public TarantoolCartridgeContainer withFixedExposedPort(int hostPort, int containerPort) {
+        super.addFixedExposedPort(hostPort, containerPort);
+        return this;
+    }
+
+    public TarantoolCartridgeContainer withExposedPort(Integer port) {
+        super.addExposedPort(port);
+        return this;
+    }
+
     private static Map<String, String> mergeBuildArguments(Map<String, String> buildArgs) {
         Map<String, String> args = new HashMap<>(buildArgs);
 

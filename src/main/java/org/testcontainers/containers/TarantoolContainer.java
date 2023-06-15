@@ -166,6 +166,16 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         return this;
     }
 
+    public TarantoolContainer withFixedExposedPort(int hostPort, int containerPort) {
+        super.addFixedExposedPort(hostPort, containerPort);
+        return this;
+    }
+
+    public TarantoolContainer withExposedPort(Integer port) {
+        super.addExposedPort(port);
+        return this;
+    }
+
     @Override
     public String getHost() {
         return host;
