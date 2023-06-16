@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * @author Alexey Kuzin
+ * @author Ivan Dneprov
  */
 class TarantoolContainerTest {
 
@@ -14,9 +15,8 @@ class TarantoolContainerTest {
     public void testExecuteScript() throws Exception {
         try (TarantoolContainer container = new TarantoolContainer()) {
             container.start();
-
-            container.executeScript("org/testcontainers/containers/test.lua").get();
-            List<?> result = container.executeCommand("return user_function_no_param()").get();
+            container.executeScript("org/testcontainers/containers/test.lua");
+            List<?> result = container.executeCommandDecoded("return user_function_no_param()");
             assertEquals(1, result.size());
             assertEquals(5, result.get(0));
         }
@@ -34,15 +34,15 @@ class TarantoolContainerTest {
                 .withLogLevel(TarantoolLogLevel.INFO)) {
             container.start();
 
-            List<?> result = container.executeCommand("return box.cfg.memtx_memory").get();
+            List<?> result = container.executeCommandDecoded("return box.cfg.memtx_memory");
             assertEquals(1, result.size());
             assertEquals(memory, result.get(0));
 
-            result = container.executeCommand("return box.cfg.log_level").get();
+            result = container.executeCommandDecoded("return box.cfg.log_level");
             assertEquals(1, result.size());
             assertEquals(5, result.get(0));
 
-            result = container.executeCommand("return user_function_no_param()").get();
+            result = container.executeCommandDecoded("return user_function_no_param()");
             assertEquals(result.size(), 1);
             assertEquals(result.get(0), 5);
         }
