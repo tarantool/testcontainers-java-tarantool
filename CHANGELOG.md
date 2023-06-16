@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.0.0] - 2023-06-16
 - Fix problem if topology isn't applied correctly
 - Bump testcontainers to 1.18.0
 - Move rocks building in build phase
