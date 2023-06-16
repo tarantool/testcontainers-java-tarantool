@@ -12,11 +12,11 @@ public class SslContext {
         this.certFile = certFile;
     }
 
-    public static SslContext getSslContext(){
+    public static SslContext getSslContext() {
         return new SslContext();
     }
 
-    public static SslContext getSslContext(String keyFile, String certFile){
+    public static SslContext getSslContext(String keyFile, String certFile) {
         return new SslContext(keyFile, certFile);
     }
 

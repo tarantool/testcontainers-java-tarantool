@@ -1,8 +1,5 @@
 package org.testcontainers.containers;
 
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 /**
  * Represents operations available on a Tarantool Container
  *
@@ -66,11 +63,12 @@ public interface TarantoolContainerOperations<T extends Container<T>> extends Co
      * Execute a local script in the Tarantool instance. The path must be classpath-relative.
      * `dofile()` function is executed internally, so possible exceptions will be caught as the client exceptions.
      *
+     * @param <V>                the result of script
      * @param scriptResourcePath the classpath resource path to a script
      * @return script execution result in {@link Container.ExecResult}
      * @throws Exception if failed to connect to the instance or execution fails
      */
-    <T> T executeScriptDecoded(String scriptResourcePath) throws Exception;
+    <V> V executeScriptDecoded(String scriptResourcePath) throws Exception;
 
     /**
      * Execute a command in the Tarantool instance. Example of a command: `return 1 + 2, 'foo'`
@@ -84,9 +82,10 @@ public interface TarantoolContainerOperations<T extends Container<T>> extends Co
     /**
      * Execute a command in the Tarantool instance. Example of a command: `return 1 + 2, 'foo'`
      *
+     * @param <V>     the result of script
      * @param command a valid Lua command or a sequence of Lua commands
      * @return command execution result in {@link Container.ExecResult}
      * @throws Exception if failed to connect to the instance or execution fails
      */
-    <T> T executeCommandDecoded(String command) throws Exception;
+    <V> V executeCommandDecoded(String command) throws Exception;
 }

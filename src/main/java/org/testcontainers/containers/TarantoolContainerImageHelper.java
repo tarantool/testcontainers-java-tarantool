@@ -1,17 +1,17 @@
 package org.testcontainers.containers;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.BuildImageCmd;
-import com.github.dockerjava.api.command.BuildImageResultCallback;
-import com.github.dockerjava.api.model.Image;
-import org.testcontainers.DockerClientFactory;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.BuildImageCmd;
+import com.github.dockerjava.api.command.BuildImageResultCallback;
+import com.github.dockerjava.api.model.Image;
+import org.testcontainers.DockerClientFactory;
 
 /**
  * Class for working with docker directly

@@ -1,5 +1,10 @@
 package org.testcontainers.containers.enterprise;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -8,12 +13,6 @@ import org.testcontainers.containers.SslContext;
 import org.testcontainers.containers.TarantoolContainer;
 import org.testcontainers.containers.TarantoolImageParams;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -28,22 +27,22 @@ public class TarantoolSslContainerTestEnterprise {
     @BeforeAll
     public static void setUp() throws Exception {
         final File dockerfile = new File(
-            TarantoolSslContainerTestEnterprise.class.getClassLoader()
-                .getResource("enterprise/Dockerfile").toURI()
+                TarantoolSslContainerTestEnterprise.class.getClassLoader()
+                        .getResource("enterprise/Dockerfile").toURI()
         );
         final Map<String, String> buildArgs = new HashMap<>();
         buildArgs.put("DOWNLOAD_SDK_URI", System.getenv("DOWNLOAD_SDK_URI"));
         buildArgs.put("SDK_VERSION", System.getenv("SDK_VERSION"));
 
         containerWithSsl = new TarantoolContainer(
-            new TarantoolImageParams("tarantool-enterprise", dockerfile, buildArgs))
-            .withScriptFileName("ssl_server.lua")
-            .withUsername("api_user")
-            .withPassword("secret")
-            .withMemtxMemory(256 * 1024 * 1024)
-            .withDirectoryBinding("enterprise/ssl")
-            .withSslContext(SslContext.getSslContext())
-            .withLogConsumer(new Slf4jLogConsumer(log));
+                new TarantoolImageParams("tarantool-enterprise", dockerfile, buildArgs))
+                .withScriptFileName("ssl_server.lua")
+                .withUsername("api_user")
+                .withPassword("secret")
+                .withMemtxMemory(256 * 1024 * 1024)
+                .withDirectoryBinding("enterprise/ssl")
+                .withSslContext(SslContext.getSslContext())
+                .withLogConsumer(new Slf4jLogConsumer(log));
 
         if (!containerWithSsl.isRunning()) {
             containerWithSsl.start();

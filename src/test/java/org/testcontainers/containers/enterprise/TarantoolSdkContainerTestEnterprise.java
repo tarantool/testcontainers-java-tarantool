@@ -1,14 +1,14 @@
 package org.testcontainers.containers.enterprise;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.TarantoolContainer;
-import org.testcontainers.containers.TarantoolImageParams;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.TarantoolContainer;
+import org.testcontainers.containers.TarantoolImageParams;
 
 /**
  * @author Oleg Kuznetsov

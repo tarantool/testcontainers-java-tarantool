@@ -1,12 +1,11 @@
 package org.testcontainers.containers;
 
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import org.testcontainers.containers.wait.strategy.Wait;
-
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.concurrent.Future;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import org.testcontainers.containers.wait.strategy.Wait;
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
@@ -183,6 +182,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      * Warning! SSL must be set as the default transport in your Tarantool cluster.
      * Supported only in Tarantool Enterprise.
      *
+     * @param sslContext {@link SslContext} instance
      * @return this container instance
      */
     public TarantoolContainer withSslContext(SslContext sslContext) {
