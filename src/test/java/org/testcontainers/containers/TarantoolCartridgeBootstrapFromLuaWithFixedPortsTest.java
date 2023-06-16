@@ -20,18 +20,18 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
 
     @Container
     private static final TarantoolCartridgeContainer container =
-        new TarantoolCartridgeContainer(
-            "Dockerfile",
-            "cartridge",
-            "cartridge/instances_fixedport.yml",
-            "cartridge/topology_fixedport.lua")
-            .withEnv("TARANTOOL_INSTANCES_FILE", "instances_fixedport.yml")
-            .withStartupTimeout(Duration.ofSeconds(300))
-            .withUseFixedPorts(true)
-            .withAPIPort(18081)
-            .withRouterPort(13301)
-            .withLogConsumer(new Slf4jLogConsumer(
-                LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)));
+            new TarantoolCartridgeContainer(
+                    "Dockerfile",
+                    "cartridge",
+                    "cartridge/instances_fixedport.yml",
+                    "cartridge/topology_fixedport.lua")
+                    .withEnv("TARANTOOL_INSTANCES_FILE", "instances_fixedport.yml")
+                    .withStartupTimeout(Duration.ofSeconds(300))
+                    .withUseFixedPorts(true)
+                    .withAPIPort(18081)
+                    .withRouterPort(13301)
+                    .withLogConsumer(new Slf4jLogConsumer(
+                            LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)));
 
     @Test
     public void test_StaticClusterContainer_StartsSuccessfully_ifFilesAreCopied() throws Exception {
@@ -41,13 +41,14 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
     @Test
     public void test_retryingSetupTopology_shouldWork() {
         try (TarantoolCartridgeContainer testContainer =
-                 new TarantoolCartridgeContainer(
-                     "Dockerfile",
-                     "cartridge",
-                     "cartridge/instances.yml",
-                     "cartridge/incorrect_topology.lua")
-                     .withLogConsumer(new Slf4jLogConsumer(
-                         LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)))) {
+                     new TarantoolCartridgeContainer(
+                             "Dockerfile",
+                             "cartridge",
+                             "cartridge/instances.yml",
+                             "cartridge/incorrect_topology.lua")
+                             .withLogConsumer(new Slf4jLogConsumer(
+                                     LoggerFactory.getLogger(
+                                             TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)))) {
             ContainerLaunchException ex = assertThrows(ContainerLaunchException.class, testContainer::start);
             Throwable cause = ex.getCause();
             assertEquals(RetryCountExceededException.class, cause.getClass());

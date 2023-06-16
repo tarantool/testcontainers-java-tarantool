@@ -1,11 +1,10 @@
 package org.testcontainers.containers;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 
 /**

@@ -1,12 +1,11 @@
 package org.testcontainers.containers;
 
-import org.testcontainers.utility.MountableFile;
-import org.yaml.snakeyaml.Yaml;
-
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
+import org.testcontainers.utility.MountableFile;
+import org.yaml.snakeyaml.Yaml;
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
@@ -23,44 +22,46 @@ public final class TarantoolContainerClientHelper {
 
     private final TarantoolContainerOperations<? extends Container<?>> container;
     private final String EXECUTE_SCRIPT_ERROR_TEMPLATE =
-        "Executed script %s with exit code %d, stderr: \"%s\", stdout: \"%s\"";
+            "Executed script %s with exit code %d, stderr: \"%s\", stdout: \"%s\"";
     private static final String EXECUTE_COMMAND_ERROR_TEMPLATE =
-        "Executed command \"%s\" with exit code %d, stderr: \"%s\", stdout: \"%s\"";
+            "Executed command \"%s\" with exit code %d, stderr: \"%s\", stdout: \"%s\"";
     private static final String MTLS_COMMAND_TEMPLATE =
-        "echo \" " +
-        "    print(require('yaml').encode( " +
-        "        {require('net.box').connect( " +
-            "            { uri='%s:%d', params = { transport='ssl', ssl_key_file = '%s', ssl_cert_file = '%s' }},  " +
-            "            { user = '%s', password = '%s' } " +
-            "            ):eval('%s')}) " +
-        "        ); " +
-        "    os.exit(); " +
-        "\" | tarantool";
+            "echo \" " +
+                    "    print(require('yaml').encode( " +
+                    "        {require('net.box').connect( " +
+                    "            { uri='%s:%d', params = { transport='ssl', ssl_key_file = '%s', ssl_cert_file = '%s'" +
+                    " }},  " +
+                    "            { user = '%s', password = '%s' } " +
+                    "            ):eval('%s')}) " +
+                    "        ); " +
+                    "    os.exit(); " +
+                    "\" | tarantool";
     private static final String SSL_COMMAND_TEMPLATE =
-        "echo \" " +
-        "    print(require('yaml').encode( " +
-        "        {require('net.box').connect( " +
-            "            { uri='%s:%d', params = { transport='ssl' }},  " +
+            "echo \" " +
+                    "    print(require('yaml').encode( " +
+                    "        {require('net.box').connect( " +
+                    "            { uri='%s:%d', params = { transport='ssl' }},  " +
+                    "            { user = '%s', password = '%s' } " +
+                    "            ):eval('%s')}) " +
+                    "        ); " +
+                    "    os.exit(); " +
+                    "\" | tarantool";
+    private static final String COMMAND_TEMPLATE = "echo \" " +
+            "    print(require('yaml').encode( " +
+            "        {require('net.box').connect( " +
+            "            { uri='%s:%d' },  " +
             "            { user = '%s', password = '%s' } " +
             "            ):eval('%s')}) " +
-        "        ); " +
-        "    os.exit(); " +
-        "\" | tarantool";
-    private static final String COMMAND_TEMPLATE = "echo \" " +
-        "    print(require('yaml').encode( " +
-        "        {require('net.box').connect( " +
-        "            { uri='%s:%d' },  " +
-        "            { user = '%s', password = '%s' } " +
-        "            ):eval('%s')}) " +
-        "        ); " +
-        "    os.exit(); " +
-        "\" | tarantool";
+            "        ); " +
+            "    os.exit(); " +
+            "\" | tarantool";
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
     }
-    
-    public Container.ExecResult executeScript(String scriptResourcePath, SslContext sslContext) throws IOException, InterruptedException {
+
+    public Container.ExecResult executeScript(String scriptResourcePath, SslContext sslContext)
+            throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute scripts in stopped container");
         }
@@ -71,27 +72,29 @@ public final class TarantoolContainerClientHelper {
         return executeCommand(String.format("return dofile('%s')", containerPath), sslContext);
     }
 
-    public <T> T executeScriptDecoded(String scriptResourcePath, SslContext sslContext) throws IOException, InterruptedException, ExecutionException {
+    public <T> T executeScriptDecoded(String scriptResourcePath, SslContext sslContext)
+            throws IOException, InterruptedException, ExecutionException {
         Container.ExecResult result = executeScript(scriptResourcePath, sslContext);
 
         if (result.getExitCode() != 0) {
 
             if (result.getExitCode() == 3 || result.getExitCode() == 1) {
                 throw new ExecutionException(String.format(EXECUTE_SCRIPT_ERROR_TEMPLATE,
-                    scriptResourcePath, result.getExitCode(),
-                    result.getStderr(), result.getStdout()),
-                    new Throwable());
+                        scriptResourcePath, result.getExitCode(),
+                        result.getStderr(), result.getStdout()),
+                        new Throwable());
             }
 
             throw new IllegalStateException(String.format(EXECUTE_SCRIPT_ERROR_TEMPLATE,
-                scriptResourcePath, result.getExitCode(),
-                result.getStderr(), result.getStdout()));
+                    scriptResourcePath, result.getExitCode(),
+                    result.getStderr(), result.getStdout()));
         }
 
         return yaml.load(result.getStdout());
     }
 
-    public Container.ExecResult executeCommand(String command, SslContext sslContext) throws IOException, InterruptedException {
+    public Container.ExecResult executeCommand(String command, SslContext sslContext)
+            throws IOException, InterruptedException {
         if (!container.isRunning()) {
             throw new IllegalStateException("Cannot execute commands in stopped container");
         }
@@ -102,22 +105,22 @@ public final class TarantoolContainerClientHelper {
         String bashCommand;
         if (sslContext == null) { // No SSL
             bashCommand = String.format(COMMAND_TEMPLATE,
-                container.getHost(), container.getInternalPort(),
-                container.getUsername(), container.getPassword(),
-                command
+                    container.getHost(), container.getInternalPort(),
+                    container.getUsername(), container.getPassword(),
+                    command
             );
         } else if (sslContext.getKeyFile() != null && sslContext.getCertFile() != null) { // mTLS
             bashCommand = String.format(MTLS_COMMAND_TEMPLATE,
-                container.getHost(), container.getInternalPort(),
-                sslContext.getKeyFile(), sslContext.getCertFile(),
-                container.getUsername(), container.getPassword(),
-                command
+                    container.getHost(), container.getInternalPort(),
+                    sslContext.getKeyFile(), sslContext.getCertFile(),
+                    container.getUsername(), container.getPassword(),
+                    command
             );
         } else { // SSL
             bashCommand = String.format(SSL_COMMAND_TEMPLATE,
-                container.getHost(), container.getInternalPort(),
-                container.getUsername(), container.getPassword(),
-                command
+                    container.getHost(), container.getInternalPort(),
+                    container.getUsername(), container.getPassword(),
+                    command
             );
         }
 
@@ -129,7 +132,7 @@ public final class TarantoolContainerClientHelper {
 
         if (result.getExitCode() != 0) {
             throw new IllegalStateException(String.format(EXECUTE_COMMAND_ERROR_TEMPLATE,
-                command, result.getExitCode(), result.getStderr(), result.getStdout()));
+                    command, result.getExitCode(), result.getStderr(), result.getStdout()));
         }
 
         return yaml.load(result.getStdout());

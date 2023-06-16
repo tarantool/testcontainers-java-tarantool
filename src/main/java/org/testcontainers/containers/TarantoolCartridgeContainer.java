@@ -1,11 +1,5 @@
 package org.testcontainers.containers;
 
-import com.github.dockerjava.api.command.InspectContainerResponse;
-
-import org.testcontainers.containers.exceptions.CartridgeTopologyException;
-import org.testcontainers.images.builder.ImageFromDockerfile;
-import org.testcontainers.shaded.org.apache.commons.lang3.ArrayUtils;
-
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +10,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
+import org.testcontainers.containers.exceptions.CartridgeTopologyException;
+import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.shaded.org.apache.commons.lang3.ArrayUtils;
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
@@ -83,7 +81,6 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
  * @author Alexey Kuzin
  * @author Artyom Dubinin
  * @author Ivan Dneprov
- *
  */
 public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartridgeContainer>
         implements TarantoolContainerOperations<TarantoolCartridgeContainer> {
@@ -164,7 +161,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
      * the result Cartridge container image name, you can cache the image and avoid rebuilding on each test run (the
      * image is tagged with the provided name and not deleted after tests finishing).
      *
-     * @param dockerFile                URL resource path to a Dockerfile which configures Cartridge and other necessary services
+     * @param dockerFile                URL resource path to a Dockerfile which configures Cartridge and other
+     *                                  necessary services
      * @param buildImageName            Specify a stable image name for the test container to prevent rebuilds
      * @param instancesFile             URL resource path to instances.yml relative in the classpath
      * @param topologyConfigurationFile URL resource path to a topology bootstrap script in the classpath
@@ -192,7 +190,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this(buildImage(dockerFile, buildImageName, buildArgs), instancesFile, topologyConfigurationFile, buildArgs);
     }
 
-    private TarantoolCartridgeContainer(ImageFromDockerfile image, String instancesFile, String topologyConfigurationFile,
+    private TarantoolCartridgeContainer(ImageFromDockerfile image, String instancesFile,
+                                        String topologyConfigurationFile,
                                         Map<String, String> buildArgs) {
         super(withBuildArgs(image, buildArgs));
 
@@ -252,7 +251,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName,
-            final Map<String, String> buildArgs) {
+                                                  final Map<String, String> buildArgs) {
         ImageFromDockerfile image;
         if (buildImageName != null && !buildImageName.isEmpty()) {
             image = new ImageFromDockerfile(buildImageName, false);
@@ -260,8 +259,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
             image = new ImageFromDockerfile();
         }
         return image.withFileFromClasspath("Dockerfile", dockerFile)
-                   .withFileFromClasspath("cartridge", buildArgs.get("CARTRIDGE_SRC_DIR") == null ?
-                                                           "cartridge" : buildArgs.get("CARTRIDGE_SRC_DIR"));
+                .withFileFromClasspath("cartridge", buildArgs.get("CARTRIDGE_SRC_DIR") == null ?
+                        "cartridge" : buildArgs.get("CARTRIDGE_SRC_DIR"));
     }
 
     /**
@@ -504,7 +503,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                         "--file=" + replicasetsFileName, "setup", "--bootstrap-vshard");
                 if (result.getExitCode() != 0) {
                     throw new CartridgeTopologyException("Failed to change the app topology via cartridge CLI: "
-                                                             + result.getStdout());
+                            + result.getStdout());
                 }
             } catch (Exception e) {
                 throw new CartridgeTopologyException(e);
