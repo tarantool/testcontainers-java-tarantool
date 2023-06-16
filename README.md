@@ -52,9 +52,9 @@ public class SomeTest {
     @BeforeAll
     public void setUp() {
         // Run some setup commands
-        container.executeCommand("return 1, 2").get();
+        container.executeCommand("return 1, 2");
         // Or execute a script
-        container.executeScript("org/testcontainers/containers/test.lua").get();
+        container.executeScript("org/testcontainers/containers/test.lua");
     }
 
     @Test
@@ -72,7 +72,7 @@ public class SomeTest {
             ...
 
             // Execute some commands in Tarantool instance for verification
-            List<Object> result = container.executeCommand("return 1, 2").get();
+            List<Object> result = container.executeCommand("return 1, 2");
             ...
         }
     ...
@@ -181,7 +181,7 @@ public class SomeOtherTest {
     // Use the created container in tests
     public void testFoo() {
         // Execute Lua commands in the router instance
-        List<Object> result = container.executeCommand("return profile_get(...)", 1).get();
+        List<Object> result = container.executeCommand("return profile_get(1)");
 
         // Instantiate a client connected to the router node
         TarantoolCredentials credentials = new SimpleTarantoolCredentials(getRouterUsername(), getRouterPassword());
