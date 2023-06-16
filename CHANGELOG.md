@@ -10,10 +10,10 @@
 - **[breaking change]** Remove io.tarantool.cartridge-driver dependency
 - **[breaking change]** Update executeScript and executeCommand methods to execute code via execInContainer  
   (now it returns **yaml** string in Container.ExecResult instead of CompletableFuture)
-- Add executeScriptDecoded and executeCommandDecoded methods to return parsed yaml not string.
+- Add executeScriptDecoded and executeCommandDecoded methods to return parsed yaml not string
 - Add SslContext class
-- Add withSslContext method to TarantoolContainer and TarantoolCartridgeContainer.
-- Update org.yaml.snakeyaml to 2.0 version.
+- Add withSslContext method to TarantoolContainer and TarantoolCartridgeContainer
+- Update org.yaml.snakeyaml to 2.0 version
 
 ## [0.5.4] - 2023-03-31
 - Use tarantool image as base instead of centos in cartridge container
