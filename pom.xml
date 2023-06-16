@@ -42,13 +42,13 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/tarantool/cartridge-java-testcontainers/issues/</url>
+        <url>https://github.com/tarantool/testcontainers-java-tarantool/issues/</url>
     </issueManagement>
 
     <scm>
-        <connection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</connection>
-        <developerConnection>scm:git:git@github.com:tarantool/cartridge-java-testcontainers.git</developerConnection>
-        <url>http://github.com/tarantool/cartridge-java-testcontainers/tree/master</url>
+        <connection>scm:git:git@github.com:tarantool/testcontainers-java-tarantool.git</connection>
+        <developerConnection>scm:git:git@github.com:tarantool/testcontainers-java-tarantool.git</developerConnection>
+        <url>http://github.com/tarantool/testcontainers-java-tarantool/tree/master</url>
         <tag>v0.5.4</tag>
     </scm>
 
