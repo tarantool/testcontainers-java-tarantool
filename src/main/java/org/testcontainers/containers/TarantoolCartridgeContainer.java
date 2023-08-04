@@ -102,8 +102,10 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_SERVER_GID = "TARANTOOL_SERVER_GID";
     private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
     private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
+    private static final String ENV_TARANTOOL_LOGDIR = "TARANTOOL_LOGDIR";
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
     private static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
+    private static final String ENV_TARANTOOL_CLUSTER_COOKIE = "TARANTOOL_CLUSTER_COOKIE";
 
     private final CartridgeConfigParser instanceFileParser;
     private final TarantoolContainerClientHelper clientHelper;
@@ -239,8 +241,10 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
                 ENV_TARANTOOL_SERVER_GID,
                 ENV_TARANTOOL_WORKDIR,
                 ENV_TARANTOOL_RUNDIR,
+                ENV_TARANTOOL_LOGDIR,
                 ENV_TARANTOOL_DATADIR,
-                ENV_TARANTOOL_INSTANCES_FILE
+                ENV_TARANTOOL_INSTANCES_FILE,
+                ENV_TARANTOOL_CLUSTER_COOKIE
         )) {
             String variableValue = System.getenv(envVariable);
             if (variableValue != null && !args.containsKey(envVariable)) {
