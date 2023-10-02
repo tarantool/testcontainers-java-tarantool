@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Fix command template for use with the 1.x Tarantool version ([#87](https://github.com/tarantool/testcontainers-java-tarantool/issues/87))
+- Propagate log directory to cartridge-cli command ([#83](https://github.com/tarantool/testcontainers-java-tarantool/issues/83))
 
 ## [1.0.0] - 2023-06-16
 - Fix problem if topology isn't applied correctly
