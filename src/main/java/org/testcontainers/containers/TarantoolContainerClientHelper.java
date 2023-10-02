@@ -49,7 +49,7 @@ public final class TarantoolContainerClientHelper {
     private static final String COMMAND_TEMPLATE = "echo \" " +
             "    print(require('yaml').encode( " +
             "        {require('net.box').connect( " +
-            "            { uri='%s:%d' },  " +
+            "            '%s:%d',  " +
             "            { user = '%s', password = '%s' } " +
             "            ):eval('%s')}) " +
             "        ); " +

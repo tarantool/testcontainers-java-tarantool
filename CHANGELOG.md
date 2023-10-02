@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fix command template for use with the 1.x Tarantool version ([#87](https://github.com/tarantool/testcontainers-java-tarantool/issues/87))
+
 ## [1.0.0] - 2023-06-16
 - Fix problem if topology isn't applied correctly
 - Bump testcontainers to 1.18.0

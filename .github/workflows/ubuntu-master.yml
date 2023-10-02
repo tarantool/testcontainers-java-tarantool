@@ -25,7 +25,7 @@ jobs:
         env:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
-        run: mvn -B verify --file pom.xml
+        run: mvn -e -B verify --file pom.xml
 
       - name: Run enterprise tests
         env:
