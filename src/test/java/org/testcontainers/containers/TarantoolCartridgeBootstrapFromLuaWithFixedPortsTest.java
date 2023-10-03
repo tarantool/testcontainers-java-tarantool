@@ -26,7 +26,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                     "cartridge/instances_fixedport.yml",
                     "cartridge/topology_fixedport.lua")
                     .withEnv("TARANTOOL_INSTANCES_FILE", "instances_fixedport.yml")
-                    .withStartupTimeout(Duration.ofSeconds(300))
+                    .withStartupTimeout(Duration.ofMinutes(5))
                     .withUseFixedPorts(true)
                     .withAPIPort(18081)
                     .withRouterPort(13301)
@@ -48,7 +48,8 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                              "cartridge/incorrect_topology.lua")
                              .withLogConsumer(new Slf4jLogConsumer(
                                      LoggerFactory.getLogger(
-                                             TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)))) {
+                                             TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)))
+                             .withStartupTimeout(Duration.ofMinutes(5))) {
             ContainerLaunchException ex = assertThrows(ContainerLaunchException.class, testContainer::start);
             Throwable cause = ex.getCause();
             assertEquals(RetryCountExceededException.class, cause.getClass());
