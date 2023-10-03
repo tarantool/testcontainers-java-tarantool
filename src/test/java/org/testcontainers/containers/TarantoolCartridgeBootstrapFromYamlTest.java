@@ -25,7 +25,7 @@ public class TarantoolCartridgeBootstrapFromYamlTest {
                     "cartridge",
                     "cartridge/instances.yml",
                     "cartridge/replicasets.yml")
-                    .withStartupTimeout(Duration.ofSeconds(300))
+                    .withStartupTimeout(Duration.ofMinutes(5))
                     .withLogConsumer(new Slf4jLogConsumer(
                             LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
 
