@@ -21,6 +21,11 @@ jobs:
           distribution: 'zulu'
           java-version: '8'
           cache: 'maven'
+
+      - name: Store docker images
+        uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
+
       - name: Build with Maven
         env:
           TARANTOOL_SERVER_USER: root
