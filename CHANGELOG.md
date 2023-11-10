@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2023-11-10
+
+- Make a separate step for building the cartridge ([#94](https://github.com/tarantool/testcontainers-java-tarantool/issues/94))
+
+## [1.0.1] - 2023-10-04
+
 - Fix command template for use with the 1.x Tarantool version ([#87](https://github.com/tarantool/testcontainers-java-tarantool/issues/87))
 - Propagate log directory to cartridge-cli command ([#83](https://github.com/tarantool/testcontainers-java-tarantool/issues/83))
 
