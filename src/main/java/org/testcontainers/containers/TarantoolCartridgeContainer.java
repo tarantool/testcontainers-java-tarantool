@@ -120,6 +120,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     private String instanceDir = INSTANCE_DIR;
     private String topologyConfigurationFile;
+    private String instancesFile;
     private SslContext sslContext;
 
     /**
@@ -205,6 +206,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (topologyConfigurationFile == null || topologyConfigurationFile.isEmpty()) {
             throw new IllegalArgumentException("Topology configuration file must not be null or empty");
         }
+        this.instancesFile = instancesFile;
         this.topologyConfigurationFile = topologyConfigurationFile;
         this.instanceFileParser = new CartridgeConfigParser(instancesFile);
         this.clientHelper = new TarantoolContainerClientHelper(this);
@@ -494,17 +496,23 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean setupTopology() {
-        String fileType = topologyConfigurationFile.substring(topologyConfigurationFile.lastIndexOf('.') + 1);
-
+        String fileType = topologyConfigurationFile
+            .substring(topologyConfigurationFile.lastIndexOf('.') + 1);
         if (fileType.equals("yml")) {
             String replicasetsFileName = topologyConfigurationFile
-                    .substring(topologyConfigurationFile.lastIndexOf('/') + 1);
-
+                .substring(topologyConfigurationFile.lastIndexOf('/') + 1);
+            String instancesFileName = instancesFile
+                .substring(instancesFile.lastIndexOf('/') + 1);
             try {
-                ExecResult result = execInContainer("cartridge",
-                        "replicasets",
-                        "--run-dir=" + TARANTOOL_RUN_DIR,
-                        "--file=" + replicasetsFileName, "setup", "--bootstrap-vshard");
+                ExecResult result = execInContainer(
+                    "cartridge",
+                    "replicasets",
+                    "--run-dir=" + TARANTOOL_RUN_DIR,
+                    "--file=" + replicasetsFileName,
+                    "--cfg=" + instancesFileName,
+                    "setup",
+                    "--bootstrap-vshard"
+                );
                 if (result.getExitCode() != 0) {
                     throw new CartridgeTopologyException("Failed to change the app topology via cartridge CLI: "
                             + result.getStdout());
@@ -540,7 +548,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         if (!setupTopology()) {
             try {
                 logger().info("Retrying setup topology in 10 seconds");
-                Thread.sleep(10000);
+                Thread.sleep(1_000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -563,10 +571,10 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
         super.containerIsStarted(containerInfo, reused);
 
-        waitUntilRouterIsUp(60);
+        waitUntilRouterIsUp(120);
         retryingSetupTopology();
         // wait until Roles are configured
-        waitUntilCartridgeIsHealthy(10);
+        waitUntilCartridgeIsHealthy(120);
         bootstrapVshard();
 
         logger().info("Tarantool Cartridge cluster is started");
@@ -575,49 +583,79 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private void waitUntilRouterIsUp(int secondsToWait) {
-        waitUntilTrue(secondsToWait, this::routerIsUp);
+        if(!waitUntilTrue(secondsToWait, this::routerIsUp)) {
+            throw new RuntimeException("Timeout exceeded during router upping stage." +
+                                       " See the specific error in logs.");
+        }
     }
 
     private void waitUntilCartridgeIsHealthy(int secondsToWait) {
-        waitUntilTrue(secondsToWait, this::isCartridgeHealthy);
+        if(!waitUntilTrue(secondsToWait, this::isCartridgeHealthy)) {
+            throw new RuntimeException("Timeout exceeded during cartridge topology applying stage." +
+                                       " See the specific error in logs.");
+        }
     }
 
-    private void waitUntilTrue(int secondsToWait, Supplier<Boolean> waitFunc) {
+    private boolean waitUntilTrue(int secondsToWait, Supplier<Boolean> waitFunc) {
         int secondsPassed = 0;
         boolean result = waitFunc.get();
         while (!result && secondsPassed < secondsToWait) {
             result = waitFunc.get();
             try {
-                Thread.sleep(1000);
+                Thread.sleep(1_000);
+                secondsPassed++;
             } catch (InterruptedException e) {
                 break;
             }
         }
-        if (!result) {
-            throw new RuntimeException("Failed to change the app topology after retry");
-        }
+        return result;
     }
 
     private boolean routerIsUp() {
-        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
-                " return cartridge ~= nil";
+//        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
+//                " return cartridge ~= nil";
+        String healthyCmd = "return require('cartridge').is_healthy()";
+        ExecResult result;
+
         try {
-            List<?> result = executeCommandDecoded(healthyCmd);
-            return result.get(0).getClass() == Boolean.class && (Boolean) result.get(0);
-        } catch (Exception e) {
-            logger().warn("Error while waiting for router instance to be up: " + e.getMessage());
+             result = executeCommand(healthyCmd);
+            if (result.getExitCode() != 0 && result.getStderr().contains("Connection refused") &&
+                result.getStdout().isEmpty()) {
+                return false;
+            } else if (result.getExitCode() != 0) {
+                logger().error("exit code: {}, stdout: {}, stderr: {}",result.getExitCode(), result.getStdout(),
+                        result.getStderr());
+                return false;
+            } else {
+                return true;
+            }
+        }catch (Exception e) {
+            logger().error(e.getMessage());
             return false;
         }
+
     }
 
     private boolean isCartridgeHealthy() {
-        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
-                " return cartridge ~= nil and cartridge.is_healthy()";
+        String healthyCmd = " return require('cartridge').is_healthy()";
+        ExecResult result;
         try {
-            List<?> result = executeCommandDecoded(healthyCmd);
-            return result.get(0).getClass() == Boolean.class && (Boolean) result.get(0);
+            result = executeCommand(healthyCmd);
+            if (result.getExitCode() != 0) {
+                logger().error("exitCode: {}, stdout: {}, stderr: {}", result.getExitCode(), result.getStdout(),
+                        result.getStderr());
+                return false;
+            } else if (result.getStdout().startsWith("---\n- null\n")){
+                return false;
+            } else if (result.getStdout().contains("true")) {
+                return true;
+            } else {
+                logger().warn("exitCode: {}, stdout: {}, stderr: {}", result.getExitCode(), result.getStdout(),
+                        result.getStderr());
+                return false;
+            }
         } catch (Exception e) {
-            logger().warn("Error while waiting for cartridge healthy state: " + e.getMessage());
+            logger().error("Error while waiting for cartridge healthy state: " + e.getMessage());
             return false;
         }
     }

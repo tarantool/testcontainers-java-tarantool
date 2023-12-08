@@ -2,5 +2,11 @@
 target/
 .idea/
 *.iml
+.classpath
+.project
+.settings/
+*.swp
+workbench.xmi
+
 
 src/test/resources/cartridge/tmp/*
