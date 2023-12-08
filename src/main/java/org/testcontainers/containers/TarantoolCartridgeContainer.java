@@ -106,6 +106,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
     private static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
     private static final String ENV_TARANTOOL_CLUSTER_COOKIE = "TARANTOOL_CLUSTER_COOKIE";
+    private static final String healthyCmd = "return require('cartridge').is_healthy()";
 
     private final CartridgeConfigParser instanceFileParser;
     private final TarantoolContainerClientHelper clientHelper;
@@ -570,11 +571,12 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     @Override
     protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
         super.containerIsStarted(containerInfo, reused);
+        int secondsToWait = 120;
 
-        waitUntilRouterIsUp(120);
+        waitUntilRouterIsUp(secondsToWait);
         retryingSetupTopology();
         // wait until Roles are configured
-        waitUntilCartridgeIsHealthy(120);
+        waitUntilCartridgeIsHealthy(secondsToWait);
         bootstrapVshard();
 
         logger().info("Tarantool Cartridge cluster is started");
@@ -584,7 +586,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     private void waitUntilRouterIsUp(int secondsToWait) {
         if(!waitUntilTrue(secondsToWait, this::routerIsUp)) {
-            throw new RuntimeException("Timeout exceeded during router upping stage." +
+            throw new RuntimeException("Timeout exceeded during router starting stage." +
                                        " See the specific error in logs.");
         }
     }
@@ -612,11 +614,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean routerIsUp() {
-//        String healthyCmd = " local cartridge = package.loaded['cartridge']" +
-//                " return cartridge ~= nil";
-        String healthyCmd = "return require('cartridge').is_healthy()";
         ExecResult result;
-
         try {
              result = executeCommand(healthyCmd);
             if (result.getExitCode() != 0 && result.getStderr().contains("Connection refused") &&
@@ -637,7 +635,6 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     }
 
     private boolean isCartridgeHealthy() {
-        String healthyCmd = " return require('cartridge').is_healthy()";
         ExecResult result;
         try {
             result = executeCommand(healthyCmd);
