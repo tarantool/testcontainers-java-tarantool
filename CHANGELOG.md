@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Bump testcontainers to 1.19.3
+
 ## [1.0.2] - 2023-11-10
 
 - Make a separate step for building the cartridge ([#94](https://github.com/tarantool/testcontainers-java-tarantool/issues/94))
