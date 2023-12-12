@@ -85,45 +85,45 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
 public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartridgeContainer>
         implements TarantoolContainerOperations<TarantoolCartridgeContainer> {
 
-    private static final String ROUTER_HOST = "localhost";
-    private static final int ROUTER_PORT = 3301;
-    private static final String CARTRIDGE_USERNAME = "admin";
-    private static final String CARTRIDGE_PASSWORD = "testapp-cluster-cookie";
-    private static final String DOCKERFILE = "Dockerfile";
-    private static final int API_PORT = 8081;
-    private static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
-    private static final String SCRIPT_RESOURCE_DIRECTORY = "";
-    private static final String INSTANCE_DIR = "/app";
+    protected static final String ROUTER_HOST = "localhost";
+    protected static final int ROUTER_PORT = 3301;
+    protected static final String CARTRIDGE_USERNAME = "admin";
+    protected static final String CARTRIDGE_PASSWORD = "testapp-cluster-cookie";
+    protected static final String DOCKERFILE = "Dockerfile";
+    protected static final int API_PORT = 8081;
+    protected static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
+    protected static final String SCRIPT_RESOURCE_DIRECTORY = "";
+    protected static final String INSTANCE_DIR = "/app";
 
-    private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
-    private static final String ENV_TARANTOOL_SERVER_USER = "TARANTOOL_SERVER_USER";
-    private static final String ENV_TARANTOOL_SERVER_UID = "TARANTOOL_SERVER_UID";
-    private static final String ENV_TARANTOOL_SERVER_GROUP = "TARANTOOL_SERVER_GROUP";
-    private static final String ENV_TARANTOOL_SERVER_GID = "TARANTOOL_SERVER_GID";
-    private static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
-    private static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
-    private static final String ENV_TARANTOOL_LOGDIR = "TARANTOOL_LOGDIR";
-    private static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
-    private static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
-    private static final String ENV_TARANTOOL_CLUSTER_COOKIE = "TARANTOOL_CLUSTER_COOKIE";
-    private static final String healthyCmd = "return require('cartridge').is_healthy()";
-    private  static final int TWO_MINUTES = 120;
+    public static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
+    public static final String ENV_TARANTOOL_SERVER_USER = "TARANTOOL_SERVER_USER";
+    public static final String ENV_TARANTOOL_SERVER_UID = "TARANTOOL_SERVER_UID";
+    public static final String ENV_TARANTOOL_SERVER_GROUP = "TARANTOOL_SERVER_GROUP";
+    public static final String ENV_TARANTOOL_SERVER_GID = "TARANTOOL_SERVER_GID";
+    public static final String ENV_TARANTOOL_WORKDIR = "TARANTOOL_WORKDIR";
+    public static final String ENV_TARANTOOL_RUNDIR = "TARANTOOL_RUNDIR";
+    public static final String ENV_TARANTOOL_LOGDIR = "TARANTOOL_LOGDIR";
+    public static final String ENV_TARANTOOL_DATADIR = "TARANTOOL_DATADIR";
+    public static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
+    public static final String ENV_TARANTOOL_CLUSTER_COOKIE = "TARANTOOL_CLUSTER_COOKIE";
+    protected static final String healthyCmd = "return require('cartridge').is_healthy()";
+    protected static final int TWO_MINUTES = 120;
 
-    private final CartridgeConfigParser instanceFileParser;
-    private final TarantoolContainerClientHelper clientHelper;
-    private final String TARANTOOL_RUN_DIR;
+    protected final CartridgeConfigParser instanceFileParser;
+    protected final TarantoolContainerClientHelper clientHelper;
+    protected final String TARANTOOL_RUN_DIR;
 
-    private boolean useFixedPorts = false;
-    private String routerHost = ROUTER_HOST;
-    private int routerPort = ROUTER_PORT;
-    private int apiPort = API_PORT;
-    private String routerUsername = CARTRIDGE_USERNAME;
-    private String routerPassword = CARTRIDGE_PASSWORD;
-    private String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
-    private String instanceDir = INSTANCE_DIR;
-    private String topologyConfigurationFile;
-    private String instancesFile;
-    private SslContext sslContext;
+    protected boolean useFixedPorts = false;
+    protected String routerHost = ROUTER_HOST;
+    protected int routerPort = ROUTER_PORT;
+    protected int apiPort = API_PORT;
+    protected String routerUsername = CARTRIDGE_USERNAME;
+    protected String routerPassword = CARTRIDGE_PASSWORD;
+    protected String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
+    protected String instanceDir = INSTANCE_DIR;
+    protected String topologyConfigurationFile;
+    protected String instancesFile;
+    protected SslContext sslContext;
 
     /**
      * Create a container with default image and specified instances file from the classpath resources. Assumes that
@@ -195,7 +195,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this(buildImage(dockerFile, buildImageName, buildArgs), instancesFile, topologyConfigurationFile, buildArgs);
     }
 
-    private TarantoolCartridgeContainer(ImageFromDockerfile image, String instancesFile,
+    protected TarantoolCartridgeContainer(ImageFromDockerfile image, String instancesFile,
                                         String topologyConfigurationFile,
                                         Map<String, String> buildArgs) {
         super(withBuildArgs(image, buildArgs));
@@ -214,7 +214,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         this.clientHelper = new TarantoolContainerClientHelper(this);
     }
 
-    private static ImageFromDockerfile withBuildArgs(ImageFromDockerfile image, Map<String, String> buildArgs) {
+    protected static ImageFromDockerfile withBuildArgs(ImageFromDockerfile image, Map<String, String> buildArgs) {
         Map<String, String> args = mergeBuildArguments(buildArgs);
 
         if (!args.isEmpty()) {
@@ -234,7 +234,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return this;
     }
 
-    private static Map<String, String> mergeBuildArguments(Map<String, String> buildArgs) {
+    protected static Map<String, String> mergeBuildArguments(Map<String, String> buildArgs) {
         Map<String, String> args = new HashMap<>(buildArgs);
 
         for (String envVariable : Arrays.asList(
@@ -258,7 +258,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return args;
     }
 
-    private static ImageFromDockerfile buildImage(String dockerFile, String buildImageName,
+    protected static ImageFromDockerfile buildImage(String dockerFile, String buildImageName,
                                                   final Map<String, String> buildArgs) {
         ImageFromDockerfile image;
         if (buildImageName != null && !buildImageName.isEmpty()) {
@@ -497,7 +497,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         logger().info("Tarantool Cartridge cluster is starting");
     }
 
-    private boolean setupTopology() {
+    protected boolean setupTopology() {
         String fileType = topologyConfigurationFile
             .substring(topologyConfigurationFile.lastIndexOf('.') + 1);
         if (fileType.equals("yml")) {
@@ -546,7 +546,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return true;
     }
 
-    private void retryingSetupTopology() {
+    protected void retryingSetupTopology() {
         if (!setupTopology()) {
             try {
                 logger().info("Retrying setup topology in 10 seconds");
@@ -560,7 +560,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         }
     }
 
-    private void bootstrapVshard() {
+    protected void bootstrapVshard() {
         try {
             executeCommand(VSHARD_BOOTSTRAP_COMMAND);
         } catch (Exception e) {
@@ -584,21 +584,21 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         logger().info("Tarantool Cartridge HTTP API is available at {}:{}", getAPIHost(), getAPIPort());
     }
 
-    private void waitUntilRouterIsUp(int secondsToWait) {
+    protected void waitUntilRouterIsUp(int secondsToWait) {
         if(!waitUntilTrue(secondsToWait, this::routerIsUp)) {
             throw new RuntimeException("Timeout exceeded during router starting stage." +
                                        " See the specific error in logs.");
         }
     }
 
-    private void waitUntilCartridgeIsHealthy(int secondsToWait) {
+    protected void waitUntilCartridgeIsHealthy(int secondsToWait) {
         if(!waitUntilTrue(secondsToWait, this::isCartridgeHealthy)) {
             throw new RuntimeException("Timeout exceeded during cartridge topology applying stage." +
                                        " See the specific error in logs.");
         }
     }
 
-    private boolean waitUntilTrue(int secondsToWait, Supplier<Boolean> waitFunc) {
+    protected boolean waitUntilTrue(int secondsToWait, Supplier<Boolean> waitFunc) {
         int secondsPassed = 0;
         boolean result = waitFunc.get();
         while (!result && secondsPassed < secondsToWait) {
@@ -613,7 +613,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
         return result;
     }
 
-    private boolean routerIsUp() {
+    protected boolean routerIsUp() {
         ExecResult result;
         try {
              result = executeCommand(healthyCmd);
@@ -634,7 +634,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     }
 
-    private boolean isCartridgeHealthy() {
+    protected boolean isCartridgeHealthy() {
         ExecResult result;
         try {
             result = executeCommand(healthyCmd);
