@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2023-12-13
+
+- Change private to protected in TarantoolCartridgeContainer
+
 ## [1.1.0] - 2023-12-12
 
 - Bump testcontainers to 1.19.3 ([#99](https://github.com/tarantool/testcontainers-java-tarantool/issues/99))
