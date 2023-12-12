@@ -2,7 +2,11 @@
 
 ## [Unreleased]
 
-- Bump testcontainers to 1.19.3
+## [1.1.0] - 2023-12-12
+
+- Bump testcontainers to 1.19.3 ([#99](https://github.com/tarantool/testcontainers-java-tarantool/issues/99))
+- Remove cached rocks on cartridge image rebuilding ([#99](https://github.com/tarantool/testcontainers-java-tarantool/issues/99))
+- Add passing instancesFile to cartridge replicasets command ([#99](https://github.com/tarantool/testcontainers-java-tarantool/issues/99))
 
 ## [1.0.2] - 2023-11-10
 
