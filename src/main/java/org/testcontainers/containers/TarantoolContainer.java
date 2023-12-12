@@ -18,9 +18,9 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
 
     public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
-    public static final String DEFAULT_IMAGE_VERSION = "2.x-centos7";
-    public static final String DEFAULT_TARANTOOL_BASE_IMAGE =
-            String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
+    public static final String DEFAULT_IMAGE_VERSION = "2.x";
+    public static final String DEFAULT_TARANTOOL_BASE_IMAGE;
+
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 3301;
@@ -46,11 +46,20 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
 
     private final TarantoolContainerClientHelper clientHelper;
 
+    static {
+        String version = System.getenv("TARANTOOL_VERSION");
+        if (version == null || version.trim().isEmpty()) {
+            DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s-centos7", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
+        } else {
+            DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s-centos7", TARANTOOL_IMAGE, version);
+        }
+    }
+
     /**
      * Constructor for {@link TarantoolContainer}
      */
     public TarantoolContainer() {
-        this(String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION));
+        this(DEFAULT_TARANTOOL_BASE_IMAGE);
     }
 
     /**
@@ -381,4 +390,5 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     public <T> T executeCommandDecoded(String command) throws Exception {
         return clientHelper.executeCommandDecoded(command, this.sslContext);
     }
+
 }
