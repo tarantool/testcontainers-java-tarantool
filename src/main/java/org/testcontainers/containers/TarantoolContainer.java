@@ -18,8 +18,8 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
 
     public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
-    public static final String DEFAULT_IMAGE_VERSION = "2.x";
-    public static final String DEFAULT_TARANTOOL_BASE_IMAGE;
+    public static final String DEFAULT_IMAGE_VERSION = "2.10.5";
+    public static final String DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s-centos7", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
 
 
     private static final String DEFAULT_HOST = "localhost";
@@ -46,20 +46,12 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
 
     private final TarantoolContainerClientHelper clientHelper;
 
-    static {
-        String version = System.getenv("TARANTOOL_VERSION");
-        if (version == null || version.trim().isEmpty()) {
-            DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s-centos7", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
-        } else {
-            DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s-centos7", TARANTOOL_IMAGE, version);
-        }
-    }
-
     /**
      * Constructor for {@link TarantoolContainer}
      */
     public TarantoolContainer() {
         this(DEFAULT_TARANTOOL_BASE_IMAGE);
+        setImageNameFromEnv();
     }
 
     /**
@@ -391,4 +383,10 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         return clientHelper.executeCommandDecoded(command, this.sslContext);
     }
 
+    private void setImageNameFromEnv() {
+        String version = System.getenv("TARANTOOL_VERSION");
+        if (version != null && !version.trim().isEmpty()) {
+            setDockerImageName(String.format("%s:%s-centos7", TARANTOOL_IMAGE, version));
+        }
+    }
 }

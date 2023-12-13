@@ -5,6 +5,9 @@
 ## [1.1.1] - 2023-12-13
 
 - Change private to protected in TarantoolCartridgeContainer
+- Add support for the `TARANTOOL_VERSION` environment variable to specify the version in the image name 
+`tarantool/tarantool:<TARANTOOL_VERSION>-centos7 when calling the constructor without arguments 
+([#51](https://github.com/tarantool/testcontainers-java-tarantool/pull/102))
 
 ## [1.1.0] - 2023-12-12
 
