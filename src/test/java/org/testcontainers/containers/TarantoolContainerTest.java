@@ -1,15 +1,38 @@
 package org.testcontainers.containers;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Alexey Kuzin
  * @author Ivan Dneprov
  */
 class TarantoolContainerTest {
+
+    private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
+
+    private void addEnv(String key, String value) throws NoSuchFieldException, IllegalAccessException {
+        Class<?> classOfMap = System.getenv().getClass();
+        Field field = classOfMap.getDeclaredField("m");
+        field.setAccessible(true);
+        Map<String, String> writeableEnvironmentVariables = (Map<String, String>) field.get(System.getenv());
+        writeableEnvironmentVariables.put(key, value);
+        field.setAccessible(false);
+    }
+
+    private void removeEnv(String key, String value) throws NoSuchFieldException, IllegalAccessException {
+        Class<?> classOfMap = System.getenv().getClass();
+        Field field = classOfMap.getDeclaredField("m");
+        field.setAccessible(true);
+        Map<String, String> writeableEnvironmentVariables = (Map<String, String>) field.get(System.getenv());
+        writeableEnvironmentVariables.remove(key);
+        field.setAccessible(false);
+    }
 
     @Test
     public void testExecuteScript() throws Exception {
@@ -46,5 +69,56 @@ class TarantoolContainerTest {
             assertEquals(result.size(), 1);
             assertEquals(result.get(0), 5);
         }
+    }
+
+    @Test
+    public void testContainerWithTrueVersion() throws Exception {
+        final String version = "2.11.0";
+        addEnv(ENV_TARANTOOL_VERSION, version);
+
+        List<String> result;
+        try (TarantoolContainer container = new TarantoolContainer()) {
+            container.start();
+            result = container.executeCommandDecoded("return _TARANTOOL");
+        }
+
+        removeEnv(ENV_TARANTOOL_VERSION, version);
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).startsWith(version));
+    }
+
+    @Test
+    public void testContainerWithDefaultVersionVersion() throws Exception {
+
+        List<String> result;
+        try (TarantoolContainer container = new TarantoolContainer()) {
+            container.start();
+            result = container.executeCommandDecoded("return _TARANTOOL");
+        }
+
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).startsWith(TarantoolContainer.DEFAULT_IMAGE_VERSION));
+    }
+
+    @Test
+    public void testContainerWithEmptyVersion() throws Exception {
+        final String version = "  ";
+        addEnv(ENV_TARANTOOL_VERSION, version);
+        try (TarantoolContainer container = new TarantoolContainer()) {
+            container.start();
+        }
+        removeEnv(ENV_TARANTOOL_VERSION, version);
+    }
+
+    @Test
+    public void testContainerWithWrongVersion() throws Exception {
+        final String version = "wrong_version";
+        addEnv(ENV_TARANTOOL_VERSION, version);
+        try (TarantoolContainer container = new TarantoolContainer()) {
+            container.start();
+        }catch (Exception exc) {
+            assertEquals(ContainerFetchException.class, exc.getClass());
+        }
+        removeEnv(ENV_TARANTOOL_VERSION, version);
     }
 }
