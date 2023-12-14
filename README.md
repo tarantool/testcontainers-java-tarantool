@@ -14,7 +14,7 @@ Add the Maven dependency:
 <dependency>
   <groupId>io.tarantool</groupId>
   <artifactId>testcontainers-java-tarantool</artifactId>
-  <version>1.1.1</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
