@@ -4,10 +4,13 @@
 
 ## [1.1.1] - 2023-12-13
 
-- Fixed default use of `TARANTOOL_CLUSTER_COOKIE`. Now if `TARANTOOL_CLUSTER_COOKIE` is installed via
-environment variable or written in the `init.lua` file, then you need to specify value of `TARANTOOL_CLUSTER_COOKIE`
-in the `.withRouterPassword()` method. If `TARANTOOL_CLUSTER_COOKIE` is not specified, the default value (`secret-cluster-cookie`) 
-will be used and no additional actions are required ([#55](https://github.com/tarantool/testcontainers-java-tarantool/issues/55))
+- Remove the default value for `TARANTOOL_CLUSTER_COOKIE` env variable in cartridge container.
+  Now it works like in cartridge in order of decreasing priority as directed by the user:
+  `TARANTOOL_CLUSTER_COOKIE > cartridge.cfg > default_cookie`
+  You can set TARANTOOL_CLUSTER_COOKIE by build-arg on image building or by env arg before container starting
+  ([#55](https://github.com/tarantool/testcontainers-java-tarantool/issues/55))
+- **[Breaking change]** Default routerPassword has been changed from `testapp-cluster-cookie` to `secret-cluster-cookie`
+  ([#55](https://github.com/tarantool/testcontainers-java-tarantool/issues/55))
 - Change private to protected in TarantoolCartridgeContainer
 - Add support for the `TARANTOOL_VERSION` environment variable to specify the version in the image name 
 `tarantool/tarantool:<TARANTOOL_VERSION>-centos7 when calling the constructor without arguments 

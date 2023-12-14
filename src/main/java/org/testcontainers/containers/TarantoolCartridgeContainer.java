@@ -107,7 +107,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     public static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
     public static final String ENV_TARANTOOL_CLUSTER_COOKIE = "TARANTOOL_CLUSTER_COOKIE";
     protected static final String healthyCmd = "return require('cartridge').is_healthy()";
-    protected static final int TWO_MINUTES = 60;
+    protected static final int TIMEOUT_ROUTER_UP_CARTRIDGE_HEALTH_IN_SECONDS = 60;
 
     protected final CartridgeConfigParser instanceFileParser;
     protected final TarantoolContainerClientHelper clientHelper;
@@ -573,10 +573,10 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected void containerIsStarted(InspectContainerResponse containerInfo, boolean reused) {
         super.containerIsStarted(containerInfo, reused);
 
-        waitUntilRouterIsUp(TWO_MINUTES);
+        waitUntilRouterIsUp(TIMEOUT_ROUTER_UP_CARTRIDGE_HEALTH_IN_SECONDS);
         retryingSetupTopology();
         // wait until Roles are configured
-        waitUntilCartridgeIsHealthy(TWO_MINUTES);
+        waitUntilCartridgeIsHealthy(TIMEOUT_ROUTER_UP_CARTRIDGE_HEALTH_IN_SECONDS);
         bootstrapVshard();
 
         logger().info("Tarantool Cartridge cluster is started");
