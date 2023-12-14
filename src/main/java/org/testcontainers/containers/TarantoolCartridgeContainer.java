@@ -87,8 +87,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
 
     protected static final String ROUTER_HOST = "localhost";
     protected static final int ROUTER_PORT = 3301;
-    protected static final String CARTRIDGE_USERNAME = "admin";
-    protected static final String CARTRIDGE_PASSWORD = "testapp-cluster-cookie";
+    protected static final String CARTRIDGE_DEFAULT_USERNAME = "admin";
+    protected static final String CARTRIDGE_DEFAULT_PASSWORD = "secret-cluster-cookie";
     protected static final String DOCKERFILE = "Dockerfile";
     protected static final int API_PORT = 8081;
     protected static final String VSHARD_BOOTSTRAP_COMMAND = "return require('cartridge').admin_bootstrap_vshard()";
@@ -107,7 +107,7 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     public static final String ENV_TARANTOOL_INSTANCES_FILE = "TARANTOOL_INSTANCES_FILE";
     public static final String ENV_TARANTOOL_CLUSTER_COOKIE = "TARANTOOL_CLUSTER_COOKIE";
     protected static final String healthyCmd = "return require('cartridge').is_healthy()";
-    protected static final int TWO_MINUTES = 120;
+    protected static final int TWO_MINUTES = 60;
 
     protected final CartridgeConfigParser instanceFileParser;
     protected final TarantoolContainerClientHelper clientHelper;
@@ -117,8 +117,8 @@ public class TarantoolCartridgeContainer extends GenericContainer<TarantoolCartr
     protected String routerHost = ROUTER_HOST;
     protected int routerPort = ROUTER_PORT;
     protected int apiPort = API_PORT;
-    protected String routerUsername = CARTRIDGE_USERNAME;
-    protected String routerPassword = CARTRIDGE_PASSWORD;
+    protected String routerUsername = CARTRIDGE_DEFAULT_USERNAME;
+    protected String routerPassword = CARTRIDGE_DEFAULT_PASSWORD;
     protected String directoryResourcePath = SCRIPT_RESOURCE_DIRECTORY;
     protected String instanceDir = INSTANCE_DIR;
     protected String topologyConfigurationFile;

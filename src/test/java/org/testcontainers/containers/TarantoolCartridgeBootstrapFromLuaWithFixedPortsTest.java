@@ -1,6 +1,8 @@
 package org.testcontainers.containers;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.rnorth.ducttape.RetryCountExceededException;
@@ -11,6 +13,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Alexey Kuzin
@@ -36,6 +41,38 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
     @Test
     public void test_StaticClusterContainer_StartsSuccessfully_ifFilesAreCopied() throws Exception {
         CartridgeContainerTestUtils.executeProfileReplaceSmokeTest(container);
+    }
+
+    @Test
+    public void testTarantoolClusterCookieDefault() throws Exception {
+        Map<String, String> env = container.getEnvMap();
+        assertFalse(env.containsKey(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE));
+        List<Object> result = container.executeCommandDecoded("return true");
+        assertEquals(1, result.size());
+        assertTrue((boolean) result.get(0));
+    }
+
+    @Test
+    public void testTarantoolClusterCookieWithEnv() throws Exception {
+        try(TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
+                "Dockerfile",
+                "cartridge",
+                "cartridge/instances.yml",
+                "cartridge/replicasets.yml")
+                .withEnv(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE, "secret")
+                .withRouterUsername("admin")
+                .withRouterPassword("secret")
+                .withStartupTimeout(Duration.ofMinutes(5))
+                .withLogConsumer(new Slf4jLogConsumer(
+                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class))))
+        {
+            newContainer.start();
+            Map<String, String> env = container.getEnvMap();
+            assertFalse(env.containsKey(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE));
+            List<Object> result = container.executeCommandDecoded("return true");
+            assertEquals(1, result.size());
+            assertTrue((boolean) result.get(0));
+        }
     }
 
     @Test

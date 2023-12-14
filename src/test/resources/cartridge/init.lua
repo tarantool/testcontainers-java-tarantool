@@ -41,7 +41,6 @@ local ok, err = cartridge.cfg({
         'app.roles.custom',
         'migrator',
     },
-    cluster_cookie = 'testapp-cluster-cookie',
 })
 
 assert(ok, tostring(err))
