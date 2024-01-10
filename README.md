@@ -167,16 +167,20 @@ public class SomeOtherTest {
     private static final TarantoolCartridgeContainer container =
         // Pass the classpath-relative paths of the instances configuration and topology script files
         new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
-            // Point out the classpath-relative directory where the application files reside
-            .withDirectoryBinding("cartridge")
-            .withRouterHost("localhost") // Optional, "localhost" is default
-            .withRouterPort(3301) // Binary port, optional, 3301 is default
-            .withAPIPort(8801) // Cartridge HTTP API port, optional, 8081 is default
-            .withRouterUsername("admin") // Specify the actual username, default is "admin"
-            .withRouterPassword("testapp-cluster-cookie") // Specify the actual password, see the "cluster_cookie" parameter
-                                                          // in the cartridge.cfg({...}) call in your application.
-                                                          // Usually it can be found in the init.lua module
-            .withReuse(true); // allows to reuse the container build once for faster testing
+            // Tarantool URI, optional. Default is "localhost"
+            .withRouterHost("localhost")
+            // Binary port, optional. Default is 3301
+            .withRouterPort(3301)
+            // Cartridge HTTP API port, optional, 8081 is default
+            .withAPIPort(8801)
+            // Specify the actual username, default is "admin"
+            .withRouterUsername("admin")
+            // Specify the actual password, see the "cluster_cookie" parameter
+            // in the cartridge.cfg({...}) call in your application.
+            // Usually it can be found in the init.lua module
+            .withRouterPassword("secret-cluster-cookie")
+            // allows to reuse the container build once for faster testing
+            .withReuse(true); 
 
     // Use the created container in tests
     public void testFoo() {
@@ -192,6 +196,41 @@ public class SomeOtherTest {
         }
     }
 ```
+
+##### Environment variables of cartridge container and build arguments:
+###### Build arguments:
+
+This section describes the Docker image build arguments and environment variables inside the container. It is worth 
+nothing that almost all build arguments listed here are passed into environment variables of the same name. At the 
+moment, the following arguments are available to build the image:
+
+- `CARTRIDGE_SRC_DIR` - directory on the host machine that contains all the .lua scripts needed to initialize and run 
+cartridge. Defaults is `cartridge`. **Only as a build argument.**
+- `TARANTOOL_WORKDIR` - a directory where all data will be stored: snapshots, wal logs and cartridge config files. 
+Defaults is `/app`. Converts to an environment variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_RUNDIR` -  a directory where PID and socket files are stored. Defaults is `/tmp/run`. Converts to an 
+environment variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_DATADIR` - a directory containing the instances working directories. Defaults is `/tmp/data`. Converts to 
+an environment variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_LOGDIR` - the directory where log files are stored. Defaults is `/tmp/log`. Converts to an environment 
+- variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_INSTANCES_FILE` - path to the configuration file. Defaults is `./instances.yml`. Converts to an environment
+variable. It is not recommended to override via the `withEnv(...)` method.
+- `START_DELAY` - the time after which cartridge will actually run after the container has started. Converts to an 
+environment variable. It is not recommended to override via the `withEnv(...)` method.
+
+You can set the Docker image build arguments using a map, which is passed as an input argument to the constructor when
+creating a container in Java code. See example: https://github.com/tarantool/testcontainers-java-tarantool/blob/355d1e985bd10beca83bc7ca77f919a288709419/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L111-L119
+
+###### Environment variables:
+
+To set an environment variable, use the `withEnv(...)` method of testcontainers API. Full list of variables the 
+environments used in cartridge can be found here [link](https://www.tarantool.io/ru/doc/2.11/book/cartridge/cartridge_api/modules/cartridge/#cfg-opts-box-opts).
+
+***Note:*** As shown in the previous section, some build arguments are converted to environment variables and used to
+cartridge build at the image build stage.
+
+An example of how to set the `TARANTOOL_CLUSTER_COOKIE` parameter: https://github.com/tarantool/testcontainers-java-tarantool/blob/355d1e985bd10beca83bc7ca77f919a288709419/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L57-L82
 
 ## License
 
