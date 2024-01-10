@@ -70,7 +70,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
         {
             newContainer.start();
             ExecResult res = newContainer.execInContainer("env");
-            assertTrue(CartridgeContainerTestUtils.envIsContainsInStdout(res.getStdout(),
+            assertTrue(CartridgeContainerTestUtils.isEnvInStdout(res.getStdout(),
                                                                          new HashMap<String, String>(){{
                                                                              put("TARANTOOL_CLUSTER_COOKIE", "secret");
                                                                          }}));
@@ -131,7 +131,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
             newContainer.start();
             ExecResult res = newContainer.execInContainer("env");
             buildArgs.remove("CARTRIDGE_SRC_DIR", "cartridge");
-            assertTrue(CartridgeContainerTestUtils.envIsContainsInStdout(res.getStdout(), buildArgs));
+            assertTrue(CartridgeContainerTestUtils.isEnvInStdout(res.getStdout(), buildArgs));
 
             List<Object> result = newContainer.executeCommandDecoded("return true");
             assertEquals(1, result.size());

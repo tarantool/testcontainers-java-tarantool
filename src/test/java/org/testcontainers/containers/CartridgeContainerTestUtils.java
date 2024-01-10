@@ -25,7 +25,7 @@ public class CartridgeContainerTestUtils {
         assertEquals(33, ((List<?>) result.get(0)).get(3));
     }
 
-    public static boolean envIsContainsInStdout(String stdout, Map<String, String> env) {
+    public static boolean isEnvInStdout(String stdout, Map<String, String> env) {
         Map<String, String> envMap = Arrays.stream(stdout.split("\n"))
                                            .collect(Collectors.toMap(toKey -> toKey.split("=")[0],
                                                    toValue -> {
