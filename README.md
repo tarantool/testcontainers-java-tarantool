@@ -220,7 +220,7 @@ variable. It is not recommended to override via the `withEnv(...)` method.
 environment variable. It is not recommended to override via the `withEnv(...)` method.
 
 You can set the Docker image build arguments using a map, which is passed as an input argument to the constructor when
-creating a container in Java code. See example: [link](https://github.com/tarantool/testcontainers-java-tarantool/blob/8eb53c43e4c00570378de91a1269837448232de8/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L111-L119).
+creating a container in Java code. See example: https://github.com/tarantool/testcontainers-java-tarantool/blob/355d1e985bd10beca83bc7ca77f919a288709419/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L111-L119
 
 ###### Environment variables:
 
