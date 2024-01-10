@@ -232,6 +232,76 @@ cartridge build at the image build stage.
 
 An example of how to set the `TARANTOOL_CLUSTER_COOKIE` parameter: https://github.com/tarantool/testcontainers-java-tarantool/blob/355d1e985bd10beca83bc7ca77f919a288709419/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L57-L82
 
+##### Mapping ports
+
+Often there is a need to connect to a container via a certain port. To achieve this goal, you need to know the mapped 
+port of the port that was specified from the Java code. To get the mapped port use the `getMappedPort(...)` method
+of testcontainers API. 
+
+As an example, consider the following Java code:
+
+```java
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.ExternalResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.TarantoolCartridgeContainer;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class AppTest {
+
+    private final Logger logger = LoggerFactory.getLogger(AppTest.class);
+
+    private static final GenericContainer<?> container =
+            new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
+                    .withDirectoryBinding("cartridge")
+                    .withRouterHost("localhost")
+                    .withRouterPort(3301)
+                    // Open http port in container
+                    .withAPIPort(8081)
+                    .withRouterUsername("admin")
+                    .withRouterPassword("tarantool-cartridge-starter-cluster-cookie")
+                    .withReuse(true);
+
+    @ClassRule
+    public static ExternalResource resource = new ExternalResource() {
+        @Override
+        public void before() {
+            container.start();
+        }
+        @Override
+        public void after() {
+            container.stop();
+        }
+    };
+
+
+    @Test
+    public void shouldAnswerWithTrue() throws IOException {
+        // Get mapped port
+        final int mappedHttpPort = container.getMappedPort(8081);
+        // Get metrics response 
+        final String metricsResponse = sendRequestAndGetResponse("http://localhost:" + mappedHttpPort + "/metrics");
+        logger.info("Metric response: {}", metricsResponse);
+        final String helloResponse = sendRequestAndGetResponse("http://localhost:" + mappedHttpPort + "/hello");
+        logger.info("Hello response: {}", helloResponse);
+    }
+
+    private String sendRequestAndGetResponse(final String urlSource) throws IOException {
+        final URL url = new URL(urlSource);
+        // Connect to the URL with mapped port
+        final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        return connection.getResponseMessage();
+    }
+}
+```
+
+
 ## License
 
 See [LICENSE](LICENSE).
