@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.testcontainers.containers.Container.ExecResult;
 
 
 /**
@@ -67,9 +69,13 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                         LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class))))
         {
             newContainer.start();
-            Map<String, String> env = container.getEnvMap();
-            assertFalse(env.containsKey(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE));
-            List<Object> result = container.executeCommandDecoded("return true");
+            ExecResult res = newContainer.execInContainer("env");
+            assertTrue(CartridgeContainerTestUtils.envIsContainsInStdout(res.getStdout(),
+                                                                         new HashMap<String, String>(){{
+                                                                             put("TARANTOOL_CLUSTER_COOKIE", "secret");
+                                                                         }}));
+
+            List<Object> result = newContainer.executeCommandDecoded("return true");
             assertEquals(1, result.size());
             assertTrue((boolean) result.get(0));
         }
@@ -95,6 +101,41 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
             cause = cause.getCause();
             assertEquals(CartridgeTopologyException.class, cause.getClass());
             assertEquals("Failed to change the app topology after retry", cause.getMessage());
+        }
+    }
+
+
+    @Test
+    public void testBuildArgs() throws Exception {
+
+        final Map<String, String> buildArgs = new HashMap<String, String>(){{
+            put("CARTRIDGE_SRC_DIR", "cartridge");
+            put("TARANTOOL_WORKDIR", "/app");
+            put("TARANTOOL_RUNDIR", "/tmp/new_run");
+            put("TARANTOOL_DATADIR", "/tmp/new_data");
+            put("TARANTOOL_LOGDIR", "/tmp/log");
+            put("TARANTOOL_INSTANCES_FILE", "./instances.yml");
+            put("START_DELAY", "1s");
+        }};
+
+        try(TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
+                "Dockerfile",
+                "build_args_test",
+                "cartridge/instances.yml",
+                "cartridge/replicasets.yml",
+                buildArgs)
+                .withStartupTimeout(Duration.ofMinutes(5))
+                .withLogConsumer(new Slf4jLogConsumer(
+                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)))
+        ) {
+            newContainer.start();
+            ExecResult res = newContainer.execInContainer("env");
+            buildArgs.remove("CARTRIDGE_SRC_DIR", "cartridge");
+            assertTrue(CartridgeContainerTestUtils.envIsContainsInStdout(res.getStdout(), buildArgs));
+
+            List<Object> result = newContainer.executeCommandDecoded("return true");
+            assertEquals(1, result.size());
+            assertTrue((boolean) result.get(0));
         }
     }
 }

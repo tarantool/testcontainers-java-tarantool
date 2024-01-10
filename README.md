@@ -167,16 +167,20 @@ public class SomeOtherTest {
     private static final TarantoolCartridgeContainer container =
         // Pass the classpath-relative paths of the instances configuration and topology script files
         new TarantoolCartridgeContainer("cartridge/instances.yml", "cartridge/topology.lua")
-            // Point out the classpath-relative directory where the application files reside
-            .withDirectoryBinding("cartridge")
-            .withRouterHost("localhost") // Optional, "localhost" is default
-            .withRouterPort(3301) // Binary port, optional, 3301 is default
-            .withAPIPort(8801) // Cartridge HTTP API port, optional, 8081 is default
-            .withRouterUsername("admin") // Specify the actual username, default is "admin"
-            .withRouterPassword("testapp-cluster-cookie") // Specify the actual password, see the "cluster_cookie" parameter
-                                                          // in the cartridge.cfg({...}) call in your application.
-                                                          // Usually it can be found in the init.lua module
-            .withReuse(true); // allows to reuse the container build once for faster testing
+            // Optional, "localhost" is default
+            .withRouterHost("localhost")
+            // Binary port, optional, 3301 is default
+            .withRouterPort(3301)
+            // Cartridge HTTP API port, optional, 8081 is default
+            .withAPIPort(8801)
+            // Specify the actual username, default is "admin"
+            .withRouterUsername("admin")
+            // Specify the actual password, see the "cluster_cookie" parameter
+            // in the cartridge.cfg({...}) call in your application.
+            // Usually it can be found in the init.lua module
+            .withRouterPassword("secret-cluster-cookie")
+            // allows to reuse the container build once for faster testing
+            .withReuse(true); 
 
     // Use the created container in tests
     public void testFoo() {
@@ -191,6 +195,185 @@ public class SomeOtherTest {
             // Do something with the client...
         }
     }
+```
+
+##### Environment variables of cartridge container and build arguments:
+###### Build arguments:
+
+This section describes the Docker image build arguments and environment variables inside the container. It is worth 
+noting that all build arguments listed here are passed into environment variables of the same name. At the moment, 
+the following arguments are available to build the image:
+
+- `CARTRIDGE_SRC_DIR` - directory on the host machine that contains all the .lua scripts needed to initialize and run 
+cartridge. Defaults to `cartridge`. Does not convert to an environment variable.
+- `TARANTOOL_WORKDIR` - a directory where all data will be stored: snapshots, wal logs and cartridge config file. 
+Defaults to `/app`. Converts to an environment variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_RUNDIR` -  a directory where PID and socket files are stored. Defaults to `/tmp/run`. Converts to an 
+environment variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_DATADIR` - a directory containing the instances working directories. Defaults to `/tmp/data`. Converts to 
+an environment variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_LOGDIR` - the directory where log files are stored. Defaults to `/tmp/log`. Converts to an environment 
+- variable. It is not recommended to override via the `withEnv(...)` method.
+- `TARANTOOL_INSTANCES_FILE` - path to the configuration file. Defaults to `./instances.yml`. Converts to an environment
+variable. It is not recommended to override via the `withEnv(...)` method.
+- `START_DELAY` - the time after which cartridge will actually run after the container has started. Converts to an 
+environment variable. It is not recommended to override via the `withEnv(...)` method.
+
+You can set the Docker image build arguments using a map, which is passed as an input argument to the constructor when
+creating a container in Java code:
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+
+@Testcontainers
+public class BuildArgsTest {
+
+    private static final Map<String, String> buildArgs = new HashMap<>() {{
+        // Set src directory
+        put("CARTRIDGE_SRC_DIR", "cartridge");
+        
+        // Set Tarantool work directory (has an environment variable of the same name)
+        put("TARANTOOL_WORKDIR", "/app");
+
+        // Set Tarantool run directory (has an environment variable of the same name)
+        put("TARANTOOL_RUNDIR", "/tmp/new_run");
+
+        // Set Tarantool data directory (has an environment variable of the same name)
+        put("TARANTOOL_DATADIR", "/tmp/new_data");
+
+        // Set Tarantool log files directory (has an environment variable of the same name)
+        put("TARANTOOL_LOGDIR", "/tmp/log");
+
+        // Path to the configuration file (has an environment variable of the same name)
+        put("TARANTOOL_INSTANCES_FILE", "./instances.yml");
+        
+        // Set container start delay (has an environment variable of the same name)
+        put("START_DELAY", "1s");
+    }};
+
+
+    @Container
+    // Create container with build arguments
+    private static final TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
+            "Dockerfile",
+            "build_args_test",
+            "cartridge/instances.yml",
+            "cartridge/replicasets.yml",
+            buildArgs)
+            .withStartupTimeout(Duration.ofMinutes(5))
+            .withLogConsumer(new Slf4jLogConsumer(
+                    LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
+
+
+    @Test
+    public void testBuildArgs() {
+        //Start container
+        newContainer.start();
+            
+        // Get environment variables from container
+        ExecResult res = newContainer.execInContainer("env");
+            
+        // Remove src directory to create expected env map
+        buildArgs.remove("CARTRIDGE_SRC_DIR", "cartridge");
+            
+        // Check that environment variables from container contains expected env map
+        assertTrue(envIsContainsInStdout(res.getStdout(), buildArgs));
+
+        // Check cartridge functionality
+        List<Object> result = newContainer.executeCommandDecoded("return true");
+        assertEquals(1, result.size());
+        assertTrue((boolean) result.get(0));
+    }
+
+    public bolean envIsContainsInStdout(String stdout, Map<String, String> env) {
+        Map<String, String> envMap = Arrays.stream(stdout.split("\n"))
+                                           .collect(Collectors.toMap(toKey -> toKey.split("=")[0],
+                                                                     toValue -> {
+                                                                        String[] pair = toValue.split("=");
+                                                                        if (pair.length == 1) {
+                                                                            return "null";
+                                                                        }
+                                                                        return pair[1];
+                                                                    }));
+
+        return envMap.entrySet().containsAll(env.entrySet());
+    }
+}
+```
+
+###### Environment variables:
+
+To set an environment variable, use the `withEnv(...)` method of testcontainers API. Full list of variables the 
+environments used in cartridge can be found here [link](https://www.tarantool.io/ru/doc/2.11/book/cartridge/cartridge_api/modules/cartridge/).
+
+***Note:*** As shown in the previous section, some build arguments are converted to environment variables and used to
+cartridge build at the image build stage.
+
+An example of how to set the `TARANTOOL_CLUSTER_COOKIE` parameter:
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.Test;
+
+@Testcontainers
+public class EnvTest {
+    
+    @Container
+    // Create container with env
+    private static final TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
+            "Dockerfile",
+            "cartridge",
+            "cartridge/instances.yml",
+            "cartridge/replicasets.yml")
+            // Set environment
+            .withEnv(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE, "secret")
+            .withRouterUsername("admin")
+            .withRouterPassword("secret")
+            .withStartupTimeout(Duration.ofMinutes(5))
+            .withLogConsumer(new Slf4jLogConsumer(
+                    LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
+
+
+    @Test
+    public void testEnv() {
+        
+        // Start container
+        newContainer.start();
+
+        // Get environment variables from container
+        ExecResult res = newContainer.execInContainer("env");
+
+        // Check that environment variables from container contains expected env map
+        assertTrue(envIsContainsInStdout(res.getStdout(), new HashMap<String, String>(){{
+            put("TARANTOOL_CLUSTER_COOKIE", "secret");
+        }}));
+
+        // Check cartridge functionality
+        List<Object> result = newContainer.executeCommandDecoded("return true");
+        assertEquals(1, result.size());
+        assertTrue((boolean) result.get(0));
+    }
+
+    public bolean envIsContainsInStdout(String stdout, Map<String, String> env) {
+        Map<String, String> envMap = Arrays.stream(stdout.split("\n"))
+                                           .collect(Collectors.toMap(toKey -> toKey.split("=")[0],
+                                                                     toValue -> {
+                                                                         String[] pair = toValue.split("=");
+                                                                         if (pair.length == 1) {
+                                                                             return "null";
+                                                                         }
+                                                                         return pair[1];
+                                                                     }));
+
+        return envMap.entrySet().containsAll(env.entrySet());
+    }
+}
+
 ```
 
 ## License
