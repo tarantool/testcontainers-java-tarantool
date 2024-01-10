@@ -230,7 +230,7 @@ environments used in cartridge can be found here [link](https://www.tarantool.io
 ***Note:*** As shown in the previous section, some build arguments are converted to environment variables and used to
 cartridge build at the image build stage.
 
-An example of how to set the `TARANTOOL_CLUSTER_COOKIE` parameter: [link](https://github.com/tarantool/testcontainers-java-tarantool/blob/8eb53c43e4c00570378de91a1269837448232de8/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L57-L82).
+An example of how to set the `TARANTOOL_CLUSTER_COOKIE` parameter: https://github.com/tarantool/testcontainers-java-tarantool/blob/355d1e985bd10beca83bc7ca77f919a288709419/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L57-L82
 
 ## License
 
