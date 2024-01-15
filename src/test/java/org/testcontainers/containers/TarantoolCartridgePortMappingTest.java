@@ -44,41 +44,42 @@ public class TarantoolCartridgePortMappingTest {
         final int portToFirstRouter = 3301;
         final int portToSecondRouter = 3302;
         final String host = "localhost";
+        final String schema = "http";
 
         container.addExposedPorts(httpPortToFirstRouter, httpPortToSecondRouter, portToFirstRouter, portToSecondRouter);
         container.start();
 
-        URI uri = new URI("http", null, host, container.getMappedPort(httpPortToFirstRouter), null,
-                null, null);
+        URI firstRouterConnectionURI = new URI(schema, null, host,
+                container.getMappedPort(httpPortToFirstRouter), null, null, null);
 
         // send get request to first router via http
-        HttpResponse response = sendCurlToRouterHttpAPI(uri);
+        HttpResponse response = sendCurlToRouterHttpAPI(firstRouterConnectionURI);
         assertEquals(200, response.getStatusLine().getStatusCode());
 
-        uri = new URI("http", null, host, container.getMappedPort(httpPortToSecondRouter), null,
-                null, null);
+        URI secondRouterConnectionURI = new URI(schema, null, host,
+                container.getMappedPort(httpPortToSecondRouter), null, null, null);
         // send get request to second router via http
-        response = sendCurlToRouterHttpAPI(uri);
+        response = sendCurlToRouterHttpAPI(secondRouterConnectionURI);
         assertEquals(200, response.getStatusLine().getStatusCode());
 
         // connect to first router via socket
-        uri = new URI(null, null, host, container.getMappedPort(portToFirstRouter), null,
-                null, null);
-        String result = connectToRouterViaSocket(uri);
+        URI firstRouterConnectionURIViaSocket = new URI(null, null, host,
+                container.getMappedPort(portToFirstRouter), null, null, null);
+        String result = connectToRouterViaSocket(firstRouterConnectionURIViaSocket);
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Tarantool"));
 
         // connect to second router via socket
-        uri = new URI(null, null, host, container.getMappedPort(portToSecondRouter), null,
-                null, null);
-        result = connectToRouterViaSocket(uri);
+        URI secondRouterConnectionURIViaSocket = new URI(null, null, host,
+                container.getMappedPort(portToSecondRouter), null, null, null);
+        result = connectToRouterViaSocket(secondRouterConnectionURIViaSocket);
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Tarantool"));
 
         // Connect to random port
-        uri = new URI(null, null, host, ThreadLocalRandom.current().nextInt(49152, 65535),
-                null, null, null);
-        result = connectToRouterViaSocket(uri);
+        URI randomPortConnectionURIViaSocket = new URI(null, null, host,
+                ThreadLocalRandom.current().nextInt(49152, 65535), null, null, null);
+        result = connectToRouterViaSocket(randomPortConnectionURIViaSocket);
         assertTrue(result.isEmpty());
     }
 
