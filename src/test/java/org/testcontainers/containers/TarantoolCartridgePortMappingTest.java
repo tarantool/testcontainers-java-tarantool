@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -35,58 +37,62 @@ public class TarantoolCartridgePortMappingTest {
                     LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
 
     @Test
-    void portMappingTest() throws IOException {
+    void portMappingTest() throws IOException, URISyntaxException {
 
         final int httpPortToFirstRouter = 8081;
         final int httpPortToSecondRouter = 8082;
         final int portToFirstRouter = 3301;
         final int portToSecondRouter = 3302;
-        final String url = "localhost";
+        final String host = "localhost";
 
-        container.addExposedPorts(httpPortToFirstRouter, httpPortToSecondRouter);
+        container.addExposedPorts(httpPortToFirstRouter, httpPortToSecondRouter, portToFirstRouter, portToSecondRouter);
         container.start();
 
-        final StringBuilder curlCommandToConnectToRouters = new StringBuilder("http://localhost:")
-                .append(container.getMappedPort(httpPortToFirstRouter));
+        URI uri = new URI("http", null, host, container.getMappedPort(httpPortToFirstRouter), null,
+                null, null);
 
         // send get request to first router via http
-        HttpResponse response = sendCurlToRouterHttpAPI(curlCommandToConnectToRouters.toString());
+        HttpResponse response = sendCurlToRouterHttpAPI(uri);
         assertEquals(200, response.getStatusLine().getStatusCode());
 
-        curlCommandToConnectToRouters.delete(0, curlCommandToConnectToRouters.length())
-                                     .append("http://localhost:")
-                                     .append(container.getMappedPort(httpPortToSecondRouter));
-
+        uri = new URI("http", null, host, container.getMappedPort(httpPortToSecondRouter), null,
+                null, null);
         // send get request to second router via http
-        response = sendCurlToRouterHttpAPI(curlCommandToConnectToRouters.toString());
+        response = sendCurlToRouterHttpAPI(uri);
         assertEquals(200, response.getStatusLine().getStatusCode());
 
         // connect to first router via socket
-        String result = connectToRouterViaSocket(url, container.getMappedPort(portToFirstRouter));
+        uri = new URI(null, null, host, container.getMappedPort(portToFirstRouter), null,
+                null, null);
+        String result = connectToRouterViaSocket(uri);
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Tarantool"));
 
         // connect to second router via socket
-        result = connectToRouterViaSocket(url, container.getMappedPort(portToSecondRouter));
+        uri = new URI(null, null, host, container.getMappedPort(portToSecondRouter), null,
+                null, null);
+        result = connectToRouterViaSocket(uri);
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Tarantool"));
 
         // Connect to random port
-        result = connectToRouterViaSocket(url, ThreadLocalRandom.current().nextInt(49152, 65535));
+        uri = new URI(null, null, host, ThreadLocalRandom.current().nextInt(49152, 65535),
+                null, null, null);
+        result = connectToRouterViaSocket(uri);
         assertTrue(result.isEmpty());
     }
 
-    private HttpResponse sendCurlToRouterHttpAPI(String url) throws IOException {
+    private HttpResponse sendCurlToRouterHttpAPI(URI uri) throws IOException {
         try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
-            HttpGet httpGetRequest = new HttpGet(url);
+            HttpGet httpGetRequest = new HttpGet(uri);
             return httpClient.execute(httpGetRequest);
         }
     }
 
-    private String connectToRouterViaSocket(String url, int port) {
+    private String connectToRouterViaSocket(URI uri) {
         final String returnedString;
 
-        try (Socket socket = new Socket(url, port);
+        try (Socket socket = new Socket(uri.getHost(), uri.getPort());
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             returnedString = in.readLine();
