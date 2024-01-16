@@ -232,6 +232,13 @@ cartridge build at the image build stage.
 
 An example of how to set the `TARANTOOL_CLUSTER_COOKIE` parameter: https://github.com/tarantool/testcontainers-java-tarantool/blob/355d1e985bd10beca83bc7ca77f919a288709419/src/test/java/org/testcontainers/containers/TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.java#L57-L82
 
+##### Mapping ports
+
+Often there is a need to connect to a container through a specific port. To achieve this goal it is necessary
+to know the mapped port specified in the Java code. To get the mapped port, use the getMappedPort(...)` method of
+testcontainers API. See examples: https://github.com/tarantool/testcontainers-java-tarantool/blob/ae580cb59d4621d7c11e5f80c394ec141d4c92b3/src/test/java/org/testcontainers/containers/TarantoolCartridgePortMappingTest.java#L22-L98
+
+
 ## License
 
 See [LICENSE](LICENSE).
