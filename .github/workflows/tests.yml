@@ -1,0 +1,130 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  tests-ce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          cache: 'maven'
+
+      - name: Cache docker images
+        uses: jpribyl/action-docker-layer-caching@v0.1.1
+        continue-on-error: true
+
+      - name: Build and run unit tests
+        run: ./mvnw -B verify -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
+
+      - name: Run integration tests
+        env:
+          TARANTOOL_SERVER_USER: root
+          TARANTOOL_SERVER_GROUP: root
+        run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
+
+      - name: Upload jacoco exec results
+        uses: actions/upload-artifact@v2
+        with:
+          name: tests-ce-jacoco
+          path: "**/jacoco-ce.exec"
+
+    tests-ee:
+      runs-on: ubuntu-latest
+      timeout-minutes: 20
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Set up JDK 1.8
+          uses: actions/setup-java@v3
+          with:
+            distribution: 'zulu'
+            java-version: '8'
+            cache: 'maven'
+
+        - name: Store docker images
+          uses: jpribyl/action-docker-layer-caching@v0.1.1
+          continue-on-error: true
+
+        - name: Run enterprise tests
+          env:
+            TARANTOOL_SERVER_USER: root
+            TARANTOOL_SERVER_GROUP: root
+            DOWNLOAD_HOST: https://tarantool:${{ secrets.DOWNLOAD_SDK_TOKEN }}@download.tarantool.io
+            SDK_PATH: enterprise/release/linux/x86_64/2.11/tarantool-enterprise-sdk-nogc64-2.11.2-0-r609.linux.x86_64.tar.gz
+          run: ./mvnw -B test -P enterprise -Djacoco.destFile=target/jacoco-ee.exec --file pom.xml
+
+        - name: Upload jacoco exec results
+          uses: actions/upload-artifact@v2
+          with:
+            name: tests-ee-jacoco
+            path: "**/jacoco-ee.exec"
+
+  merge-jacoco-report:
+    name: Jacoco Merge Results
+    needs:
+      - tests-ce
+      - tests-ee
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          cache: 'maven'
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: tests-ce-jacoco
+          path: target/
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: tests-ee-jacoco
+          path: target/
+
+      - name: merge results
+        run: |
+          ls -la && ls -la target && cp -r ./target/tarantool-core/target ./tarantool-core/target && \
+          cp -r ./target/tarantool-jackson-mapping/target ./tarantool-jackson-mapping/target && \
+          cp -r ./target/tarantool-client/target ./tarantool-client/target && \
+          cp -r ./target/tarantool-pooling/target ./tarantool-pooling/target && \
+          cp -r ./target/tarantool-balancer/target ./tarantool-balancer/target && \
+          cp -r ./target/tarantool-schema/target ./tarantool-schema/target && \
+          ./mvnw package jacoco:report-aggregate && ls -la
+
+      - name: Upload jacoco coverage despite the check result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-results-report
+          path: jacoco-coverage-aggregate-report/target/site/jacoco-aggregate
+          if-no-files-found: error
+
+      - name: Jacoco Report to PR
+        id: jacoco
+        uses: madrapps/jacoco-report@v1.6.1
+        with:
+          paths: jacoco-coverage-aggregate-report/target/site/jacoco-aggregate/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 40
+          min-coverage-changed-files: 60
+          update-comment: true
