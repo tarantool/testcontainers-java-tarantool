@@ -35,7 +35,8 @@ public final class TarantoolContainerClientHelper {
                     "            ):eval('%s')}) " +
                     "        ); " +
                     "    os.exit(); " +
-                    "\" | tarantool";
+                    "\" > container-tmp.lua &&" +
+                    " tarantool container-tmp.lua";
     private static final String SSL_COMMAND_TEMPLATE =
             "echo \" " +
                     "    print(require('yaml').encode( " +
@@ -45,7 +46,8 @@ public final class TarantoolContainerClientHelper {
                     "            ):eval('%s')}) " +
                     "        ); " +
                     "    os.exit(); " +
-                    "\" | tarantool";
+                    "\" > container-tmp.lua &&" +
+                    " tarantool container-tmp.lua";
     private static final String COMMAND_TEMPLATE = "echo \" " +
             "    print(require('yaml').encode( " +
             "        {require('net.box').connect( " +
@@ -54,7 +56,8 @@ public final class TarantoolContainerClientHelper {
             "            ):eval('%s')}) " +
             "        ); " +
             "    os.exit(); " +
-            "\" | tarantool";
+            "\" > container-tmp.lua &&" +
+            " tarantool container-tmp.lua";
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;

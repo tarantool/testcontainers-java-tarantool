@@ -292,6 +292,27 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>tarantool-container</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*TarantoolContainer*Test*.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <logback.configurationFile>${logging.config}</logback.configurationFile>
+                                <logLevel>${logging.logLevel}</logLevel>
+                            </systemPropertyVariables>
+                            <trimStackTrace>false</trimStackTrace>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
     <distributionManagement>

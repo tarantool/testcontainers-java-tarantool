@@ -1,25 +1,24 @@
 FROM centos:7
 
-ARG TARANTOOL_WORKDIR="/app"
+ARG SDK_DIR="/sdk"
 ARG TARANTOOL_RUNDIR="/tmp/run"
+ARG TARANTOOL_WORKDIR="/app"
 ARG TARANTOOL_DATADIR="/tmp/data"
-ARG SDK_TGT_DIR="/sdk"
-ARG DOWNLOAD_SDK_URI=""
-ARG SDK_VERSION=""
-ARG SDK_TGZ=$SDK_VERSION.tar.gz
 
-ENV DOWNLOAD_SDK_URI=$DOWNLOAD_SDK_URI
-ENV SDK_VERSION=$SDK_VERSION
-ENV SDK_TGT_DIR=$SDK_TGT_DIR
-ENV TARANTOOL_WORKDIR=$TARANTOOL_WORKDIR
+ARG DOWNLOAD_HOST
+ARG SDK_PATH
+
+ENV SDK_DIR=$SDK_DIR
 ENV TARANTOOL_RUNDIR=$TARANTOOL_RUNDIR
+ENV TARANTOOL_WORKDIR=$TARANTOOL_WORKDIR
 ENV TARANTOOL_DATADIR=$TARANTOOL_DATADIR
 
-RUN curl https://curl.se/ca/cacert.pem -o /etc/pki/tls/certs/ca-bundle.crt && \
-    yum -y install wget && \
-    wget $DOWNLOAD_SDK_URI/$SDK_TGZ && \
-    mkdir ./tmp_sdk && tar -xf $SDK_TGZ -C ./tmp_sdk && \
-    mv ./tmp_sdk/tarantool-enterprise $SDK_TGT_DIR && rm $SDK_TGZ && \
-    cp $SDK_TGT_DIR/tarantool /usr/bin/tarantool
+RUN curl https://curl.se/ca/cacert.pem -o /etc/pki/tls/certs/ca-bundle.crt
+RUN yum -y install wget
+RUN wget $DOWNLOAD_HOST/$SDK_PATH
+RUN tar -xf ${SDK_PATH##*/}
+RUN mv ./tarantool-enterprise $SDK_DIR
+RUN cp $SDK_DIR/tarantool /usr/bin/tarantool && \
+    cp $SDK_DIR/tt /usr/bin/tt
 
 WORKDIR $TARANTOOL_WORKDIR

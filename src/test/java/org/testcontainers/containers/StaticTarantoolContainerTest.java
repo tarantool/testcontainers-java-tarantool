@@ -13,10 +13,15 @@ import static org.junit.Assert.assertEquals;
  * @author Ivan Dneprov
  */
 @Testcontainers
-public class TarantoolStaticContainerTest {
+public class StaticTarantoolContainerTest {
+
+    protected static final String tarantoolVersion = System.getenv().get("TARANTOOL_VERSION");
 
     @Container
-    private static final TarantoolContainer container = new TarantoolContainer();
+    protected static final TarantoolContainer container =
+            new TarantoolContainer(
+                    String.format("tarantool/tarantool:%s-centos7",
+                            tarantoolVersion != null ? tarantoolVersion : "2.11.2-centos7"));
 
     @Test
     public void testExecuteCommand() throws Exception {
