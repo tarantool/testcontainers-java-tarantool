@@ -18,30 +18,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Ivan Dneprov
  */
-public class TarantoolSslContainerTestEnterprise {
+public class TarantoolMTlsContainerEnterpriseIT {
 
-    private static final Logger log = LoggerFactory.getLogger(TarantoolSslContainerTestEnterprise.class);
+    private static final Logger log = LoggerFactory.getLogger(TarantoolMTlsContainerEnterpriseIT.class);
 
     private static TarantoolContainer containerWithSsl;
 
     @BeforeAll
     public static void setUp() throws Exception {
         final File dockerfile = new File(
-                TarantoolSslContainerTestEnterprise.class.getClassLoader()
+                TarantoolMTlsContainerEnterpriseIT.class.getClassLoader()
                         .getResource("enterprise/Dockerfile").toURI()
         );
         final Map<String, String> buildArgs = new HashMap<>();
-        buildArgs.put("DOWNLOAD_SDK_URI", System.getenv("DOWNLOAD_SDK_URI"));
-        buildArgs.put("SDK_VERSION", System.getenv("SDK_VERSION"));
+        buildArgs.put("DOWNLOAD_HOST", System.getenv("DOWNLOAD_HOST"));
+        buildArgs.put("SDK_PATH", System.getenv("SDK_PATH"));
 
         containerWithSsl = new TarantoolContainer(
                 new TarantoolImageParams("tarantool-enterprise", dockerfile, buildArgs))
-                .withScriptFileName("ssl_server.lua")
+                .withScriptFileName("mtls_server.lua")
                 .withUsername("api_user")
                 .withPassword("secret")
                 .withMemtxMemory(256 * 1024 * 1024)
-                .withDirectoryBinding("enterprise/ssl")
-                .withSslContext(SslContext.getSslContext())
+                .withDirectoryBinding("enterprise/ssl/mtls")
+                .withSslContext(SslContext.getSslContext("/app/ca.key", "/app/ca.crt"))
                 .withLogConsumer(new Slf4jLogConsumer(log));
 
         if (!containerWithSsl.isRunning()) {
@@ -55,7 +55,8 @@ public class TarantoolSslContainerTestEnterprise {
         HashMap<String, HashMap> result = resultList.get(0);
         HashMap<String, String> params = result.get("params");
         assertEquals("ssl", params.get("transport"));
-        assertEquals("key.pem", params.get("ssl_key_file"));
-        assertEquals("certificate.crt", params.get("ssl_cert_file"));
+        assertEquals("server.key", params.get("ssl_key_file"));
+        assertEquals("server.crt", params.get("ssl_cert_file"));
+        assertEquals("ca.crt", params.get("ssl_ca_file"));
     }
 }

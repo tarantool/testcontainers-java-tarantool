@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
  * @author Alexey Kuzin
  * @author Ivan Dneprov
  */
-class TarantoolContainerTest {
+class TarantoolContainerIT {
 
     private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
 
