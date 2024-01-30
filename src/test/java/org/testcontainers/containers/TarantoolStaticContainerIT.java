@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
  * @author Ivan Dneprov
  */
 @Testcontainers
-public class TarantoolStaticContainerTest {
+public class TarantoolStaticContainerIT {
 
     @Container
     private static final TarantoolContainer container = new TarantoolContainer();

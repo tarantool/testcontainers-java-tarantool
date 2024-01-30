@@ -23,7 +23,7 @@ import org.testcontainers.containers.Container.ExecResult;
  * @author Alexey Kuzin
  */
 @Testcontainers
-public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
+public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
 
     @Container
     private static final TarantoolCartridgeContainer container =
@@ -38,7 +38,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                     .withAPIPort(18081)
                     .withRouterPort(13301)
                     .withLogConsumer(new Slf4jLogConsumer(
-                            LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)));
+                            LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT.class)));
 
     @Test
     public void test_StaticClusterContainer_StartsSuccessfully_ifFilesAreCopied() throws Exception {
@@ -66,7 +66,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                 .withRouterPassword("secret")
                 .withStartupTimeout(Duration.ofMinutes(5))
                 .withLogConsumer(new Slf4jLogConsumer(
-                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class))))
+                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlIT.class))))
         {
             newContainer.start();
             ExecResult res = newContainer.execInContainer("env");
@@ -91,7 +91,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                              "cartridge/incorrect_topology.lua")
                              .withLogConsumer(new Slf4jLogConsumer(
                                      LoggerFactory.getLogger(
-                                             TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest.class)))
+                                             TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT.class)))
                              .withStartupTimeout(Duration.ofMinutes(5))) {
             ContainerLaunchException ex = assertThrows(ContainerLaunchException.class, testContainer::start);
             Throwable cause = ex.getCause();
@@ -126,7 +126,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsTest {
                 buildArgs)
                 .withStartupTimeout(Duration.ofMinutes(5))
                 .withLogConsumer(new Slf4jLogConsumer(
-                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)))
+                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlIT.class)))
         ) {
             newContainer.start();
             ExecResult res = newContainer.execInContainer("env");

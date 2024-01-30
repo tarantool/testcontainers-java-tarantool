@@ -14,17 +14,17 @@ import org.testcontainers.containers.TarantoolImageParams;
  * @author Oleg Kuznetsov
  * @author Ivan Dneprov
  */
-public class TarantoolSdkContainerTestEnterprise {
+public class TarantoolSdkContainerEnterpriseIT {
 
 
     @Test
     void test_should_createTarantoolContainerFromSdk() throws Exception {
         final File dockerfile = new File(
-                TarantoolSdkContainerTestEnterprise.class.getClassLoader().getResource("enterprise/Dockerfile").toURI()
+                TarantoolSdkContainerEnterpriseIT.class.getClassLoader().getResource("enterprise/Dockerfile").toURI()
         );
         final Map<String, String> buildArgs = new HashMap<>();
-        buildArgs.put("DOWNLOAD_SDK_URI", System.getenv("DOWNLOAD_SDK_URI"));
-        buildArgs.put("SDK_VERSION", System.getenv("SDK_VERSION"));
+        buildArgs.put("DOWNLOAD_HOST", System.getenv("DOWNLOAD_HOST"));
+        buildArgs.put("SDK_PATH", System.getenv("SDK_PATH"));
 
         try (final TarantoolContainer tarantoolContainer = new TarantoolContainer(
                 new TarantoolImageParams("tarantool-enterprise-bundle:latest", dockerfile, buildArgs))
@@ -33,10 +33,8 @@ public class TarantoolSdkContainerTestEnterprise {
             tarantoolContainer.start();
 
             List<String> result = tarantoolContainer.executeCommandDecoded("return 'test'");
-            List<String> versionAnswer = tarantoolContainer.executeCommandDecoded("return _TARANTOOL");
 
             Assertions.assertEquals("test", result.get(0));
-            Assertions.assertEquals("2.10.7-0-g2e9b20365-r563-nogc64", versionAnswer.get(0));
         }
     }
 }

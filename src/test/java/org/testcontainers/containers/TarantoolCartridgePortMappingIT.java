@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TarantoolCartridgePortMappingTest {
+public class TarantoolCartridgePortMappingIT {
 
     @Container
     private final static TarantoolCartridgeContainer container = new TarantoolCartridgeContainer(
@@ -34,7 +34,7 @@ public class TarantoolCartridgePortMappingTest {
             .withRouterPassword("secret")
             .withStartupTimeout(Duration.ofMinutes(5))
             .withLogConsumer(new Slf4jLogConsumer(
-                    LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
+                    LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlIT.class)));
 
     @Test
     void portMappingTest() throws IOException, URISyntaxException {

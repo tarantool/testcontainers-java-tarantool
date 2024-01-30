@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
  * @author Ivan Dneprov
  */
 @Testcontainers
-public class TarantoolCartridgeBootstrapFromYamlTest {
+public class TarantoolCartridgeBootstrapFromYamlIT {
 
     @Container
     private static final TarantoolCartridgeContainer container =
@@ -27,7 +27,7 @@ public class TarantoolCartridgeBootstrapFromYamlTest {
                     "cartridge/replicasets.yml")
                     .withStartupTimeout(Duration.ofMinutes(5))
                     .withLogConsumer(new Slf4jLogConsumer(
-                            LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlTest.class)));
+                            LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlIT.class)));
 
     @Test
     public void test_StaticClusterContainer_StartsSuccessfully_ifFilesAreCopied() throws Exception {
