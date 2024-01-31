@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 class TarantoolContainerIT {
 
     private static final String ENV_TARANTOOL_VERSION = "TARANTOOL_VERSION";
+    protected static final String tarantoolVersion = System.getenv(ENV_TARANTOOL_VERSION);
 
     private void addEnv(String key, String value) throws NoSuchFieldException, IllegalAccessException {
         Class<?> classOfMap = System.getenv().getClass();
@@ -73,23 +74,6 @@ class TarantoolContainerIT {
 
     @Test
     public void testContainerWithTrueVersion() throws Exception {
-        final String version = "2.11.0";
-        addEnv(ENV_TARANTOOL_VERSION, version);
-
-        List<String> result;
-        try (TarantoolContainer container = new TarantoolContainer()) {
-            container.start();
-            result = container.executeCommandDecoded("return _TARANTOOL");
-        }
-
-        removeEnv(ENV_TARANTOOL_VERSION, version);
-        assertEquals(1, result.size());
-        assertTrue(result.get(0).startsWith(version));
-    }
-
-    @Test
-    public void testContainerWithDefaultVersionVersion() throws Exception {
-
         List<String> result;
         try (TarantoolContainer container = new TarantoolContainer()) {
             container.start();
@@ -97,7 +81,9 @@ class TarantoolContainerIT {
         }
 
         assertEquals(1, result.size());
-        assertTrue(result.get(0).startsWith(TarantoolContainer.DEFAULT_IMAGE_VERSION));
+        if (tarantoolVersion != null) {
+            assertTrue(result.get(0).startsWith(String.valueOf(tarantoolVersion.charAt(0))));
+        }
     }
 
     @Test

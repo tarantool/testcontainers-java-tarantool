@@ -25,6 +25,8 @@ public final class TarantoolContainerClientHelper {
             "Executed script %s with exit code %d, stderr: \"%s\", stdout: \"%s\"";
     private static final String EXECUTE_COMMAND_ERROR_TEMPLATE =
             "Executed command \"%s\" with exit code %d, stderr: \"%s\", stdout: \"%s\"";
+    // Generates bash command witch creates executable lua file with connection to required node
+    // and evaluation of needed lua code
     private static final String MTLS_COMMAND_TEMPLATE =
             "echo \" " +
                     "    print(require('yaml').encode( " +
@@ -35,7 +37,8 @@ public final class TarantoolContainerClientHelper {
                     "            ):eval('%s')}) " +
                     "        ); " +
                     "    os.exit(); " +
-                    "\" | tarantool";
+                    "\" > container-tmp.lua &&" +
+                    " tarantool container-tmp.lua";
     private static final String SSL_COMMAND_TEMPLATE =
             "echo \" " +
                     "    print(require('yaml').encode( " +
@@ -45,7 +48,8 @@ public final class TarantoolContainerClientHelper {
                     "            ):eval('%s')}) " +
                     "        ); " +
                     "    os.exit(); " +
-                    "\" | tarantool";
+                    "\" > container-tmp.lua &&" +
+                    " tarantool container-tmp.lua";
     private static final String COMMAND_TEMPLATE = "echo \" " +
             "    print(require('yaml').encode( " +
             "        {require('net.box').connect( " +
@@ -54,7 +58,8 @@ public final class TarantoolContainerClientHelper {
             "            ):eval('%s')}) " +
             "        ); " +
             "    os.exit(); " +
-            "\" | tarantool";
+            "\" > container-tmp.lua &&" +
+            " tarantool container-tmp.lua";
 
     TarantoolContainerClientHelper(TarantoolContainerOperations<? extends Container<?>> container) {
         this.container = container;
