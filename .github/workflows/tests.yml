@@ -32,6 +32,7 @@ jobs:
         env:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
+          TARANTOOL_VERSION: "2.11.2-centos7"
         run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
 
       - name: Upload jacoco exec results
@@ -66,6 +67,30 @@ jobs:
         with:
           name: tests-ee-jacoco
           path: "**/jacoco-ee.exec"
+
+  tests-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      matrix:
+        tarantool-version: [ "1.x-centos7", "2.11.2-centos7", "3.0.1" ]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '8'
+          cache: 'maven'
+
+      - name: Build and run integration matrix tests
+        env:
+          TARANTOOL_VERSION: ${{ matrix.tarantool-version }}
+          TARANTOOL_SERVER_USER: root
+          TARANTOOL_SERVER_GROUP: root
+        run: ./mvnw -B test -P tarantool-container --file pom.xml
 
   merge-jacoco-report:
     name: Jacoco Merge Results

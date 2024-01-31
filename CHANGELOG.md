@@ -13,7 +13,7 @@
   ([#55](https://github.com/tarantool/testcontainers-java-tarantool/issues/55))
 - Change private modifier to protected modifier for fields and methods in TarantoolCartridgeContainer
 - Add `TARANTOOL_VERSION` environment variable support to TarantoolCartridgeContainer
-  `tarantool/tarantool:<TARANTOOL_VERSION>-centos7` if image name is omitted
+  `tarantool/tarantool:<TARANTOOL_VERSION>` if image name is omitted
   ([#102](https://github.com/tarantool/testcontainers-java-tarantool/pull/102))
 
 ## [1.1.0] - 2023-12-12

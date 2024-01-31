@@ -13,10 +13,11 @@ import static org.junit.Assert.assertEquals;
  * @author Ivan Dneprov
  */
 @Testcontainers
-public class TarantoolStaticContainerIT {
+public class StaticTarantoolContainerIT {
+    protected static final String tarantoolVersion = System.getenv().get("TARANTOOL_VERSION");
 
     @Container
-    private static final TarantoolContainer container = new TarantoolContainer();
+    protected static final TarantoolContainer container = new TarantoolContainer();
 
     @Test
     public void testExecuteCommand() throws Exception {

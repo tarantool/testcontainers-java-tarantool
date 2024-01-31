@@ -18,8 +18,8 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
 
     public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
-    public static final String DEFAULT_IMAGE_VERSION = "2.10.5";
-    public static final String DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s-centos7", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
+    public static final String DEFAULT_IMAGE_VERSION = "2.11.2-centos7";
+    public static final String DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
 
 
     private static final String DEFAULT_HOST = "localhost";
@@ -386,7 +386,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     private void setImageNameFromEnv() {
         String version = System.getenv("TARANTOOL_VERSION");
         if (version != null && !version.trim().isEmpty()) {
-            setDockerImageName(String.format("%s:%s-centos7", TARANTOOL_IMAGE, version));
+            setDockerImageName(String.format("%s:%s", TARANTOOL_IMAGE, version));
         }
     }
 }
