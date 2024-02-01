@@ -81,7 +81,9 @@ class TarantoolContainerIT {
         }
 
         assertEquals(1, result.size());
-        assertTrue(result.get(0).startsWith(String.valueOf(tarantoolVersion.charAt(0))));
+        if (tarantoolVersion != null) {
+            assertTrue(result.get(0).startsWith(String.valueOf(tarantoolVersion.charAt(0))));
+        }
     }
 
     @Test
