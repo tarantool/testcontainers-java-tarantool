@@ -91,11 +91,12 @@ jobs:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
         run: ./mvnw -B test -P tarantool-container -Djacoco.destFile=target/jacoco-mt.exec --file pom.xml
-        - name: Upload jacoco exec results
-          uses: actions/upload-artifact@v2
-          with:
-            name: tests-mt-jacoco
-            path: "**/jacoco-mt.exec"
+
+      - name: Upload jacoco exec results
+        uses: actions/upload-artifact@v2
+        with:
+          name: tests-mt-jacoco
+          path: "**/jacoco-mt.exec"
 
   merge-jacoco-report:
     name: Jacoco Merge Results
