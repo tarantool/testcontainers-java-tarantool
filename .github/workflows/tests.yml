@@ -28,13 +28,6 @@ jobs:
       - name: Build and run unit tests
         run: ./mvnw -B verify -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
 
-      - name: Run integration tests
-        env:
-          TARANTOOL_SERVER_USER: root
-          TARANTOOL_SERVER_GROUP: root
-          TARANTOOL_VERSION: "2.11.2-centos7"
-        run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
-
       - name: Upload jacoco exec results
         uses: actions/upload-artifact@v2
         with:
@@ -90,7 +83,13 @@ jobs:
           TARANTOOL_VERSION: ${{ matrix.tarantool-version }}
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
-        run: ./mvnw -B test -P tarantool-container --file pom.xml
+        run: ./mvnw -B test -P tarantool-container -Djacoco.destFile=target/jacoco-mt.exec --file pom.xml
+
+      - name: Upload jacoco exec results
+        uses: actions/upload-artifact@v2
+        with:
+          name: tests-mt-jacoco
+          path: "**/jacoco-mt.exec"
 
   merge-jacoco-report:
     name: Jacoco Merge Results
