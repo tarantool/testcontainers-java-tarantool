@@ -90,7 +90,12 @@ jobs:
           TARANTOOL_VERSION: ${{ matrix.tarantool-version }}
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
-        run: ./mvnw -B test -P tarantool-container --file pom.xml
+        run: ./mvnw -B test -P tarantool-container -Djacoco.destFile=target/jacoco-mt.exec --file pom.xml
+        - name: Upload jacoco exec results
+          uses: actions/upload-artifact@v2
+          with:
+            name: tests-mt-jacoco
+            path: "**/jacoco-mt.exec"
 
   merge-jacoco-report:
     name: Jacoco Merge Results
@@ -116,6 +121,11 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: tests-ee-jacoco
+          path: .
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: tests-mt-jacoco
           path: .
 
       - name: merge results

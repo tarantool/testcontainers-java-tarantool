@@ -259,6 +259,7 @@
                             </includes>
                             <excludes>
                                 <exclude>**/*EnterpriseIT.java</exclude>
+                                <exclude>**/*TarantoolContainer*IT.java</exclude>
                             </excludes>
                             <systemPropertyVariables>
                                 <logback.configurationFile>${logging.config}</logback.configurationFile>
