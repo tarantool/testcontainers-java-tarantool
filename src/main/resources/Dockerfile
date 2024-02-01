@@ -1,5 +1,5 @@
-ARG TARANTOOL_VERSION=2.11.0
-FROM tarantool/tarantool:${TARANTOOL_VERSION}-centos7 AS cartridge-base
+ARG TARANTOOL_VERSION=2.11.2-centos7
+FROM tarantool/tarantool:${TARANTOOL_VERSION} AS cartridge-base
 
 # system preparations because docker mount directory as a root
 ARG TARANTOOL_SERVER_USER="root"
