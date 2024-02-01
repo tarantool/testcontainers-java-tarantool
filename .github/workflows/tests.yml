@@ -10,7 +10,7 @@ on:
     branches: [ master ]
 
 jobs:
-  tests-ce:
+  tests-cartridge-container:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -26,20 +26,20 @@ jobs:
           cache: 'maven'
 
       - name: Build and run unit tests
-        run: ./mvnw -B verify -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
+        run: ./mvnw -B verify -Djacoco.destFile=target/jacoco-cartridge-container.exec --file pom.xml
 
       - name: Run integration tests
         env:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
           TARANTOOL_VERSION: "2.11.2-centos7"
-        run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-ce.exec --file pom.xml
+        run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-cartridge-container.exec --file pom.xml
 
       - name: Upload jacoco exec results
         uses: actions/upload-artifact@v2
         with:
-          name: tests-ce-jacoco
-          path: "**/jacoco-ce.exec"
+          name: tests-cartridge-container-jacoco
+          path: "**/jacoco-cartridge-container.exec"
 
   tests-ee:
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
           name: tests-ee-jacoco
           path: "**/jacoco-ee.exec"
 
-  tests-matrix:
+  tests-tarantool-container:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -90,18 +90,18 @@ jobs:
           TARANTOOL_VERSION: ${{ matrix.tarantool-version }}
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
-        run: ./mvnw -B test -P tarantool-container -Djacoco.destFile=target/jacoco-mt.exec --file pom.xml
+        run: ./mvnw -B test -P tarantool-container -Djacoco.destFile=target/jacoco-tarantool-container.exec --file pom.xml
 
       - name: Upload jacoco exec results
         uses: actions/upload-artifact@v2
         with:
-          name: tests-mt-jacoco
-          path: "**/jacoco-mt.exec"
+          name: tests-tarantool-container-jacoco
+          path: "**/jacoco-tarantool-container.exec"
 
   merge-jacoco-report:
     name: Jacoco Merge Results
     needs:
-      - tests-ce
+      - tests-cartridge-container
       - tests-ee
     runs-on: ubuntu-latest
     steps:
@@ -116,7 +116,7 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
-          name: tests-ce-jacoco
+          name: tests-cartridge-container-jacoco
           path: .
 
       - uses: actions/download-artifact@v2
@@ -126,7 +126,7 @@ jobs:
 
       - uses: actions/download-artifact@v2
         with:
-          name: tests-mt-jacoco
+          name: tests-tarantool-container-jacoco
           path: .
 
       - name: merge results
