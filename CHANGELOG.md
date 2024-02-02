@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [1.2.0] - 2024-02-02
+## [1.3.0] - 2024-02-02
 
 - Change `TARANTOOL_VERSION` semantic. Now it's expected to be a full tag, not prefix of centos version.
   ```
