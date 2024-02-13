@@ -10,8 +10,10 @@ RUN apt-get -y update && \
     apt-get -y install gcc && \
     apt-get -y install git && \
     apt-get -y install unzip && \
-    apt-get -y install cartridge-cli && \
-    cartridge version
+RUN apt-get -y update && \
+    apt-get -y install build-essential cmake make gcc git unzip cartridge-cli && \
+    apt-get -y clean
+RUN cartridge version
 
 # build and run
 FROM cartridge-base AS cartridge-app
