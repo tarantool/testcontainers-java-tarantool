@@ -7,7 +7,8 @@ USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
 RUN groupadd $TARANTOOL_SERVER_GROUP && useradd -m -s /bin/bash $TARANTOOL_SERVER_USER || true
 
 # install dependencies
-RUN apt-get -y update && \
+RUN ulimit -n 1024 && \
+    apt-get -y update && \
     apt-get -y install build-essential cmake make gcc git unzip cartridge-cli && \
     apt-get -y clean
 RUN cartridge version
