@@ -4,13 +4,6 @@ FROM tarantool/tarantool:${TARANTOOL_VERSION} AS cartridge-base
 # install dependencies
 # a yum bug requires setting ulimit, see https://bugzilla.redhat.com/show_bug.cgi?id=1537564
 RUN apt-get -y update && \
-    apt-get -y install build-essential && \
-    apt-get -y install cmake && \
-    apt-get -y install make && \
-    apt-get -y install gcc && \
-    apt-get -y install git && \
-    apt-get -y install unzip && \
-RUN apt-get -y update && \
     apt-get -y install build-essential cmake make gcc git unzip cartridge-cli && \
     apt-get -y clean
 RUN cartridge version
