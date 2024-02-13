@@ -32,7 +32,7 @@ jobs:
         env:
           TARANTOOL_SERVER_USER: root
           TARANTOOL_SERVER_GROUP: root
-          TARANTOOL_VERSION: "2.11.2-centos7"
+          TARANTOOL_VERSION: "2.11.2-ubuntu20.04"
         run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-cartridge-container.exec --file pom.xml
 
       - name: Upload jacoco exec results
@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 25
     strategy:
       matrix:
-        tarantool-version: [ "1.x-centos7", "2.11.2-centos7", "3.0.1" ]
+        tarantool-version: [ "1.x-centos7", "2.11.2-ubuntu20.04", "3.0.1" ]
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
