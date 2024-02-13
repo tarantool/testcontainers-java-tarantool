@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2024-02-13
+
+- Change `TARANTOOL_VERSION` default value from `2.11.2-centos7` to `2.11.2-ubuntu20.04` and update Dockerfile
+
 ## [1.3.0] - 2024-02-02
 
 - Change `TARANTOOL_VERSION` semantic. Now it's expected to be a full tag, not prefix of centos version.
