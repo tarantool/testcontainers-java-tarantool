@@ -1,8 +1,12 @@
 ARG TARANTOOL_VERSION=2.11.2-ubuntu20.04
 FROM tarantool/tarantool:${TARANTOOL_VERSION} AS cartridge-base
 
+ARG TARANTOOL_SERVER_USER="root"
+ARG TARANTOOL_SERVER_GROUP="root"
+USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
+RUN groupadd $TARANTOOL_SERVER_GROUP && useradd -m -s /bin/bash $TARANTOOL_SERVER_USER || true
+
 # install dependencies
-# a yum bug requires setting ulimit, see https://bugzilla.redhat.com/show_bug.cgi?id=1537564
 RUN apt-get -y update && \
     apt-get -y install build-essential cmake make gcc git unzip cartridge-cli && \
     apt-get -y clean
