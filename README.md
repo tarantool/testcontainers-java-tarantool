@@ -1,6 +1,6 @@
 # TestContainers Tarantool module
 
-[![ubuntu-master](https://github.com/tarantool/testcontainers-java-tarantool/actions/workflows/ubuntu-master.yml/badge.svg)](https://github.com/tarantool/testcontainers-java-tarantool/actions/workflows/ubuntu-master.yml)
+[![tests](https://github.com/tarantool/testcontainers-java-tarantool/actions/workflows/tests.yml/badge.svg)](https://github.com/tarantool/testcontainers-java-tarantool/actions/workflows/tests.yml)
 
 Testcontainers module for the [Tarantool](https://tarantool.io) database and application server and the [Tarantool Cartridge](https://tarantool.io/cartridge) framework.
 
