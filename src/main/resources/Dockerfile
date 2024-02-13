@@ -1,17 +1,25 @@
-ARG TARANTOOL_VERSION=2.11.2-centos7
+ARG TARANTOOL_VERSION=2.11.2-ubuntu20.04
 FROM tarantool/tarantool:${TARANTOOL_VERSION} AS cartridge-base
 
 # system preparations because docker mount directory as a root
-ARG TARANTOOL_SERVER_USER="root"
-ARG TARANTOOL_SERVER_GROUP="root"
-USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
-RUN groupadd $TARANTOOL_SERVER_GROUP && useradd -m -s /bin/bash $TARANTOOL_SERVER_USER || true
+#ARG TARANTOOL_SERVER_USER="root"
+#ARG TARANTOOL_SERVER_GROUP="root"
+#USER $TARANTOOL_SERVER_USER:$TARANTOOL_SERVER_GROUP
+#RUN groupadd $TARANTOOL_SERVER_GROUP && useradd -m -s /bin/bash $TARANTOOL_SERVER_USER || true
 
 # install dependencies
 # a yum bug requires setting ulimit, see https://bugzilla.redhat.com/show_bug.cgi?id=1537564
-RUN ulimit -n 1024 && \
-    yum -y install cmake make gcc gcc-c++ git unzip cartridge-cli && \
-    yum clean all
+RUN echo "test"
+RUN touch /etc/apt/sources.list
+RUN echo "deb http://mirror.yandex.ru/ubuntu focal main restricted\ndeb http://mirror.yandex.ru/ubuntu focal-updates main restricted\ndeb http://mirror.yandex.ru/ubuntu focal universe\ndeb http://mirror.yandex.ru/ubuntu focal-updates universe\ndeb http://mirror.yandex.ru/ubuntu focal multiverse\ndeb http://mirror.yandex.ru/ubuntu focal-updates multiverse\ndeb http://mirror.yandex.ru/ubuntu focal-backports main restricted universe multiverse\ndeb http://mirror.yandex.ru/ubuntu focal-security main restricted\ndeb http://mirror.yandex.ru/ubuntu focal-security universe\ndeb http://mirror.yandex.ru/ubuntu focal-security multiverse" > /etc/apt/sources.list
+RUN apt-get -y update
+RUN apt-get -y install build-essential
+RUN apt-get -y install cmake
+RUN apt-get -y install make
+RUN apt-get -y install gcc
+RUN apt-get -y install git
+RUN apt-get -y install unzip
+RUN apt-get -y install cartridge-cli
 RUN cartridge version
 
 # build and run
@@ -31,10 +39,12 @@ ENV TARANTOOL_DATADIR=$TARANTOOL_DATADIR
 ENV TARANTOOL_LOGDIR=$TARANTOOL_LOGDIR
 ENV TARANTOOL_INSTANCES_FILE=$TARANTOOL_INSTANCES_FILE
 ENV TARANTOOL_CLUSTER_COOKIE=$TARANTOOL_CLUSTER_COOKIE
+ENV CMAKE_DUMMY_WEBUI="YES"
 COPY $CARTRIDGE_SRC_DIR $TARANTOOL_WORKDIR
 WORKDIR $TARANTOOL_WORKDIR
 
-RUN rm -rf .rocks && cartridge build --verbose
+RUN rm -rf .rocks
+RUN cartridge build --verbose
 
 RUN echo 'if [ -z "$TARANTOOL_CLUSTER_COOKIE" ]; then unset TARANTOOL_CLUSTER_COOKIE ; fi ; \
     sleep $START_DELAY && cartridge start --run-dir=$TARANTOOL_RUNDIR --data-dir=$TARANTOOL_DATADIR \
