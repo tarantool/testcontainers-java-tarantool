@@ -5,7 +5,7 @@
     <groupId>io.tarantool</groupId>
     <artifactId>testcontainers-java-tarantool</artifactId>
     <packaging>jar</packaging>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>1.3.2</version>
 
     <name>TestContainers for Tarantool</name>
     <description>Dockerized Tarantool and Tarantool Cartridge containers for testing under Testcontainers.</description>
@@ -140,7 +140,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <compilerVersion>1.8</compilerVersion>
+                    <compilerVersion>17</compilerVersion>
                     <fork>true</fork>
                     <debug>true</debug>
                     <optimize>true</optimize>
@@ -251,8 +251,9 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <includes>
                                 <include>**/*IT.java</include>
@@ -299,6 +300,7 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
                         <version>3.2.0</version>
                         <configuration>

@@ -31,6 +31,10 @@ public class TarantoolSslContainerEnterpriseIT {
                         .getResource("enterprise/Dockerfile").toURI()
         );
         final Map<String, String> buildArgs = new HashMap<>();
+        String tarantoolRegistry = System.getenv("TARANTOOL_REGISTRY");
+        if (tarantoolRegistry != null) {
+            buildArgs.put("TARANTOOL_REGISTRY", tarantoolRegistry);
+        }
         buildArgs.put("DOWNLOAD_HOST", System.getenv("DOWNLOAD_HOST"));
         buildArgs.put("SDK_PATH", System.getenv("SDK_PATH"));
 

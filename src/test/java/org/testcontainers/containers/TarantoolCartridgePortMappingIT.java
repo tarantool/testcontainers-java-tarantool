@@ -28,7 +28,8 @@ public class TarantoolCartridgePortMappingIT {
             "Dockerfile",
             "mapping-ports-container",
             "cartridge/instances.yml",
-            "cartridge/replicasets.yml")
+            "cartridge/replicasets.yml",
+            CartridgeContainerTestUtils.getBuildArgs())
             .withEnv(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE, "secret")
             .withRouterUsername("admin")
             .withRouterPassword("secret")

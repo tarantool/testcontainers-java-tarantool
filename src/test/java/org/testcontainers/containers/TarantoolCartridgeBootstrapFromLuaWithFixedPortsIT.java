@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,8 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
                     "Dockerfile",
                     "cartridge",
                     "cartridge/instances_fixedport.yml",
-                    "cartridge/topology_fixedport.lua")
+                    "cartridge/topology_fixedport.lua",
+                    CartridgeContainerTestUtils.getBuildArgs())
                     .withEnv("TARANTOOL_INSTANCES_FILE", "instances_fixedport.yml")
                     .withStartupTimeout(Duration.ofMinutes(5))
                     .withUseFixedPorts(true)
@@ -56,7 +58,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
 
     @Test
     public void testTarantoolClusterCookieWithEnv() throws Exception {
-        try(TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
+        try (TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
                 "Dockerfile",
                 "cartridge",
                 "cartridge/instances.yml",
@@ -66,14 +68,15 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
                 .withRouterPassword("secret")
                 .withStartupTimeout(Duration.ofMinutes(5))
                 .withLogConsumer(new Slf4jLogConsumer(
-                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlIT.class))))
-        {
+                        LoggerFactory.getLogger(TarantoolCartridgeBootstrapFromYamlIT.class)))) {
             newContainer.start();
             ExecResult res = newContainer.execInContainer("env");
-            assertTrue(CartridgeContainerTestUtils.isEnvInStdout(res.getStdout(),
-                                                                         new HashMap<String, String>(){{
-                                                                             put("TARANTOOL_CLUSTER_COOKIE", "secret");
-                                                                         }}));
+            assertTrue(
+                CartridgeContainerTestUtils.isEnvInStdout(
+                    res.getStdout(),
+                    Collections.singletonMap("TARANTOOL_CLUSTER_COOKIE", "secret")
+                )
+            );
 
             List<Object> result = newContainer.executeCommandDecoded("return true");
             assertEquals(1, result.size());
@@ -108,7 +111,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
     @Test
     public void testBuildArgs() throws Exception {
 
-        final Map<String, String> buildArgs = new HashMap<String, String>(){{
+        final Map<String, String> buildArgs = new HashMap<String, String>() {{
             put("CARTRIDGE_SRC_DIR", "cartridge");
             put("TARANTOOL_WORKDIR", "/app");
             put("TARANTOOL_RUNDIR", "/tmp/new_run");
@@ -118,7 +121,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
             put("START_DELAY", "1s");
         }};
 
-        try(TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
+        try (TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
                 "Dockerfile",
                 "build_args_test",
                 "cartridge/instances.yml",

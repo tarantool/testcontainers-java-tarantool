@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.3.2] - 2024-04-11
+- Add `TARANTOOL_REGISTRY` as environment variable with default value `tarantool/`.  
+- Add `TARANTOOL_IMAGE` as environment variable with default value `tarantool`.  
+
 ## [1.3.1] - 2024-02-13
 
 - Change `TARANTOOL_VERSION` default value from `2.11.2-centos7` to `2.11.2-ubuntu20.04`. It ruins rocks building due to certificate issues on centos.

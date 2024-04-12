@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,7 +17,7 @@ public class CartridgeContainerTestUtils {
     private CartridgeContainerTestUtils() {
     }
 
-    static public void executeProfileReplaceSmokeTest(TarantoolCartridgeContainer container) throws Exception {
+    public static void executeProfileReplaceSmokeTest(TarantoolCartridgeContainer container) throws Exception {
         container.executeCommand(
                 "return profile_replace({1, \"Ivanov Ivan Ivanovich\", 33, 100500})");
 
@@ -27,15 +28,22 @@ public class CartridgeContainerTestUtils {
 
     public static boolean isEnvInStdout(String stdout, Map<String, String> env) {
         Map<String, String> envMap = Arrays.stream(stdout.split("\n"))
-                                           .collect(Collectors.toMap(toKey -> toKey.split("=")[0],
-                                                   toValue -> {
-                                                       String[] pair = toValue.split("=");
-                                                       if (pair.length == 1) {
-                                                           return "null";
-                                                       }
-                                                       return pair[1];
-                                                   }));
+                .collect(Collectors.toMap(toKey -> toKey.split("=")[0],
+                        toValue -> {
+                            String[] pair = toValue.split("=");
+                            if (pair.length == 1) {
+                                return "null";
+                            }
+                            return pair[1];
+                        }));
 
         return envMap.entrySet().containsAll(env.entrySet());
+    }
+
+    public static Map<String, String> getBuildArgs() {
+        return System.getenv().entrySet().stream()
+            .filter(e -> Arrays.asList("TARANTOOL_REGISTRY", "TARANTOOL_IMAGE", "TARANTOOL_VERSION").contains(e.getKey()))
+            .filter(e -> e.getValue() != null)
+            .collect(Collectors.toMap(HashMap.Entry::getKey, HashMap.Entry::getValue));
     }
 }

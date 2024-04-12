@@ -14,8 +14,6 @@ import static org.junit.Assert.assertEquals;
  */
 @Testcontainers
 public class StaticTarantoolContainerIT {
-    protected static final String tarantoolVersion = System.getenv().get("TARANTOOL_VERSION");
-
     @Container
     protected static final TarantoolContainer container = new TarantoolContainer();
 

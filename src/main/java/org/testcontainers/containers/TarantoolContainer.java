@@ -17,10 +17,11 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
 public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
 
-    public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
+    public static final String DEFAULT_IMAGE_GROUP = "tarantool/";
+    public static final String DEFAULT_IMAGE_NAME = "tarantool";
     public static final String DEFAULT_IMAGE_VERSION = "2.11.2-ubuntu20.04";
-    public static final String DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
-
+    public static final String DEFAULT_TARANTOOL_IMAGE =
+            String.format("%s%s:%s", DEFAULT_IMAGE_GROUP, DEFAULT_IMAGE_NAME, DEFAULT_IMAGE_VERSION);
 
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 3301;
@@ -50,7 +51,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      * Constructor for {@link TarantoolContainer}
      */
     public TarantoolContainer() {
-        this(DEFAULT_TARANTOOL_BASE_IMAGE);
+        this(DEFAULT_TARANTOOL_IMAGE);
         setImageNameFromEnv();
     }
 
@@ -154,7 +155,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      * Specify the username for connecting to Tarantool with.
      * Warning! This user must be created on Tarantool instance startup, e.g. specified in the startup script.
      *
-     * @param username the client user name
+     * @param username the client username
      * @return this container instance
      */
     public TarantoolContainer withUsername(String username) {
@@ -384,9 +385,14 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     }
 
     private void setImageNameFromEnv() {
-        String version = System.getenv("TARANTOOL_VERSION");
-        if (version != null && !version.trim().isEmpty()) {
-            setDockerImageName(String.format("%s:%s", TARANTOOL_IMAGE, version));
-        }
+        String groupEnv = System.getenv("TARANTOOL_REGISTRY");
+        String nameEnv = System.getenv("TARANTOOL_IMAGE");
+        String versionEnv = System.getenv("TARANTOOL_VERSION");
+
+        String group = groupEnv == null || groupEnv.trim().isEmpty() ? DEFAULT_IMAGE_GROUP : groupEnv;
+        String name = nameEnv == null || nameEnv.trim().isEmpty() ? DEFAULT_IMAGE_NAME : nameEnv;
+        String version = versionEnv == null || versionEnv.trim().isEmpty() ? DEFAULT_IMAGE_VERSION : versionEnv;
+
+        setDockerImageName(String.format("%s%s:%s", group, name, version));
     }
 }
