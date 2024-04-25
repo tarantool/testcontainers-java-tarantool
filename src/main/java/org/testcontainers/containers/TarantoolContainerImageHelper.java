@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageCmd;
@@ -71,6 +72,7 @@ class TarantoolContainerImageHelper {
         final List<Image> images = getDockerClient().listImagesCmd().exec();
         return images.stream()
                 .map(Image::getRepoTags)
+                .filter(Objects::nonNull)
                 .map(Arrays::asList)
                 .flatMap(Collection::stream)
                 .anyMatch(repoTag -> repoTag.equals(tag));

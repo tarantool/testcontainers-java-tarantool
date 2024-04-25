@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 25
     strategy:
       matrix:
-        tarantool-version: [ "1.x-centos7", "2.11.2-ubuntu20.04", "3.0.1" ]
+        tarantool-version: [ "1.x-centos7", "2.11.2-ubuntu20.04", "3.0.1-old" ]
       fail-fast: false
     steps:
       - uses: actions/checkout@v4

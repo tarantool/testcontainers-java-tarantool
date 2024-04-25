@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [1.3.2] - 2024-04-25
+- Fix NullPointerException during building docker image when images with null tags exist on a local machine.
+
 ## [1.3.1] - 2024-02-13
 
 - Change `TARANTOOL_VERSION` default value from `2.11.2-centos7` to `2.11.2-ubuntu20.04`. It ruins rocks building due to certificate issues on centos.
