@@ -22,7 +22,7 @@ public class TarantoolCartridgeBootstrapFromYamlIT {
     private static final TarantoolCartridgeContainer container =
             new TarantoolCartridgeContainer(
                     "Dockerfile",
-                    "cartridge",
+                    System.getenv().getOrDefault("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX", "") + "cartridge",
                     "cartridge/instances.yml",
                     "cartridge/replicasets.yml")
                     .withStartupTimeout(Duration.ofMinutes(5))

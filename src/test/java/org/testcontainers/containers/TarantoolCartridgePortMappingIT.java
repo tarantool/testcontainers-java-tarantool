@@ -26,7 +26,7 @@ public class TarantoolCartridgePortMappingIT {
     @Container
     private final static TarantoolCartridgeContainer container = new TarantoolCartridgeContainer(
             "Dockerfile",
-            "mapping-ports-container",
+            System.getenv().getOrDefault("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX", "") + "mapping-ports-container",
             "cartridge/instances.yml",
             "cartridge/replicasets.yml")
             .withEnv(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE, "secret")

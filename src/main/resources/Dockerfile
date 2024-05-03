@@ -1,5 +1,6 @@
-ARG TARANTOOL_VERSION=2.11.2-ubuntu20.04
-FROM tarantool/tarantool:${TARANTOOL_VERSION} AS cartridge-base
+ARG IMAGE="tarantool/tarantool"
+ARG TARANTOOL_VERSION="2.11.2-ubuntu20.04"
+FROM $IMAGE:$TARANTOOL_VERSION AS cartridge-base
 
 ARG TARANTOOL_SERVER_USER="root"
 ARG TARANTOOL_SERVER_GROUP="root"

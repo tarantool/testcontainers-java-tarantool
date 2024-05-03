@@ -17,9 +17,9 @@ import static org.testcontainers.containers.PathUtils.normalizePath;
 public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
 
-    public static final String TARANTOOL_IMAGE = "tarantool/tarantool";
-    public static final String DEFAULT_IMAGE_VERSION = "2.11.2-ubuntu20.04";
-    public static final String DEFAULT_TARANTOOL_BASE_IMAGE = String.format("%s:%s", TARANTOOL_IMAGE, DEFAULT_IMAGE_VERSION);
+    public static final String DEFAULT_IMAGE = "tarantool/tarantool";
+    public static final String DEFAULT_TAG = "2.11.2-ubuntu20.04";
+    public static final String DEFAULT_BASE_IMAGE = String.format("%s:%s", DEFAULT_IMAGE, DEFAULT_TAG);
 
 
     private static final String DEFAULT_HOST = "localhost";
@@ -50,7 +50,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
      * Constructor for {@link TarantoolContainer}
      */
     public TarantoolContainer() {
-        this(DEFAULT_TARANTOOL_BASE_IMAGE);
+        this(DEFAULT_BASE_IMAGE);
         setImageNameFromEnv();
     }
 
@@ -386,7 +386,11 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
     private void setImageNameFromEnv() {
         String version = System.getenv("TARANTOOL_VERSION");
         if (version != null && !version.trim().isEmpty()) {
-            setDockerImageName(String.format("%s:%s", TARANTOOL_IMAGE, version));
+            String registry = System.getenv("TARANTOOL_REGISTRY");
+            String image = registry == null || registry.isEmpty() ?
+                    DEFAULT_IMAGE :
+                    (registry.endsWith("/") ? registry + DEFAULT_IMAGE : registry + "/" + DEFAULT_IMAGE);
+            setDockerImageName(String.format("%s:%s", image, version));
         }
     }
 }
