@@ -8,6 +8,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.rnorth.ducttape.RetryCountExceededException;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.junit.jupiter.Container;
@@ -16,8 +17,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.testcontainers.containers.Container.ExecResult;
-
 
 /**
  * @author Alexey Kuzin
@@ -29,7 +28,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
     private static final TarantoolCartridgeContainer container =
             new TarantoolCartridgeContainer(
                     "Dockerfile",
-                    "cartridge",
+                    System.getenv().getOrDefault("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX", "") + "cartridge",
                     "cartridge/instances_fixedport.yml",
                     "cartridge/topology_fixedport.lua")
                     .withEnv("TARANTOOL_INSTANCES_FILE", "instances_fixedport.yml")
@@ -58,7 +57,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
     public void testTarantoolClusterCookieWithEnv() throws Exception {
         try(TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
                 "Dockerfile",
-                "cartridge",
+                System.getenv().getOrDefault("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX", "") + "cartridge",
                 "cartridge/instances.yml",
                 "cartridge/replicasets.yml")
                 .withEnv(TarantoolCartridgeContainer.ENV_TARANTOOL_CLUSTER_COOKIE, "secret")
@@ -86,7 +85,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
         try (TarantoolCartridgeContainer testContainer =
                      new TarantoolCartridgeContainer(
                              "Dockerfile",
-                             "cartridge",
+                             System.getenv().getOrDefault("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX", "") + "cartridge",
                              "cartridge/instances.yml",
                              "cartridge/incorrect_topology.lua")
                              .withLogConsumer(new Slf4jLogConsumer(
@@ -120,7 +119,7 @@ public class TarantoolCartridgeBootstrapFromLuaWithFixedPortsIT {
 
         try(TarantoolCartridgeContainer newContainer = new TarantoolCartridgeContainer(
                 "Dockerfile",
-                "build_args_test",
+                System.getenv().getOrDefault("TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX", "") + "build_args_test",
                 "cartridge/instances.yml",
                 "cartridge/replicasets.yml",
                 buildArgs)

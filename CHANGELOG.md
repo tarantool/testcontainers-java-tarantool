@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.3.3] - 2024-05-06
+- Add support for environment variable `TARANTOOL_REGISTRY`
+- Remove enterprise tests
+
+
 ## [1.3.2] - 2024-04-25
 - Fix NullPointerException during building docker image when images with null tags exist on a local machine.
 
