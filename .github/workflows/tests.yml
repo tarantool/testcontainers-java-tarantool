@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '8'
@@ -36,10 +36,12 @@ jobs:
         run: ./mvnw -B test -P integration -Djacoco.destFile=target/jacoco-cartridge-container.exec --file pom.xml
 
       - name: Upload jacoco exec results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: tests-cartridge-container-jacoco
           path: "**/jacoco-cartridge-container.exec"
+          retention-days: 5
+          overwrite: true
 
   tests-ee:
     runs-on: ubuntu-latest
@@ -48,7 +50,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '8'
@@ -63,10 +65,12 @@ jobs:
         run: ./mvnw -B test -P enterprise -Djacoco.destFile=target/jacoco-ee.exec --file pom.xml
 
       - name: Upload jacoco exec results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: tests-ee-jacoco
           path: "**/jacoco-ee.exec"
+          retention-days: 5
+          overwrite: true
 
   tests-tarantool-container:
     runs-on: ubuntu-latest
@@ -79,7 +83,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '8'
@@ -93,10 +97,12 @@ jobs:
         run: ./mvnw -B test -P tarantool-container -Djacoco.destFile=target/jacoco-tarantool-container.exec --file pom.xml
 
       - name: Upload jacoco exec results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: tests-tarantool-container-jacoco
           path: "**/jacoco-tarantool-container.exec"
+          retention-days: 5
+          overwrite: true
 
   merge-jacoco-report:
     name: Jacoco Merge Results
@@ -109,23 +115,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '8'
           cache: 'maven'
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: tests-cartridge-container-jacoco
           path: .
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: tests-ee-jacoco
           path: .
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: tests-tarantool-container-jacoco
           path: .
@@ -136,11 +142,13 @@ jobs:
 
       - name: Upload jacoco coverage despite the check result
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-results-report
           path: target/site/jacoco
           if-no-files-found: error
+          overwrite: true
+
 
       - name: Jacoco Report to PR
         id: jacoco
