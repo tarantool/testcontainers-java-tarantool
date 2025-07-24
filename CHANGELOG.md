@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2025-07-24
+- Bump testcontainers.version from 1.19.3 to 1.21.3
+- Bump jackson-annotations from 2.14.0 to 2.18.4
+- Bump slf4j-api from 2.0.3 to 2.0.17
+- Bump snakeyaml from 2.0 to 2.3
+- Bump httpclient from 4.5.1 to 4.5.14
+- Bump logback-classic from 1.3.4 to 1.3.15
+- Bump junit-jupiter from 5.8.1 to 5.13.3
+
 ## [1.3.3] - 2024-05-06
 - Add support for environment variable `TARANTOOL_REGISTRY`
 - Remove enterprise tests
