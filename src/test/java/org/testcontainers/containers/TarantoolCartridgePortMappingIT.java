@@ -9,10 +9,10 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -53,14 +53,14 @@ public class TarantoolCartridgePortMappingIT {
                 container.getMappedPort(httpPortToFirstRouter), null, null, null);
 
         // send get request to first router via http
-        HttpResponse response = sendCurlToRouterHttpAPI(firstRouterConnectionURI);
-        assertEquals(200, response.getStatusLine().getStatusCode());
+        ClassicHttpResponse response = sendCurlToRouterHttpAPI(firstRouterConnectionURI);
+        assertEquals(200, response.getCode());
 
         URI secondRouterConnectionURI = new URI(schema, null, host,
                 container.getMappedPort(httpPortToSecondRouter), null, null, null);
         // send get request to second router via http
         response = sendCurlToRouterHttpAPI(secondRouterConnectionURI);
-        assertEquals(200, response.getStatusLine().getStatusCode());
+        assertEquals(200, response.getCode());
 
         // connect to first router via socket
         URI firstRouterConnectionURIViaSocket = new URI(null, null, host,
@@ -83,8 +83,8 @@ public class TarantoolCartridgePortMappingIT {
         assertTrue(result.isEmpty());
     }
 
-    private HttpResponse sendCurlToRouterHttpAPI(URI uri) throws IOException {
-        try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+    private ClassicHttpResponse sendCurlToRouterHttpAPI(URI uri) throws IOException {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet httpGetRequest = new HttpGet(uri);
             return httpClient.execute(httpGetRequest);
         }
