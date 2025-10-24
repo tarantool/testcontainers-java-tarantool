@@ -93,9 +93,9 @@
 
         <!-- Test dependencies -->
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.5.1</version>
             <scope>test</scope>
         </dependency>
 
@@ -133,45 +133,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.2.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <compilerVersion>1.8</compilerVersion>
-                    <fork>true</fork>
-                    <debug>true</debug>
-                    <optimize>true</optimize>
-                    <showDeprecation>true</showDeprecation>
-                    <showWarnings>true</showWarnings>
-                    <source>8</source>
-                    <target>8</target>
-                    <excludes>
-                        <exclude>**/package-info.java</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-                <configuration>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
-                    <systemPropertyVariables>
-                        <logback.configurationFile>${logging.config}</logback.configurationFile>
-                        <logLevel>${logging.logLevel}</logLevel>
-                    </systemPropertyVariables>
-                    <trimStackTrace>false</trimStackTrace>
-                </configuration>
+                <version>3.3.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.12.0</version>
                 <configuration>
                     <detectOfflineLinks>false</detectOfflineLinks>
                     <breakiterator>true</breakiterator>
@@ -181,20 +148,9 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.13</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://ossrh-staging-api.central.sonatype.com</nexusUrl>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.1.1</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <releaseProfiles>release</releaseProfiles>
@@ -206,7 +162,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>0.8.12</version>
                 <executions>
                     <execution>
                         <goals>
@@ -233,13 +189,53 @@
 
     <profiles>
         <profile>
+            <id>unit</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.14.1</version>
+                        <configuration>
+                            <compilerVersion>1.8</compilerVersion>
+                            <fork>true</fork>
+                            <debug>true</debug>
+                            <optimize>true</optimize>
+                            <showDeprecation>true</showDeprecation>
+                            <showWarnings>true</showWarnings>
+                            <source>8</source>
+                            <target>8</target>
+                            <excludes>
+                                <exclude>**/package-info.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.5.2</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <logback.configurationFile>${logging.config}</logback.configurationFile>
+                                <logLevel>${logging.logLevel}</logLevel>
+                            </systemPropertyVariables>
+                            <trimStackTrace>false</trimStackTrace>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>integration</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-antrun-plugin</artifactId>
-                        <version>3.0.0</version>
+                        <version>3.2.0</version>
                         <executions>
                             <execution>
                                 <id>process-test-classes</id>
@@ -252,7 +248,7 @@
                     </plugin>
                     <plugin>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.5.2</version>
                         <configuration>
                             <includes>
                                 <include>**/*IT.java</include>
@@ -271,12 +267,63 @@
             </build>
         </profile>
         <profile>
-            <id>release</id>
+            <id>tarantool-container</id>
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.5.2</version>
+                        <configuration>
+                            <includes>
+                                <include>**/*TarantoolContainer*IT.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <logback.configurationFile>${logging.config}</logback.configurationFile>
+                                <logLevel>${logging.logLevel}</logLevel>
+                            </systemPropertyVariables>
+                            <trimStackTrace>false</trimStackTrace>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>sonatypeSnapshot</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central-portal-snapshots</publishingServerId>
+                            <deploymentName>io.tarantool.testcontainers-java-tarantool</deploymentName>
+                            <waitUntil>uploaded</waitUntil>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>sonatypeRelease</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <deploymentName>io.tarantool.testcontainers-java-tarantool</deploymentName>
+                            <waitUntil>uploaded</waitUntil>
+                        </configuration>
+                    </plugin>
+                    <plugin>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.0</version>
+                        <version>3.3.1</version>
                         <configuration>
                             <archive>
                                 <manifestEntries>
@@ -308,7 +355,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.2.0</version>
+                        <version>3.12.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -321,7 +368,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.2.8</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -341,38 +388,19 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>tarantool-container</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
-                        <configuration>
-                            <includes>
-                                <include>**/*TarantoolContainer*IT.java</include>
-                            </includes>
-                            <systemPropertyVariables>
-                                <logback.configurationFile>${logging.config}</logback.configurationFile>
-                                <logLevel>${logging.logLevel}</logLevel>
-                            </systemPropertyVariables>
-                            <trimStackTrace>false</trimStackTrace>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://ossrh-staging-api.central.sonatype.com/content/repositories/snapshots</url>
-        </snapshotRepository>
+    <repositories>
         <repository>
-            <id>ossrh</id>
-            <url>https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/</url>
+            <name>Central Portal Snapshots</name>
+            <id>central-portal-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
-    </distributionManagement>
+    </repositories>
 </project>

@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '8'
@@ -32,8 +32,11 @@ jobs:
       - name: Docker login to private registry
         run: docker login "$TARANTOOL_REGISTRY" -u admin -p "${{ secrets.TARANTOOL_REGISTRY_PASSWORD }}"
 
-      - name: Build and run unit tests
-        run: ./mvnw -B verify -Djacoco.destFile=target/jacoco-cartridge-container.exec --file pom.xml
+      - name: Build
+        run: ./mvnw -B clean package --file pom.xml
+
+      - name: Run unit tests
+        run: ./mvnw -B test -P unit -Djacoco.destFile=target/jacoco-cartridge-container.exec --file pom.xml
 
       - name: Run integration tests
         env:
@@ -64,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '8'
@@ -101,7 +104,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 1.8
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '8'

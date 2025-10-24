@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+- Bump httpclient from 4.5.14 to httpclient5 5.5.1
+- Bump various maven plugins
 
 ## [1.4.0] - 2025-07-24
 - Bump testcontainers.version from 1.19.3 to 1.21.3
