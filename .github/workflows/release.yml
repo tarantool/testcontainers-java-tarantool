@@ -1,9 +1,16 @@
 name: Release to Maven Central
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      releaseVersion:
+        description: 'Release and tag version'
+        required: true
+        default: "v1.5.0-dev.N"
+      developmentVersion:
+        description: 'Version to use for new working copy'
+        required: true
+        default: '2.0.0-SNAPSHOT'
 
 jobs:
   release:
@@ -27,6 +34,15 @@ jobs:
         run: |
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
+
+      - name: Run release prepare
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
+          DEVELOPMENT_VERSION: ${{ github.event.inputs.developmentVersion }}
+        run: |
+          ./mvnw release:prepare -s .maven_settings.xml -DskipTests -Darguments=-DskipTests \
+            -DreleaseVersion="$RELEASE_VERSION" -Dtag="$RELEASE_VERSION" \
+            -DdevelopmentVersion="$DEVELOPMENT_VERSION"
 
       - name: Publish to Maven Central
         run: |
