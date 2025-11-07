@@ -1,5 +1,7 @@
 # Changelog
 
+## [Unreleased]
+
 ## [1.4.1] - 2025-11-07
 - Bump httpclient from 4.5.14 to httpclient5 5.5.1
 - Bump various maven plugins
