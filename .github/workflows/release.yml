@@ -1,4 +1,4 @@
-name: Release to Maven Central
+name: Publish Release to Maven Central
 
 on:
   push:
@@ -17,16 +17,12 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '8'
+          cache: 'maven'
           server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_TOKEN
           gpg-private-key: ${{ secrets.MAVEN_CENTRAL_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
-
-      - name: Configure Git user
-        run: |
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
 
       - name: Publish to Maven Central
         run: |

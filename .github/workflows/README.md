@@ -10,7 +10,7 @@ This directory contains the GitHub Actions workflows for the project.
 - **Runs on**: Ubuntu latest
 
 ### 2. release.yml
-- **Trigger**: Creation of tags matching semantic versioning pattern (e.g., `1.4.0`, `2.0.1`)
+- **Trigger**: Creation of tags matching semantic versioning pattern (e.g., `1.4.1`, `2.0.1`)
 - **Purpose**: Automatically release to Maven Central and create GitHub Release
 - **Runs on**: Ubuntu latest
 - **Requires secrets**:
@@ -44,7 +44,7 @@ To enable automatic releases, you need to configure the following secrets in you
 ## Release Process
 
 ### Automatic Release
-1. Create and push a new tag with semantic versioning format (e.g., `git tag 1.4.0 && git push origin 1.4.0`)
+1. Create and push a new tag with semantic versioning format (e.g., `git tag 1.4.1 && git push origin 1.4.1`)
 2. The release workflow will automatically:
    - Build and test the project
    - Sign the artifacts with GPG
