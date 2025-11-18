@@ -18,7 +18,7 @@ public class TarantoolContainer extends GenericContainer<TarantoolContainer>
         implements TarantoolContainerOperations<TarantoolContainer> {
 
     public static final String DEFAULT_IMAGE = "tarantool/tarantool";
-    public static final String DEFAULT_TAG = "2.11.2-ubuntu20.04";
+    public static final String DEFAULT_TAG = "2.11.8-ubuntu20.04";
     public static final String DEFAULT_BASE_IMAGE = String.format("%s:%s", DEFAULT_IMAGE, DEFAULT_TAG);
 
 

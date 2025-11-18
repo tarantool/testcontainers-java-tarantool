@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Change `TARANTOOL_VERSION` default value from `2.11.2-ubuntu20.04` to `2.11.8-ubuntu20.04`
+
 ## [1.4.1] - 2025-11-07
 - Bump httpclient from 4.5.14 to httpclient5 5.5.1
 - Bump various maven plugins
