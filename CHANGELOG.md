@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Bump org.testcontainers from 1.21.3 to 2.0.1
+- Bump logback-classic from 1.3.15 to 1.3.16
 - Change `TARANTOOL_VERSION` default value from `2.11.2-ubuntu20.04` to `2.11.8-ubuntu20.04`
 - CI/CD: Change JDK distribution from Zulu to Temurin
 
