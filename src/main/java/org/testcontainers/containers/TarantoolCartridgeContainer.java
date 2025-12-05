@@ -10,10 +10,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import org.testcontainers.containers.exceptions.CartridgeTopologyException;
 import org.testcontainers.images.builder.ImageFromDockerfile;
-import org.testcontainers.shaded.org.apache.commons.lang3.ArrayUtils;
 import static org.testcontainers.containers.PathUtils.normalizePath;
 
 /**
