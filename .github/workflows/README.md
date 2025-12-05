@@ -44,7 +44,7 @@ To enable automatic releases, you need to configure the following secrets in you
 ## Release Process
 
 ### Automatic Release
-1. Create and push a new tag with semantic versioning format (e.g., `git tag 1.4.1 && git push origin 1.4.1`)
+1. Create and push a new tag with semantic versioning format (e.g., `git tag 1.5.0 && git push origin 1.5.0`)
 2. The release workflow will automatically:
    - Build and test the project
    - Sign the artifacts with GPG

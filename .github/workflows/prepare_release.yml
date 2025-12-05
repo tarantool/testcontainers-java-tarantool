@@ -6,7 +6,7 @@ on:
       releaseVersion:
         description: 'Release and tag version'
         required: true
-        default: "v1.5.0"
+        default: "v1.6.0"
       developmentVersion:
         description: 'Version to use for new working copy'
         required: true
